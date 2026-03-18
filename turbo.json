@@ -4,17 +4,9 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
-    },
-    "build:cli": {
-      "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
     "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "dev:cli": {
       "cache": false,
       "persistent": true
     },
@@ -26,6 +18,46 @@
     },
     "typecheck": {
       "dependsOn": ["^build"]
+    },
+    "clean": {
+      "cache": false
+    },
+
+    "@gubbi/core#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@gubbi/git#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@gubbi/github#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@gubbi/ui#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@gubbi/plugin-dashboard#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@gubbi/plugin-github#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@gubbi/plugin-repo#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@gubbi/plugin-stacks#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@gubbi/web#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
     }
   }
 }

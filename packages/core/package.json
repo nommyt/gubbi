@@ -12,7 +12,6 @@
     "./state": "./src/state/index.ts"
   },
   "scripts": {
-    "build": "echo 'No build step needed'",
     "lint": "oxlint .",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
