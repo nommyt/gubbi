@@ -96,7 +96,14 @@ export function Sidebar(props: SidebarProps) {
 			<box paddingLeft={1} paddingBottom={1}>
 				<Show
 					when={state.github.isAuthenticated}
-					fallback={<text fg={C.keyHint}>⚠ gh: login needed</text>}
+					fallback={
+						<Show
+							when={state.github.isCheckingAuth}
+							fallback={<text fg={C.keyHint}>⚠ gh: not logged in</text>}
+						>
+							<text fg={C.keyHint}>⬡ gh: checking...</text>
+						</Show>
+					}
 				>
 					<text fg={C.keyHint}>⬡ {state.github.user || "authenticated"}</text>
 				</Show>

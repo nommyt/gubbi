@@ -80,3 +80,26 @@ export async function commandExists(name: string): Promise<boolean> {
 		return false
 	}
 }
+
+/**
+ * Run an interactive command with stdin/stdout/stderr inherited from the
+ * current process (required for commands like `gh auth login --web` that
+ * prompt for user input or open a browser flow).
+ */
+export async function execInteractive(
+	cmd: string,
+	args: string[],
+	opts: Pick<ExecOptions, "cwd"> = {},
+): Promise<number> {
+	const { cwd = process.cwd() } = opts
+
+	const proc = Bun.spawn([cmd, ...args], {
+		cwd,
+		env: process.env,
+		stdin: "inherit",
+		stdout: "inherit",
+		stderr: "inherit",
+	})
+
+	return proc.exited
+}

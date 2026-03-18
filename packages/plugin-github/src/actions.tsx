@@ -149,7 +149,7 @@ export function ActionsView() {
 						fallback={
 							<box flexGrow={1} alignItems="center" justifyContent="center" gap={1}>
 								<text fg={C.dim}>GitHub not authenticated</text>
-								<text fg={C.dim}>Run: gh auth login</text>
+								<text fg={C.dim}>Install gh and ensure you are logged in</text>
 							</box>
 						}
 					>

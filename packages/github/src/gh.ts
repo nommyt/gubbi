@@ -3,7 +3,7 @@
  * All commands use `gh` with JSON output for structured parsing.
  */
 
-import { exec, execOrThrow } from "@gubbi/git"
+import { exec, execOrThrow, execInteractive } from "@gubbi/git"
 
 const GH = "gh"
 
@@ -23,6 +23,17 @@ export async function getAuthUser(): Promise<string> {
 	} catch {
 		return ""
 	}
+}
+
+/**
+ * Trigger an interactive `gh auth login --web` flow.
+ * This hands stdio to the terminal so the user can complete the browser-based
+ * OAuth flow without leaving gubbi.
+ * Returns true if login succeeded.
+ */
+export async function loginWeb(): Promise<boolean> {
+	const exitCode = await execInteractive(GH, ["auth", "login", "--web"])
+	return exitCode === 0
 }
 
 // ---------------------------------------------------------------------------

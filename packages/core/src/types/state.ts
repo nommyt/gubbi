@@ -147,6 +147,7 @@ export interface GitHubNotification {
 export interface GitHubState {
 	// Auth
 	isAuthenticated: boolean
+	isCheckingAuth: boolean
 	user: string
 
 	// Data

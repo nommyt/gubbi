@@ -1,11 +1,10 @@
 {
-  "extends": "@gubbi/config/tsconfig",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@gubbi/git": ["./src/index.ts"],
-      "@gubbi/git/*": ["./src/*.ts"]
-    }
-  },
-  "include": ["src/**/*"]
+	"extends": "@gubbi/config/tsconfig",
+	"compilerOptions": {
+		"paths": {
+			"@gubbi/git": ["./src/index.ts"],
+			"@gubbi/git/*": ["./src/*.ts"],
+		},
+	},
+	"include": ["src/**/*"],
 }

@@ -21,6 +21,7 @@ export interface GitService {
 
 export interface GitHubService {
 	// Will be implemented by @gubbi/github package
+	checkAuth: () => Promise<void>
 	refreshPRs: () => Promise<void>
 	refreshIssues: () => Promise<void>
 	refreshRuns: () => Promise<void>

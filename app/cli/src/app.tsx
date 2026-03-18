@@ -9,7 +9,7 @@ import { createGitHubService } from "@gubbi/github"
 import { Header, StatusBar, Sidebar, HelpOverlay } from "@gubbi/ui"
 import type { ParsedKey } from "@opentui/core"
 import { useRenderer, useKeyboard } from "@opentui/solid"
-import { Switch, Match, Show } from "solid-js"
+import { Switch, Match, Show, onMount } from "solid-js"
 
 // Import all plugins
 import plugins from "./plugins/index.ts"
@@ -20,6 +20,11 @@ export function App() {
 	// Initialize services
 	const gitService = createGitService()
 	const githubService = createGitHubService()
+
+	// Check gh auth at startup; trigger web login if not logged in
+	onMount(() => {
+		void githubService.checkAuth()
+	})
 
 	// Activate plugins — must happen before useKeyboard so viewRegistry is populated
 	for (const plugin of plugins) {

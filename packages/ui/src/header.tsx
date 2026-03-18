@@ -144,9 +144,9 @@ export function Header() {
 				{/* Spacer */}
 				<box flexGrow={1} />
 
-				{/* GitHub auth indicator */}
-				<Show when={!state.github.isAuthenticated && state.git.isRepo}>
-					<text fg={C.dim}>gh: not authenticated</text>
+				{/* GitHub auth indicator — only show after auth check completes */}
+				<Show when={!state.github.isAuthenticated && !state.github.isCheckingAuth && state.git.isRepo}>
+					<text fg={C.dim}>gh: not logged in</text>
 					<text fg={C.dim}>│</text>
 				</Show>
 

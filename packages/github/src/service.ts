@@ -14,7 +14,17 @@ import {
 } from "@gubbi/core/state"
 import type { GitHubNotification } from "@gubbi/core/types"
 
-import { listPRs, listIssues, listRuns, listNotifications, type Notification } from "./gh.ts"
+import {
+	listPRs,
+	listIssues,
+	listRuns,
+	listNotifications,
+	isAuthenticated,
+	getAuthUser,
+	loginWeb,
+	type Notification,
+} from "./gh.ts"
+import { commandExists } from "@gubbi/git"
 
 // Notification from @gubbi/github has a nested `subject` object;
 // GitHubNotification in core flattens title/type/url to the top level.
@@ -30,12 +40,45 @@ function toGitHubNotification(n: Notification): GitHubNotification {
 	}
 }
 
-export interface GitHubService extends GitHubServiceInterface {}
+export interface GitHubService extends GitHubServiceInterface {
+	checkAuth(): Promise<void>
+}
 
 // Singleton instance for direct usage
 export const githubService = createGitHubService()
 
 export function createGitHubService(): GitHubService {
+	/**
+	 * Check gh authentication at startup.
+	 * - If gh is not installed, silently skip (GitHub features stay hidden).
+	 * - If gh is installed but not authenticated, trigger `gh auth login --web`
+	 *   so the user completes the OAuth flow right in the terminal.
+	 * - On success, populate state.github.isAuthenticated and state.github.user.
+	 */
+	async function checkAuth(): Promise<void> {
+		setState("github", "isCheckingAuth", true)
+		try {
+			const ghInstalled = await commandExists("gh")
+			if (!ghInstalled) return
+
+			let authed = await isAuthenticated()
+
+			if (!authed) {
+				const ok = await loginWeb()
+				if (!ok) return
+				authed = await isAuthenticated()
+			}
+
+			if (authed) {
+				const user = await getAuthUser()
+				setState("github", "isAuthenticated", true)
+				setState("github", "user", user)
+			}
+		} finally {
+			setState("github", "isCheckingAuth", false)
+		}
+	}
+
 	async function refreshPRs(): Promise<void> {
 		if (!state.github.isAuthenticated) return
 		try {
@@ -77,6 +120,7 @@ export function createGitHubService(): GitHubService {
 	}
 
 	return {
+		checkAuth,
 		refreshPRs,
 		refreshIssues,
 		refreshRuns,

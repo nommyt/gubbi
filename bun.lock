@@ -58,8 +58,6 @@
       "dependencies": {
         "@opentui/core": "^0.1.88",
         "@opentui/solid": "^0.1.88",
-        "@tanstack/hotkeys": "^0.4.1",
-        "@tanstack/solid-hotkeys": "^0.4.1",
         "solid-js": "^1.9.11",
       },
       "devDependencies": {
@@ -191,6 +189,9 @@
         "typescript": "^5.9.3",
       },
     },
+  },
+  "patchedDependencies": {
+    "@opentui/solid@0.1.88": "patches/@opentui%2Fsolid@0.1.88.patch",
   },
   "packages": {
     "@ampproject/remapping": ["@ampproject/remapping@2.3.0", "", { "dependencies": { "@jridgewell/gen-mapping": "^0.3.5", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw=="],

@@ -51,6 +51,7 @@ const initialGitState: GitState = {
 
 const initialGitHubState: GitHubState = {
 	isAuthenticated: false,
+	isCheckingAuth: true,
 	user: "",
 	prs: [],
 	issues: [],
