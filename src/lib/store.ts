@@ -2,7 +2,7 @@
  * store.ts — Global reactive application state using SolidJS stores/signals
  */
 
-import { createSignal, createRoot } from "solid-js"
+import { createRoot } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 
 import type {

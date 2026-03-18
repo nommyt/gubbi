@@ -2,9 +2,8 @@
  * dialog.tsx — Modal dialogs (confirm, input, select)
  */
 
-import type { TextareaRenderable } from "@opentui/core"
 import { useKeyboard } from "@opentui/solid"
-import { createSignal, Show, For } from "solid-js"
+import { Show, For } from "solid-js"
 
 const C = {
 	overlay: "#0d1117",
@@ -227,10 +226,9 @@ const HELP_SECTIONS: HelpSection[] = [
 			{ key: "S", description: "Toggle side-by-side diff" },
 			{ key: "/", description: "Search / filter" },
 			{ key: "?", description: "This help" },
-			{ key: "Ctrl+z", description: "Undo last operation" },
-			{ key: "Ctrl+r", description: "Refresh all data" },
+			{ key: "Mod+r", description: "Refresh all data (Cmd on Mac, Ctrl on other)" },
 			{ key: "q / Esc", description: "Go back / cancel" },
-			{ key: "Ctrl+c", description: "Quit" },
+			{ key: "Mod+c", description: "Quit (Cmd on Mac, Ctrl on other)" },
 		],
 	},
 	{

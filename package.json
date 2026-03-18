@@ -19,6 +19,7 @@
 	"dependencies": {
 		"@opentui/core": "^0.1.88",
 		"@opentui/solid": "^0.1.88",
+		"@tanstack/solid-hotkeys": "^0.4.1",
 		"solid-js": "^1.9.11"
 	},
 	"devDependencies": {

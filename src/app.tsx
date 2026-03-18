@@ -11,14 +11,15 @@
  * └─────────────────────────────────────────────┘
  */
 
-import { useKeyboard, useRenderer } from "@opentui/solid"
-import { Switch, Match, Show, onMount } from "solid-js"
+import { useRenderer } from "@opentui/solid"
+import { Switch, Match, Show } from "solid-js"
 
 import { HelpOverlay } from "./components/dialog.tsx"
 import { Header } from "./components/header.tsx"
 import { StatusBar } from "./components/status-bar.tsx"
 import { useGhInit, useGhAutoRefresh } from "./hooks/use-gh.ts"
 import { useGitInit, useGitAutoRefresh, refreshAll } from "./hooks/use-git.ts"
+import { HotkeysProvider, registerGlobalHotkey } from "./lib/hotkeys.ts"
 import { state, setState, setView, setFocus, VIEWS } from "./lib/store.ts"
 import { ActionsView } from "./views/actions.tsx"
 import { BranchesView } from "./views/branches.tsx"
@@ -44,109 +45,110 @@ export function App() {
 	useGitAutoRefresh()
 	useGhAutoRefresh()
 
-	// Global keybindings
-	useKeyboard((key) => {
-		// View switching by number key
-		if (!key.ctrl && !key.shift) {
-			const viewByKey = VIEWS.find((v) => v.key === key.name)
-			if (viewByKey) {
-				key.preventDefault()
-				setView(viewByKey.id)
-				setFocus("primary")
-				return
-			}
-		}
+	// Register global hotkeys using TanStack Hotkeys
+	// View switching by number key
+	VIEWS.forEach((view) => {
+		registerGlobalHotkey(view.key, () => {
+			setView(view.id)
+			setFocus("primary")
+		})
+	})
 
-		// Help overlay
-		if (key.name === "?") {
-			key.preventDefault()
-			setState("helpVisible", (v) => !v)
-			return
-		}
+	// Help overlay
+	registerGlobalHotkey("?", () => {
+		setState("helpVisible", (v) => !v)
+	})
 
-		// Quit
-		if (key.ctrl && key.name === "c") {
-			key.preventDefault()
-			renderer.destroy()
-			return
-		}
+	// Quit
+	registerGlobalHotkey("Mod+c", () => {
+		renderer.destroy()
+	})
 
-		// Global refresh
-		if (key.ctrl && key.name === "r") {
-			key.preventDefault()
-			void refreshAll()
-			return
-		}
+	// Global refresh
+	registerGlobalHotkey("Mod+r", () => {
+		void refreshAll()
+	})
 
-		// Tab to cycle panel focus (primary <-> detail)
-		if (key.name === "tab" && !key.ctrl) {
-			key.preventDefault()
-			setState("focusedPanel", (p) => {
-				if (p === "primary") return "detail"
-				return "primary"
-			})
-			return
-		}
+	// Tab to cycle panel focus (primary <-> detail)
+	registerGlobalHotkey("Tab", () => {
+		setState("focusedPanel", (p) => {
+			if (p === "primary") return "detail"
+			return "primary"
+		})
+	})
 
-		// Close help overlay
-		if (key.name === "escape" || key.name === "q") {
-			if (state.helpVisible) {
-				setState("helpVisible", false)
-				return
-			}
+	// Close help overlay
+	registerGlobalHotkey("Escape", () => {
+		if (state.helpVisible) {
+			setState("helpVisible", false)
+		}
+	})
+
+	registerGlobalHotkey("q", () => {
+		if (state.helpVisible) {
+			setState("helpVisible", false)
 		}
 	})
 
 	return (
-		<box flexDirection="column" height="100%">
-			<Header />
+		<HotkeysProvider
+			defaultOptions={{
+				hotkey: {
+					preventDefault: true,
+					stopPropagation: false,
+				},
+			}}
+		>
+			<box flexDirection="column" height="100%">
+				<Header />
 
-			<box flexGrow={1}>
-				<Switch>
-					<Match when={state.currentView === "dashboard"}>
-						<DashboardView />
-					</Match>
-					<Match when={state.currentView === "smartlog" && state.isGitRepo}>
-						<SmartlogView />
-					</Match>
-					<Match when={state.currentView === "status" && state.isGitRepo}>
-						<StatusView />
-					</Match>
-					<Match when={state.currentView === "log" && state.isGitRepo}>
-						<LogView />
-					</Match>
-					<Match when={state.currentView === "branches" && state.isGitRepo}>
-						<BranchesView />
-					</Match>
-					<Match when={state.currentView === "stacks" && state.isGitRepo}>
-						<StacksView />
-					</Match>
-					<Match when={state.currentView === "stash" && state.isGitRepo}>
-						<StashView />
-					</Match>
-					<Match when={state.currentView === "prs"}>
-						<PullRequestsView />
-					</Match>
-					<Match when={state.currentView === "issues"}>
-						<IssuesView />
-					</Match>
-					<Match when={state.currentView === "actions"}>
-						<ActionsView />
-					</Match>
-					<Match when={state.currentView === "notifications"}>
-						<NotificationsView />
-					</Match>
-					<Match when={state.currentView === "remotes"}>
-						<RemotesView />
-					</Match>
-				</Switch>
+				<box flexGrow={1}>
+					<Switch>
+						<Match when={state.currentView === "dashboard"}>
+							<DashboardView />
+						</Match>
+						<Match when={state.currentView === "smartlog" && state.isGitRepo}>
+							<SmartlogView />
+						</Match>
+						<Match when={state.currentView === "status" && state.isGitRepo}>
+							<StatusView />
+						</Match>
+						<Match when={state.currentView === "log" && state.isGitRepo}>
+							<LogView />
+						</Match>
+						<Match when={state.currentView === "branches" && state.isGitRepo}>
+							<BranchesView />
+						</Match>
+						<Match when={state.currentView === "stacks" && state.isGitRepo}>
+							<StacksView />
+						</Match>
+						<Match when={state.currentView === "stash" && state.isGitRepo}>
+							<StashView />
+						</Match>
+						<Match when={state.currentView === "prs"}>
+							<PullRequestsView />
+						</Match>
+						<Match when={state.currentView === "issues"}>
+							<IssuesView />
+						</Match>
+						<Match when={state.currentView === "actions"}>
+							<ActionsView />
+						</Match>
+						<Match when={state.currentView === "notifications"}>
+							<NotificationsView />
+						</Match>
+						<Match when={state.currentView === "remotes"}>
+							<RemotesView />
+						</Match>
+					</Switch>
+				</box>
+
+				<StatusBar />
+
+				<Show when={state.helpVisible}>
+					<HelpOverlay onClose={() => setState("helpVisible", false)} />
+				</Show>
 			</box>
-
-			<StatusBar />
-
-			<Show when={state.helpVisible}>
-				<HelpOverlay onClose={() => setState("helpVisible", false)} />
-			</Show>
-		</box>
+		</HotkeysProvider>
 	)
 }
