@@ -1,6 +1,6 @@
 {
   "name": "@gubbi/plugin-github",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "description": "GitHub views for Gubbi (PRs, Issues, Actions, Notifications)",
   "type": "module",

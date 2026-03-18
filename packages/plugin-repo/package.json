@@ -1,6 +1,6 @@
 {
   "name": "@gubbi/plugin-repo",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Repository operations views for Gubbi (status, log, branches, stash, remotes)",
   "type": "module",

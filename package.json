@@ -1,6 +1,6 @@
 {
   "name": "@gubbi/monorepo",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Gubbi — Terminal-native Git + GitHub client monorepo",
   "packageManager": "bun@1.3.10",
