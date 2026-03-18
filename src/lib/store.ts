@@ -14,6 +14,7 @@ import type {
 import type { StatusEntry, LogEntry, BranchEntry, StashEntry } from "./parser.ts"
 
 export type ViewName =
+	| "dashboard"
 	| "smartlog"
 	| "status"
 	| "log"
@@ -27,6 +28,7 @@ export type ViewName =
 	| "remotes"
 
 export const VIEWS: { id: ViewName; label: string; key: string }[] = [
+	{ id: "dashboard", label: "Dashboard", key: "d" },
 	{ id: "smartlog", label: "Smartlog", key: "1" },
 	{ id: "status", label: "Status", key: "2" },
 	{ id: "log", label: "Log", key: "3" },
@@ -137,7 +139,7 @@ const initialState: AppState = {
 	remoteUrl: "",
 	defaultBranch: "main",
 
-	currentView: "smartlog",
+	currentView: "dashboard",
 	focusedPanel: "primary",
 	fullscreenPanel: null,
 

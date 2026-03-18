@@ -219,7 +219,9 @@ const HELP_SECTIONS: HelpSection[] = [
 	{
 		title: "Global",
 		bindings: [
-			{ key: "1-0", description: "Switch to view by number" },
+			{ key: "d", description: "Dashboard" },
+			{ key: "1-9", description: "Switch to view by number" },
+			{ key: "0", description: "Notifications" },
 			{ key: "Tab", description: "Cycle panel focus" },
 			{ key: "f", description: "Toggle full-screen diff" },
 			{ key: "S", description: "Toggle side-by-side diff" },

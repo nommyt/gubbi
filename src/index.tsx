@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * index.tsx — Gub entry point
+ * index.tsx — Gubbi entry point
  * Terminal-native Git + GitHub client powered by OpenTUI
  */
 

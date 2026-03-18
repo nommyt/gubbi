@@ -14,13 +14,12 @@
 		"build": "bun run build.ts",
 		"test": "bun test",
 		"lint": "oxlint .",
-		"format": "oxfmt .",
-		"postinstall": "lefthook install"
+		"format": "oxfmt ."
 	},
 	"dependencies": {
-		"@opentui/core": "0.1.88",
-		"@opentui/solid": "0.1.88",
-		"solid-js": "1.9.11"
+		"@opentui/core": "^0.1.88",
+		"@opentui/solid": "^0.1.88",
+		"solid-js": "^1.9.11"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",

@@ -22,6 +22,7 @@ import { useGitInit, useGitAutoRefresh, refreshAll } from "./hooks/use-git.ts"
 import { state, setState, setView, setFocus, VIEWS } from "./lib/store.ts"
 import { ActionsView } from "./views/actions.tsx"
 import { BranchesView } from "./views/branches.tsx"
+import { DashboardView } from "./views/dashboard.tsx"
 import { IssuesView } from "./views/issues.tsx"
 import { LogView } from "./views/log.tsx"
 import { NotificationsView } from "./views/notifications.tsx"
@@ -101,57 +102,44 @@ export function App() {
 			<Header />
 
 			<box flexGrow={1}>
-				<Show when={!state.isGitRepo}>
-					<box
-						flexGrow={1}
-						alignItems="center"
-						justifyContent="center"
-						flexDirection="column"
-						gap={1}
-					>
-						<text fg="#58a6ff">⬡ gubbi</text>
-						<text fg="#8b949e">Not inside a git repository</text>
-						<text fg="#484f58">Navigate to a git repo and run gubbi</text>
-					</box>
-				</Show>
-
-				<Show when={state.isGitRepo}>
-					<Switch>
-						<Match when={state.currentView === "smartlog"}>
-							<SmartlogView />
-						</Match>
-						<Match when={state.currentView === "status"}>
-							<StatusView />
-						</Match>
-						<Match when={state.currentView === "log"}>
-							<LogView />
-						</Match>
-						<Match when={state.currentView === "branches"}>
-							<BranchesView />
-						</Match>
-						<Match when={state.currentView === "stacks"}>
-							<StacksView />
-						</Match>
-						<Match when={state.currentView === "stash"}>
-							<StashView />
-						</Match>
-						<Match when={state.currentView === "prs"}>
-							<PullRequestsView />
-						</Match>
-						<Match when={state.currentView === "issues"}>
-							<IssuesView />
-						</Match>
-						<Match when={state.currentView === "actions"}>
-							<ActionsView />
-						</Match>
-						<Match when={state.currentView === "notifications"}>
-							<NotificationsView />
-						</Match>
-						<Match when={state.currentView === "remotes"}>
-							<RemotesView />
-						</Match>
-					</Switch>
-				</Show>
+				<Switch>
+					<Match when={state.currentView === "dashboard"}>
+						<DashboardView />
+					</Match>
+					<Match when={state.currentView === "smartlog" && state.isGitRepo}>
+						<SmartlogView />
+					</Match>
+					<Match when={state.currentView === "status" && state.isGitRepo}>
+						<StatusView />
+					</Match>
+					<Match when={state.currentView === "log" && state.isGitRepo}>
+						<LogView />
+					</Match>
+					<Match when={state.currentView === "branches" && state.isGitRepo}>
+						<BranchesView />
+					</Match>
+					<Match when={state.currentView === "stacks" && state.isGitRepo}>
+						<StacksView />
+					</Match>
+					<Match when={state.currentView === "stash" && state.isGitRepo}>
+						<StashView />
+					</Match>
+					<Match when={state.currentView === "prs"}>
+						<PullRequestsView />
+					</Match>
+					<Match when={state.currentView === "issues"}>
+						<IssuesView />
+					</Match>
+					<Match when={state.currentView === "actions"}>
+						<ActionsView />
+					</Match>
+					<Match when={state.currentView === "notifications"}>
+						<NotificationsView />
+					</Match>
+					<Match when={state.currentView === "remotes"}>
+						<RemotesView />
+					</Match>
+				</Switch>
 			</box>
 
 			<StatusBar />
