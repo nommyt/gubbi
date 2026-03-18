@@ -4,9 +4,9 @@
  * Terminal-native Git + GitHub client powered by plugins
  */
 
-import { render } from "@opentui/solid"
 import { commandExists } from "@gubbi/git"
 import { githubService } from "@gubbi/github"
+import { render } from "@opentui/solid"
 
 import { App } from "./app.tsx"
 

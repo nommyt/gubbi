@@ -13,6 +13,7 @@ import {
 	showToast,
 } from "@gubbi/core/state"
 import type { GitHubNotification } from "@gubbi/core/types"
+import { commandExists } from "@gubbi/git"
 
 import {
 	listPRs,
@@ -24,7 +25,6 @@ import {
 	loginWeb,
 	type Notification,
 } from "./gh.ts"
-import { commandExists } from "@gubbi/git"
 
 // Notification from @gubbi/github has a nested `subject` object;
 // GitHubNotification in core flattens title/type/url to the top level.

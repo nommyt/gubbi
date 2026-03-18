@@ -167,10 +167,10 @@ export function NotificationsView() {
 				<Show
 					when={state.github.isAuthenticated}
 					fallback={
-							<box flexGrow={1} alignItems="center" justifyContent="center" gap={1}>
-								<text fg={C.dim}>GitHub not authenticated</text>
-								<text fg={C.dim}>Install gh and ensure you are logged in</text>
-							</box>
+						<box flexGrow={1} alignItems="center" justifyContent="center" gap={1}>
+							<text fg={C.dim}>GitHub not authenticated</text>
+							<text fg={C.dim}>Install gh and ensure you are logged in</text>
+						</box>
 					}
 				>
 					<scrollbox flexGrow={1} scrollbarOptions={{ visible: true }}>
