@@ -2,12 +2,11 @@
  * actions.tsx — GitHub Actions workflow runs: list, status, logs, re-run
  */
 
+import { state, showToast } from "@gubbi/core"
+import { exec } from "@gubbi/git"
+import { listRuns, getRunLogs, rerunRun, type WorkflowRun } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
-
-import { listRuns, getRunLogs, rerunRun, type WorkflowRun } from "@gubbi/github"
-import { exec } from "@gubbi/git"
-import { state, showToast } from "@gubbi/core"
 
 const C = {
 	border: "#30363d",

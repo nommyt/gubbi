@@ -2,13 +2,20 @@
  * status.tsx — Git status view: working tree, staging area, and diff preview
  */
 
-import { useKeyboard } from "@opentui/solid"
-import { createSignal, Show, For, onMount } from "solid-js"
-
-import { ConfirmDialog, InputDialog, DiffViewer } from "@gubbi/ui"
-import { stageFile, unstageFile, stageAll, unstageAll, discardFile, getDiff, gitService } from "@gubbi/git"
 import type { GitStatusEntry } from "@gubbi/core"
 import { state, setState, setFocus, showToast, toggleFullscreen } from "@gubbi/core"
+import {
+	stageFile,
+	unstageFile,
+	stageAll,
+	unstageAll,
+	discardFile,
+	getDiff,
+	gitService,
+} from "@gubbi/git"
+import { ConfirmDialog, InputDialog, DiffViewer } from "@gubbi/ui"
+import { useKeyboard } from "@opentui/solid"
+import { createSignal, Show, For, onMount } from "solid-js"
 
 const C = {
 	border: "#30363d",

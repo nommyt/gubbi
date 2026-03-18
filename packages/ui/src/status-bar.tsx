@@ -2,9 +2,8 @@
  * status-bar.tsx — Bottom bar with context-sensitive keybinding hints + notifications
  */
 
-import { For, Show, Switch, Match } from "solid-js"
-
 import { state } from "@gubbi/core"
+import { For, Show, Switch, Match } from "solid-js"
 
 const C = {
 	bg: "#0d1117",
@@ -196,6 +195,4 @@ export function StatusBar() {
 
 import { VIEWS } from "@gubbi/core"
 
-const VIEWS_DISPLAY: Record<string, string> = Object.fromEntries(
-	VIEWS.map((v) => [v.id, v.label]),
-)
+const VIEWS_DISPLAY: Record<string, string> = Object.fromEntries(VIEWS.map((v) => [v.id, v.label]))

@@ -2,14 +2,21 @@
  * stash.tsx — Stash management: list, preview, apply/pop/drop
  */
 
-import { useKeyboard } from "@opentui/solid"
-import { createSignal, For, Show, onMount } from "solid-js"
-
+import { state, showToast } from "@gubbi/core"
+import {
+	getStashList,
+	stash,
+	stashApply,
+	stashPop,
+	stashDrop,
+	getStashDiff,
+	gitService,
+} from "@gubbi/git"
+import type { StashEntry } from "@gubbi/git"
 import { ConfirmDialog, InputDialog, SelectDialog } from "@gubbi/ui"
 import { DiffViewer } from "@gubbi/ui"
-import { getStashList, stash, stashApply, stashPop, stashDrop, getStashDiff, gitService } from "@gubbi/git"
-import type { StashEntry } from "@gubbi/git"
-import { state, showToast } from "@gubbi/core"
+import { useKeyboard } from "@opentui/solid"
+import { createSignal, For, Show, onMount } from "solid-js"
 
 const C = {
 	border: "#30363d",

@@ -17,9 +17,9 @@ await Bun.$`rm -f ${localBinPath}`.quiet()
 
 // Create new symlink
 try {
-  await Bun.$`ln -s ${targetPath} ${localBinPath}`.quiet()
-  console.log(`Symlinked: ${localBinPath} -> ${targetPath}`)
+	await Bun.$`ln -s ${targetPath} ${localBinPath}`.quiet()
+	console.log(`Symlinked: ${localBinPath} -> ${targetPath}`)
 } catch (error) {
-  console.error("Failed to create symlink:", error)
-  process.exit(1)
+	console.error("Failed to create symlink:", error)
+	process.exit(1)
 }

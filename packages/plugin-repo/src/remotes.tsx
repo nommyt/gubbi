@@ -2,10 +2,7 @@
  * remotes.tsx — Remote management and worktrees
  */
 
-import { useKeyboard } from "@opentui/solid"
-import { createSignal, For, Show, onMount } from "solid-js"
-
-import { InputDialog, ConfirmDialog } from "@gubbi/ui"
+import { state, showToast } from "@gubbi/core"
 import {
 	getRemotes,
 	fetch,
@@ -16,7 +13,9 @@ import {
 	type WorktreeEntry,
 } from "@gubbi/git"
 import type { RemoteEntry } from "@gubbi/git"
-import { state, showToast } from "@gubbi/core"
+import { InputDialog, ConfirmDialog } from "@gubbi/ui"
+import { useKeyboard } from "@opentui/solid"
+import { createSignal, For, Show, onMount } from "solid-js"
 
 const C = {
 	border: "#30363d",
@@ -41,7 +40,10 @@ export function RemotesView() {
 	async function loadData() {
 		setLoading(true)
 		try {
-			const [r, w] = await Promise.all([getRemotes(state.git.repoRoot), getWorktrees(state.git.repoRoot)])
+			const [r, w] = await Promise.all([
+				getRemotes(state.git.repoRoot),
+				getWorktrees(state.git.repoRoot),
+			])
 			setRemotes(r)
 			setWorktrees(w)
 		} catch (err) {

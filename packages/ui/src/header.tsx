@@ -2,9 +2,8 @@
  * header.tsx — Top bar: repo name, branch, sync status, file counts, and tab navigation
  */
 
-import { Show, For } from "solid-js"
-
 import { state, setView, VIEWS } from "@gubbi/core"
+import { Show, For } from "solid-js"
 
 // Colors
 const C = {
@@ -145,19 +144,19 @@ export function Header() {
 				{/* Spacer */}
 				<box flexGrow={1} />
 
-			{/* GitHub auth indicator */}
-			<Show when={!state.github.isAuthenticated && state.git.isRepo}>
-				<text fg={C.dim}>gh: not authenticated</text>
-				<text fg={C.dim}>│</text>
-			</Show>
+				{/* GitHub auth indicator */}
+				<Show when={!state.github.isAuthenticated && state.git.isRepo}>
+					<text fg={C.dim}>gh: not authenticated</text>
+					<text fg={C.dim}>│</text>
+				</Show>
 
-			{/* Unread notifications badge */}
-			<Show when={state.github.unreadNotificationCount > 0}>
-				<text>
-					<span style={{ fg: C.modified }}>🔔 {state.github.unreadNotificationCount}</span>
-				</text>
-				<text fg={C.dim}>│</text>
-			</Show>
+				{/* Unread notifications badge */}
+				<Show when={state.github.unreadNotificationCount > 0}>
+					<text>
+						<span style={{ fg: C.modified }}>🔔 {state.github.unreadNotificationCount}</span>
+					</text>
+					<text fg={C.dim}>│</text>
+				</Show>
 
 				{/* Branding */}
 				<text>
@@ -169,18 +168,21 @@ export function Header() {
 			{/* Tab row: navigation tabs */}
 			<box flexDirection="row" height={1} paddingLeft={1} gap={0}>
 				<For each={VIEWS}>
-				{(view) => {
-					const isActive = () => state.ui.currentView === view.id
-					const badge = () => {
-						if (view.id === "notifications")
-							return state.github.unreadNotificationCount > 0 ? state.github.unreadNotificationCount : 0
-						if (view.id === "status") return state.git.status.length
-						if (view.id === "prs") return state.github.prs.filter((p) => p.state === "OPEN").length
-						return 0
-					}
+					{(view) => {
+						const isActive = () => state.ui.currentView === view.id
+						const badge = () => {
+							if (view.id === "notifications")
+								return state.github.unreadNotificationCount > 0
+									? state.github.unreadNotificationCount
+									: 0
+							if (view.id === "status") return state.git.status.length
+							if (view.id === "prs")
+								return state.github.prs.filter((p) => p.state === "OPEN").length
+							return 0
+						}
 
-					// Short labels for tabs
-					const shortLabel: Record<string, string> = {
+						// Short labels for tabs
+						const shortLabel: Record<string, string> = {
 							smartlog: "smartlog",
 							status: "status",
 							log: "log",

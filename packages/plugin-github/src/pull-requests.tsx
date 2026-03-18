@@ -2,14 +2,22 @@
  * pull-requests.tsx — GitHub PRs: list, detail, create, review, merge, diff
  */
 
-import { useKeyboard } from "@opentui/solid"
-import { createSignal, For, Show, onMount } from "solid-js"
-
+import { state, setState, showToast } from "@gubbi/core"
+import { exec } from "@gubbi/git"
+import {
+	listPRs,
+	getPRDiff,
+	mergePR,
+	reviewPR,
+	closePR,
+	checkoutPR,
+	githubService,
+	type PullRequest,
+} from "@gubbi/github"
 import { SelectDialog, InputDialog, ConfirmDialog } from "@gubbi/ui"
 import { DiffViewer } from "@gubbi/ui"
-import { listPRs, getPRDiff, mergePR, reviewPR, closePR, checkoutPR, githubService, type PullRequest } from "@gubbi/github"
-import { exec } from "@gubbi/git"
-import { state, setState, showToast } from "@gubbi/core"
+import { useKeyboard } from "@opentui/solid"
+import { createSignal, For, Show, onMount } from "solid-js"
 
 const C = {
 	border: "#30363d",

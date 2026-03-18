@@ -2,17 +2,16 @@
  * notifications.tsx — GitHub notifications: triage, filter, mark read, batch ops
  */
 
-import { useKeyboard } from "@opentui/solid"
-import { createSignal, For, Show, onMount } from "solid-js"
-
+import { state, showToast } from "@gubbi/core"
+import { exec } from "@gubbi/git"
 import {
 	listNotifications,
 	markNotificationRead,
 	markAllNotificationsRead,
 	type Notification,
 } from "@gubbi/github"
-import { exec } from "@gubbi/git"
-import { state, showToast } from "@gubbi/core"
+import { useKeyboard } from "@opentui/solid"
+import { createSignal, For, Show, onMount } from "solid-js"
 
 const C = {
 	border: "#30363d",

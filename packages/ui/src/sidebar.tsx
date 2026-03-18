@@ -2,9 +2,8 @@
  * sidebar.tsx — Left navigation panel with view list
  */
 
-import { For, Show } from "solid-js"
-
 import { state, setView, setFocus, VIEWS } from "@gubbi/core"
+import { For, Show } from "solid-js"
 
 const C = {
 	bg: "#0d1117",
@@ -50,7 +49,9 @@ export function Sidebar(props: SidebarProps) {
 					const isActive = () => state.ui.currentView === view.id
 					const badge = () => {
 						if (view.id === "notifications")
-							return state.github.unreadNotificationCount > 0 ? state.github.unreadNotificationCount : 0
+							return state.github.unreadNotificationCount > 0
+								? state.github.unreadNotificationCount
+								: 0
 						if (view.id === "status") return state.git.status?.length ?? 0
 						if (view.id === "prs") return state.github.prs?.filter((p) => p.state === "OPEN").length
 						return 0

@@ -3,11 +3,7 @@
  * Visualize, create, navigate, sync, and submit stacks of dependent branches.
  */
 
-import { useKeyboard } from "@opentui/solid"
-import { createSignal, For, Show, onMount } from "solid-js"
-
-import { InputDialog, ConfirmDialog, SelectDialog } from "@gubbi/ui"
-import { DiffViewer } from "@gubbi/ui"
+import { state, showToast } from "@gubbi/core"
 import { getDiffBetween, gitService } from "@gubbi/git"
 import {
 	getStacks,
@@ -21,7 +17,10 @@ import {
 	type Stack,
 	type StackBranch,
 } from "@gubbi/git"
-import { state, showToast } from "@gubbi/core"
+import { InputDialog, ConfirmDialog, SelectDialog } from "@gubbi/ui"
+import { DiffViewer } from "@gubbi/ui"
+import { useKeyboard } from "@opentui/solid"
+import { createSignal, For, Show, onMount } from "solid-js"
 
 const C = {
 	border: "#30363d",
@@ -264,12 +263,12 @@ export function StacksView() {
 												const branchIdx = stack.branches.indexOf(branch)
 												const isSelected = () =>
 													selectedStack() === si() && selectedBranch() === branchIdx
-	const isCurrent = () => branch.name === state.git.currentBranch
+												const isCurrent = () => branch.name === state.git.currentBranch
 
-											// Find linked PR
-											const pr = () => state.github.prs.find((p) => p.headRefName === branch.name)
-											// CI status not available on GitHubPR (no checks field)
-											const ci = () => null
+												// Find linked PR
+												const pr = () => state.github.prs.find((p) => p.headRefName === branch.name)
+												// CI status not available on GitHubPR (no checks field)
+												const ci = () => null
 
 												return (
 													<box

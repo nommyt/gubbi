@@ -3,14 +3,13 @@
  * Shows only your work: unpushed commits, branches you authored, with inline GitHub data.
  */
 
-import { useKeyboard } from "@opentui/solid"
-import { createSignal, For, Show, onMount } from "solid-js"
-
-import { DiffViewer } from "@gubbi/ui"
+import { state, showToast } from "@gubbi/core"
 import { getLog, getGraphLog } from "@gubbi/git"
 import type { LogEntry } from "@gubbi/git"
 import { exec } from "@gubbi/git"
-import { state, showToast } from "@gubbi/core"
+import { DiffViewer } from "@gubbi/ui"
+import { useKeyboard } from "@opentui/solid"
+import { createSignal, For, Show, onMount } from "solid-js"
 
 const C = {
 	border: "#30363d",

@@ -3,9 +3,7 @@
  * Shows a column view of PRs user was tagged in, user's open PRs, assigned issues, and notifications
  */
 
-import { useKeyboard } from "@opentui/solid"
-import { createSignal, For, Show, onMount } from "solid-js"
-
+import { state, setState, showToast } from "@gubbi/core"
 // import { refreshGhData } from "@gubbi/github"
 import {
 	listPRs,
@@ -15,7 +13,8 @@ import {
 	type Issue,
 	type Notification,
 } from "@gubbi/github"
-import { state, setState, showToast } from "@gubbi/core"
+import { useKeyboard } from "@opentui/solid"
+import { createSignal, For, Show, onMount } from "solid-js"
 
 const C = {
 	border: "#30363d",

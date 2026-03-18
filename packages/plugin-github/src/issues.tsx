@@ -2,10 +2,8 @@
  * issues.tsx — GitHub issues: list, detail, create, comment
  */
 
-import { useKeyboard } from "@opentui/solid"
-import { createSignal, For, Show, onMount } from "solid-js"
-
-import { InputDialog, ConfirmDialog } from "@gubbi/ui"
+import { state, showToast } from "@gubbi/core"
+import { exec } from "@gubbi/git"
 import {
 	listIssues,
 	getIssueComments,
@@ -15,8 +13,9 @@ import {
 	type Issue,
 	type IssueComment,
 } from "@gubbi/github"
-import { exec } from "@gubbi/git"
-import { state, showToast } from "@gubbi/core"
+import { InputDialog, ConfirmDialog } from "@gubbi/ui"
+import { useKeyboard } from "@opentui/solid"
+import { createSignal, For, Show, onMount } from "solid-js"
 
 const C = {
 	border: "#30363d",
