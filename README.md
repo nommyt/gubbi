@@ -36,24 +36,25 @@ gubbi
 
 ## Keybindings
 
-| Key | Action |
-|-----|--------|
-| `1-0` | Switch to view by number |
-| `j/k` | Navigate lists |
-| `Enter` | Select/open |
-| `Space` | Stage/unstage |
-| `f` | Toggle fullscreen diff |
-| `S` | Toggle side-by-side diff |
-| `n` | New (branch, stash, PR, issue, etc.) |
-| `u/d` | Navigate up/down stack |
-| `s` | Sync stack (pull trunk + restack) |
-| `p` | Push/submit |
-| `?` | Help |
-| `Ctrl+c` | Quit |
+| Key      | Action                               |
+| -------- | ------------------------------------ |
+| `1-0`    | Switch to view by number             |
+| `j/k`    | Navigate lists                       |
+| `Enter`  | Select/open                          |
+| `Space`  | Stage/unstage                        |
+| `f`      | Toggle fullscreen diff               |
+| `S`      | Toggle side-by-side diff             |
+| `n`      | New (branch, stash, PR, issue, etc.) |
+| `u/d`    | Navigate up/down stack               |
+| `s`      | Sync stack (pull trunk + restack)    |
+| `p`      | Push/submit                          |
+| `?`      | Help                                 |
+| `Ctrl+c` | Quit                                 |
 
 ## Architecture
 
 Built with:
+
 - **Bun** — Fast JavaScript runtime
 - **OpenTUI** — Terminal UI renderer with Yoga layout and Tree-sitter syntax highlighting
 - **SolidJS** — Fine-grained reactivity

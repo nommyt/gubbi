@@ -5,8 +5,8 @@
 import { onCleanup } from "solid-js"
 
 export function useInterval(fn: () => void | Promise<void>, intervalMs: number) {
-  const id = setInterval(() => {
-    void Promise.resolve(fn())
-  }, intervalMs)
-  onCleanup(() => clearInterval(id))
+	const id = setInterval(() => {
+		void Promise.resolve(fn())
+	}, intervalMs)
+	onCleanup(() => clearInterval(id))
 }

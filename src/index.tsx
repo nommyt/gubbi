@@ -5,8 +5,9 @@
  */
 
 import { render } from "@opentui/solid"
+
 import { App } from "./app.tsx"
 
 render(() => <App />, {
-  exitOnCtrlC: false, // We handle Ctrl+C ourselves for cleanup
+	exitOnCtrlC: false, // We handle Ctrl+C ourselves for cleanup
 })

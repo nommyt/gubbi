@@ -3,82 +3,80 @@
  */
 
 export interface ExecResult {
-  stdout: string
-  stderr: string
-  exitCode: number
+	stdout: string
+	stderr: string
+	exitCode: number
 }
 
 export interface ExecOptions {
-  cwd?: string
-  timeout?: number
-  env?: Record<string, string>
-  input?: string
+	cwd?: string
+	timeout?: number
+	env?: Record<string, string>
+	input?: string
 }
 
 export class ShellError extends Error {
-  constructor(
-    public command: string,
-    public exitCode: number,
-    public stderr: string,
-  ) {
-    super(`Command "${command}" failed (exit ${exitCode}): ${stderr.trim()}`)
-    this.name = "ShellError"
-  }
+	constructor(
+		public command: string,
+		public exitCode: number,
+		public stderr: string,
+	) {
+		super(`Command "${command}" failed (exit ${exitCode}): ${stderr.trim()}`)
+		this.name = "ShellError"
+	}
 }
 
 const DEFAULT_TIMEOUT = 30_000
 
 export async function exec(
-  cmd: string,
-  args: string[],
-  opts: ExecOptions = {},
+	cmd: string,
+	args: string[],
+	opts: ExecOptions = {},
 ): Promise<ExecResult> {
-  const { cwd = process.cwd(), timeout = DEFAULT_TIMEOUT, env, input } = opts
+	const { cwd = process.cwd(), timeout = DEFAULT_TIMEOUT, env, input } = opts
 
-  const proc = Bun.spawn([cmd, ...args], {
-    cwd,
-    env: env ? { ...process.env, ...env } : process.env,
-    stdin: input !== undefined ? new TextEncoder().encode(input) : "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  })
+	const proc = Bun.spawn([cmd, ...args], {
+		cwd,
+		env: env ? { ...process.env, ...env } : process.env,
+		stdin: input !== undefined ? new TextEncoder().encode(input) : "ignore",
+		stdout: "pipe",
+		stderr: "pipe",
+	})
 
-  const timer = timeout > 0
-    ? setTimeout(() => proc.kill(), timeout)
-    : null
+	const timer = timeout > 0 ? setTimeout(() => proc.kill(), timeout) : null
 
-  try {
-    const [stdoutBuf, stderrBuf] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-    ])
-    const exitCode = await proc.exited
+	try {
+		const [stdoutBuf, stderrBuf] = await Promise.all([
+			new Response(proc.stdout).text(),
+			new Response(proc.stderr).text(),
+		])
+		const exitCode = await proc.exited
 
-    return { stdout: stdoutBuf, stderr: stderrBuf, exitCode }
-  } finally {
-    if (timer) clearTimeout(timer)
-  }
+		return { stdout: stdoutBuf, stderr: stderrBuf, exitCode }
+	} finally {
+		if (timer) clearTimeout(timer)
+	}
 }
 
 /** Like exec() but throws ShellError on non-zero exit */
 export async function execOrThrow(
-  cmd: string,
-  args: string[],
-  opts: ExecOptions = {},
+	cmd: string,
+	args: string[],
+	opts: ExecOptions = {},
 ): Promise<string> {
-  const result = await exec(cmd, args, opts)
-  if (result.exitCode !== 0) {
-    throw new ShellError(`${cmd} ${args.join(" ")}`, result.exitCode, result.stderr)
-  }
-  return result.stdout
+	const result = await exec(cmd, args, opts)
+	if (result.exitCode !== 0) {
+		throw new ShellError(`${cmd} ${args.join(" ")}`, result.exitCode, result.stderr)
+	}
+	return result.stdout
 }
 
 /** Quick check if a command is available on PATH */
 export async function commandExists(name: string): Promise<boolean> {
-  try {
-    const r = await exec("which", [name], { timeout: 2000 })
-    return r.exitCode === 0
-  } catch {
-    return false
-  }
+	try {
+		const r = await exec("which", [name], { timeout: 2000 })
+		return r.exitCode === 0
+	} catch {
+		return false
+	}
 }
