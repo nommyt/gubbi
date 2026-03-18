@@ -14,6 +14,7 @@
     "dev": "bun --hot src/index.tsx",
     "start": "bun src/index.tsx",
     "build": "bun run build.ts && bun run symlink",
+    "build:npm": "bun run build-npm.ts",
     "symlink": "bun run scripts/symlink.ts",
     "lint": "oxlint .",
     "typecheck": "tsc --noEmit",

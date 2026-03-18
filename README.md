@@ -4,7 +4,7 @@
 
 A terminal-native Git + GitHub client. Full keyboard navigation, live GitHub data, and a dashboard that replaces the GitHub web UI — all in your terminal.
 
-Built on [Bun](https://bun.sh), [SolidJS](https://solidjs.com), and [OpenTUI](https://github.com/nicholasgasior/opentui).
+Built on [Bun](https://bun.sh), [SolidJS](https://solidjs.com), and [OpenTUI](https://opentui.com/).
 
 ---
 
@@ -91,7 +91,7 @@ gubbi/
 **Stack:**
 - [Bun](https://bun.sh) — runtime and package manager
 - [SolidJS](https://solidjs.com) — fine-grained reactivity
-- [OpenTUI](https://github.com/nicholasgasior/opentui) — terminal renderer with Yoga flexbox layout
+- [OpenTUI](https://opentui.com/) — terminal renderer with Yoga flexbox layout
 - [gh CLI](https://cli.github.com) — GitHub API access (no OAuth token needed)
 - [Turborepo](https://turbo.build) — monorepo task runner
 

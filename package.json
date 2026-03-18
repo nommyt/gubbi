@@ -12,6 +12,8 @@
     "build": "turbo run build",
     "build:cli": "turbo run build --filter @gubbi/cli",
     "build:web": "turbo run build --filter @gubbi/web",
+    "build:npm": "bun run app/cli/build-npm.ts",
+    "version:npm": "bun run scripts/version.ts",
     "lint": "turbo run lint",
     "format": "oxfmt .",
     "test": "turbo run test",
