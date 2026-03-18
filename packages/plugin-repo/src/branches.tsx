@@ -14,7 +14,7 @@ import {
 	gitService,
 } from "@gubbi/git"
 import type { BranchEntry } from "@gubbi/git"
-import { InputDialog, SelectDialog, ConfirmDialog } from "@gubbi/ui"
+import { InputDialog, SelectDialog, ConfirmDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 

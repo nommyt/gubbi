@@ -13,8 +13,8 @@ import {
 	gitService,
 } from "@gubbi/git"
 import type { StashEntry } from "@gubbi/git"
-import { ConfirmDialog, InputDialog, SelectDialog } from "@gubbi/ui"
-import { DiffViewer } from "@gubbi/ui"
+import { ConfirmDialog, InputDialog, SelectDialog } from "@gubbi/tui"
+import { DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 

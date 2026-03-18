@@ -7,7 +7,7 @@ import { state, showToast } from "@gubbi/core"
 import { getLog, getGraphLog } from "@gubbi/git"
 import type { LogEntry } from "@gubbi/git"
 import { exec } from "@gubbi/git"
-import { DiffViewer } from "@gubbi/ui"
+import { DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 

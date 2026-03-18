@@ -17,8 +17,8 @@ import {
 	type Stack,
 	type StackBranch,
 } from "@gubbi/git"
-import { InputDialog, ConfirmDialog, SelectDialog } from "@gubbi/ui"
-import { DiffViewer } from "@gubbi/ui"
+import { InputDialog, ConfirmDialog, SelectDialog } from "@gubbi/tui"
+import { DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 

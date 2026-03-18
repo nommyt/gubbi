@@ -2,7 +2,7 @@
  * dashboard.tsx — GitHub dashboard: my PRs, tagged items, repos, notifications
  *
  * Caching strategy:
- *   - Module-level `cache` object persists across component remounts.
+ *   - Module-level `cache`  object persists across component remounts.
  *   - `loading` is only true on the very first render when there is no cached data.
  *   - Manual refresh (r) and background polling both update data silently — the
  *     cached values stay visible while the fetch is in-flight.

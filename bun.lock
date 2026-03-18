@@ -27,7 +27,7 @@
         "@gubbi/plugin-github": "workspace:*",
         "@gubbi/plugin-repo": "workspace:*",
         "@gubbi/plugin-stacks": "workspace:*",
-        "@gubbi/ui": "workspace:*",
+        "@gubbi/tui": "workspace:*",
         "@opentui/core": "^0.1.88",
         "@opentui/solid": "^0.1.88",
         "@tanstack/solid-hotkeys": "^0.4.1",
@@ -101,7 +101,7 @@
         "@gubbi/core": "workspace:*",
         "@gubbi/git": "workspace:*",
         "@gubbi/github": "workspace:*",
-        "@gubbi/ui": "workspace:*",
+        "@gubbi/tui": "workspace:*",
         "@opentui/core": "^0.1.88",
         "@opentui/solid": "^0.1.88",
         "@tanstack/solid-hotkeys": "^0.4.1",
@@ -121,7 +121,7 @@
         "@gubbi/core": "workspace:*",
         "@gubbi/git": "workspace:*",
         "@gubbi/github": "workspace:*",
-        "@gubbi/ui": "workspace:*",
+        "@gubbi/tui": "workspace:*",
         "@opentui/core": "^0.1.88",
         "@opentui/solid": "^0.1.88",
         "@tanstack/solid-hotkeys": "^0.4.1",
@@ -140,7 +140,7 @@
       "dependencies": {
         "@gubbi/core": "workspace:*",
         "@gubbi/git": "workspace:*",
-        "@gubbi/ui": "workspace:*",
+        "@gubbi/tui": "workspace:*",
         "@opentui/core": "^0.1.88",
         "@opentui/solid": "^0.1.88",
         "@tanstack/solid-hotkeys": "^0.4.1",
@@ -159,7 +159,7 @@
       "dependencies": {
         "@gubbi/core": "workspace:*",
         "@gubbi/git": "workspace:*",
-        "@gubbi/ui": "workspace:*",
+        "@gubbi/tui": "workspace:*",
         "@opentui/core": "^0.1.88",
         "@opentui/solid": "^0.1.88",
         "@tanstack/solid-hotkeys": "^0.4.1",
@@ -172,8 +172,8 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/ui": {
-      "name": "@gubbi/ui",
+    "packages/tui": {
+      "name": "@gubbi/tui",
       "version": "0.1.0",
       "dependencies": {
         "@gubbi/core": "workspace:*",
@@ -189,9 +189,6 @@
         "typescript": "^5.9.3",
       },
     },
-  },
-  "patchedDependencies": {
-    "@opentui/solid@0.1.88": "patches/@opentui%2Fsolid@0.1.88.patch",
   },
   "packages": {
     "@ampproject/remapping": ["@ampproject/remapping@2.3.0", "", { "dependencies": { "@jridgewell/gen-mapping": "^0.3.5", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw=="],
@@ -272,7 +269,7 @@
 
     "@gubbi/plugin-stacks": ["@gubbi/plugin-stacks@workspace:packages/plugin-stacks"],
 
-    "@gubbi/ui": ["@gubbi/ui@workspace:packages/ui"],
+    "@gubbi/tui": ["@gubbi/tui@workspace:packages/tui"],
 
     "@gubbi/web": ["@gubbi/web@workspace:app/web"],
 

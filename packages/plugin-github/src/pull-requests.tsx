@@ -14,8 +14,8 @@ import {
 	githubService,
 	type PullRequest,
 } from "@gubbi/github"
-import { SelectDialog, InputDialog, ConfirmDialog } from "@gubbi/ui"
-import { DiffViewer } from "@gubbi/ui"
+import { SelectDialog, InputDialog, ConfirmDialog } from "@gubbi/tui"
+import { DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 

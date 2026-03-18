@@ -13,7 +13,7 @@ import {
 	type Issue,
 	type IssueComment,
 } from "@gubbi/github"
-import { InputDialog, ConfirmDialog } from "@gubbi/ui"
+import { InputDialog, ConfirmDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 

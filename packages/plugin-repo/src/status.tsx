@@ -13,7 +13,7 @@ import {
 	getDiff,
 	gitService,
 } from "@gubbi/git"
-import { ConfirmDialog, InputDialog, DiffViewer } from "@gubbi/ui"
+import { ConfirmDialog, InputDialog, DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, Show, For, onMount } from "solid-js"
 

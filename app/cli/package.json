@@ -23,7 +23,7 @@
     "@gubbi/core": "workspace:*",
     "@gubbi/git": "workspace:*",
     "@gubbi/github": "workspace:*",
-    "@gubbi/ui": "workspace:*",
+    "@gubbi/tui": "workspace:*",
     "@gubbi/plugin-dashboard": "workspace:*",
     "@gubbi/plugin-repo": "workspace:*",
     "@gubbi/plugin-stacks": "workspace:*",

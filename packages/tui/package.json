@@ -1,5 +1,5 @@
 {
-  "name": "@gubbi/ui",
+  "name": "@gubbi/tui",
   "version": "0.1.0",
   "private": true,
   "description": "Shared TUI components for Gubbi",
