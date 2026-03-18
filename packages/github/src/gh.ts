@@ -331,11 +331,17 @@ function mapIssue(raw: Record<string, unknown>): Issue {
 }
 
 export async function listIssues(
-	opts: { state?: "open" | "closed" | "all"; limit?: number; labels?: string[] } = {},
+	opts: {
+		state?: "open" | "closed" | "all"
+		limit?: number
+		labels?: string[]
+		mention?: string
+	} = {},
 ): Promise<Issue[]> {
 	const args = ["issue", "list", "--json", ISSUE_FIELDS, "--limit", String(opts.limit ?? 50)]
 	if (opts.state && opts.state !== "all") args.push("--state", opts.state)
 	if (opts.labels?.length) args.push("--label", opts.labels.join(","))
+	if (opts.mention) args.push("--mention", opts.mention)
 
 	const r = await exec(GH, args)
 	if (r.exitCode !== 0) return []
@@ -591,6 +597,158 @@ export async function markNotificationRead(id: string): Promise<boolean> {
 export async function markAllNotificationsRead(): Promise<boolean> {
 	const r = await exec(GH, ["api", "--method", "PUT", "notifications"])
 	return r.exitCode === 0
+}
+
+// ---------------------------------------------------------------------------
+// User repos list
+// ---------------------------------------------------------------------------
+
+export interface UserRepo {
+	name: string
+	fullName: string
+	pushedAt: string
+	isPrivate: boolean
+	isFork: boolean
+	stargazerCount: number
+	url: string
+	latestCommit: {
+		message: string // first line only
+		author: string
+		date: string
+	} | null
+}
+
+export async function listUserRepos(opts: { limit?: number } = {}): Promise<UserRepo[]> {
+	const limit = opts.limit ?? 30
+	const query = `{
+		viewer {
+			repositories(first: ${limit}, orderBy: {field: PUSHED_AT, direction: DESC}) {
+				nodes {
+					name
+					nameWithOwner
+					pushedAt
+					isPrivate
+					isFork
+					stargazerCount
+					url
+					defaultBranchRef {
+						target {
+							... on Commit {
+								message
+								committedDate
+								author { name }
+							}
+						}
+					}
+				}
+			}
+		}
+	}`
+
+	const r = await exec(GH, ["api", "graphql", "-f", `query=${query}`])
+	if (r.exitCode !== 0) return []
+	try {
+		type GQLRepo = {
+			name: string
+			nameWithOwner: string
+			pushedAt: string
+			isPrivate: boolean
+			isFork: boolean
+			stargazerCount: number
+			url: string
+			defaultBranchRef: {
+				target: { message: string; committedDate: string; author: { name: string } } | null
+			} | null
+		}
+		const parsed = JSON.parse(r.stdout) as {
+			data: { viewer: { repositories: { nodes: GQLRepo[] } } }
+		}
+		const nodes = parsed.data?.viewer?.repositories?.nodes ?? []
+		return nodes.map((raw) => {
+			const target = raw.defaultBranchRef?.target
+			return {
+				name: raw.name,
+				fullName: raw.nameWithOwner,
+				pushedAt: raw.pushedAt,
+				isPrivate: raw.isPrivate,
+				isFork: raw.isFork,
+				stargazerCount: raw.stargazerCount,
+				url: raw.url,
+				latestCommit: target
+					? {
+							// Only the first line of the commit message
+							message: target.message.split("\n")[0] ?? "",
+							author: target.author?.name ?? "",
+							date: target.committedDate,
+						}
+					: null,
+			}
+		})
+	} catch {
+		return []
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Cross-repo PR search (my open PRs across all repos)
+// ---------------------------------------------------------------------------
+
+export interface SearchPR {
+	number: number
+	title: string
+	state: "open" | "closed" | "merged"
+	isDraft: boolean
+	repository: string // "owner/repo"
+	url: string
+	updatedAt: string
+	checks: PRCheck[]
+}
+
+export async function searchMyOpenPRs(opts: { limit?: number } = {}): Promise<SearchPR[]> {
+	const args = [
+		"search",
+		"prs",
+		"--author",
+		"@me",
+		"--state",
+		"open",
+		"--json",
+		"number,title,state,isDraft,repository,url,updatedAt,statusCheckRollup",
+		"--limit",
+		String(opts.limit ?? 50),
+	]
+
+	const r = await exec(GH, args)
+	if (r.exitCode !== 0) return []
+	try {
+		const data = JSON.parse(r.stdout) as Array<Record<string, unknown>>
+		return data.map((raw) => {
+			const repo = raw.repository as Record<string, unknown> | undefined
+			const checks: PRCheck[] = []
+			if (Array.isArray(raw.statusCheckRollup)) {
+				for (const c of raw.statusCheckRollup as Array<Record<string, unknown>>) {
+					checks.push({
+						name: String(c.name ?? c.context ?? ""),
+						status: String(c.status ?? "COMPLETED") as PRCheck["status"],
+						conclusion: (c.conclusion ?? c.state ?? null) as PRCheck["conclusion"],
+						detailsUrl: String(c.detailsUrl ?? c.targetUrl ?? ""),
+					})
+				}
+			}
+			return {
+				number: Number(raw.number ?? 0),
+				title: String(raw.title ?? ""),
+				state: String(raw.state ?? "open") as SearchPR["state"],
+				isDraft: Boolean(raw.isDraft),
+				repository: String(repo?.nameWithOwner ?? repo?.name ?? ""),
+				url: String(raw.url ?? ""),
+				updatedAt: String(raw.updatedAt ?? ""),
+				checks,
+			}
+		})
+	} catch {
+		return []
+	}
 }
 
 // ---------------------------------------------------------------------------

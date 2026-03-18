@@ -6,7 +6,7 @@ import { createPluginContext } from "@gubbi/core"
 import { state, setState, setView, setFocus, viewRegistry } from "@gubbi/core"
 import { createGitService } from "@gubbi/git"
 import { createGitHubService } from "@gubbi/github"
-import { Header, StatusBar, Sidebar, HelpOverlay } from "@gubbi/ui"
+import { Header, StatusBar, HelpOverlay } from "@gubbi/ui"
 import type { ParsedKey } from "@opentui/core"
 import { useRenderer, useKeyboard } from "@opentui/solid"
 import { Switch, Match, Show, onMount } from "solid-js"
@@ -80,11 +80,8 @@ export function App() {
 			{/* Header with repo/branch info */}
 			<Header />
 
-			{/* Main content area with sidebar and view */}
+			{/* Main content area */}
 			<box flexGrow={1} flexDirection="row">
-				{/* Sidebar with view tabs */}
-				<Sidebar focused={state.ui.focusedPanel === "primary"} />
-
 				{/* Active view */}
 				<box flexGrow={1}>
 					<Switch fallback={<text>Loading views...</text>}>

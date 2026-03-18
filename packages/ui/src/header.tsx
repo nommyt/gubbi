@@ -30,6 +30,7 @@ const C = {
 }
 
 const VIEW_ICONS: Record<string, string> = {
+	dashboard: "◈",
 	smartlog: "◈",
 	status: "◉",
 	log: "≡",
@@ -185,6 +186,7 @@ export function Header() {
 
 						// Short labels for tabs
 						const shortLabel: Record<string, string> = {
+							dashboard: "dash",
 							smartlog: "smartlog",
 							status: "status",
 							log: "log",
@@ -210,6 +212,7 @@ export function Header() {
 								border={isActive() ? ["bottom"] : []}
 								borderColor={C.branding}
 							>
+								<text fg={C.dim}>{view.key}</text>
 								<text fg={isActive() ? C.branding : C.dim}>
 									{VIEW_ICONS[view.id]} {shortLabel[view.id]}
 								</text>

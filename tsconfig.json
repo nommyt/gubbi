@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"types": ["bun"],
 		"lib": ["ESNext", "DOM"],
 		"target": "ESNext",
 		"module": "Preserve",
@@ -21,6 +22,6 @@
 
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
-		"noPropertyAccessFromIndexSignature": false
-	}
+		"noPropertyAccessFromIndexSignature": false,
+	},
 }
