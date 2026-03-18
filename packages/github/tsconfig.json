@@ -1,0 +1,10 @@
+{
+  "extends": "@gubbi/config/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@gubbi/github": ["./src/index.ts"]
+    }
+  },
+  "include": ["src/**/*"]
+}

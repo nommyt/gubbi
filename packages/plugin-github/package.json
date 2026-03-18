@@ -1,0 +1,32 @@
+{
+  "name": "@gubbi/plugin-github",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GitHub views for Gubbi (PRs, Issues, Actions, Notifications)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "echo 'No build step needed'",
+    "lint": "oxlint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@gubbi/core": "workspace:*",
+    "@gubbi/github": "workspace:*",
+    "@gubbi/git": "workspace:*",
+    "@gubbi/ui": "workspace:*",
+    "solid-js": "^1.9.11",
+    "@opentui/core": "^0.1.88",
+    "@opentui/solid": "^0.1.88",
+    "@tanstack/solid-hotkeys": "^0.4.1"
+  },
+  "devDependencies": {
+    "@gubbi/config": "workspace:*",
+    "@types/bun": "latest",
+    "oxlint": "^1.56.0",
+    "typescript": "^5.9.3"
+  }
+}

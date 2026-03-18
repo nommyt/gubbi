@@ -1,0 +1,28 @@
+{
+  "name": "@gubbi/git",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Git operations for Gubbi",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./shell": "./src/shell.ts",
+    "./parser": "./src/parser.ts",
+    "./stack": "./src/stack.ts"
+  },
+  "scripts": {
+    "build": "echo 'No build step needed'",
+    "lint": "oxlint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@gubbi/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@gubbi/config": "workspace:*",
+    "@types/bun": "latest",
+    "oxlint": "^1.56.0",
+    "typescript": "^5.9.3"
+  }
+}

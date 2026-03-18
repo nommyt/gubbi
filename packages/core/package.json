@@ -1,0 +1,31 @@
+{
+  "name": "@gubbi/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gubbi plugin API and core types",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./context": "./src/context/index.ts",
+    "./registry": "./src/registry/index.ts",
+    "./state": "./src/state/index.ts"
+  },
+  "scripts": {
+    "build": "echo 'No build step needed'",
+    "lint": "oxlint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "solid-js": "^1.9.11",
+    "@opentui/core": "^0.1.88",
+    "@opentui/solid": "^0.1.88"
+  },
+  "devDependencies": {
+    "@gubbi/config": "workspace:*",
+    "@types/bun": "latest",
+    "oxlint": "^1.56.0",
+    "typescript": "^5.9.3"
+  }
+}

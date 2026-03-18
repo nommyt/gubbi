@@ -1,0 +1,16 @@
+{
+  "name": "@gubbi/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gubbi Web — Web interface for Gubbi (Vite + TanStack Start)",
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'Not implemented yet. Run: cd app/web && npm create vite@latest . -- --template react-ts'",
+    "build": "echo 'Not implemented yet'",
+    "preview": "echo 'Not implemented yet'"
+  },
+  "devDependencies": {
+    "@gubbi/config": "workspace:*",
+    "typescript": "^5.9.3"
+  }
+}

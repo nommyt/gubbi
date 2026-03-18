@@ -4,16 +4,189 @@
   "workspaces": {
     "": {
       "name": "gubbi",
+      "devDependencies": {
+        "@types/bun": "latest",
+        "lefthook": "^2.1.4",
+        "oxfmt": "^0.41.0",
+        "oxlint": "^1.56.0",
+        "turbo": "^2.8.17",
+        "typescript": "^5.9.3",
+      },
+    },
+    "app/cli": {
+      "name": "@gubbi/cli",
+      "version": "0.1.0",
+      "bin": {
+        "gubbi": "./src/index.tsx",
+      },
       "dependencies": {
+        "@gubbi/core": "workspace:*",
+        "@gubbi/git": "workspace:*",
+        "@gubbi/github": "workspace:*",
+        "@gubbi/plugin-dashboard": "workspace:*",
+        "@gubbi/plugin-github": "workspace:*",
+        "@gubbi/plugin-repo": "workspace:*",
+        "@gubbi/plugin-stacks": "workspace:*",
+        "@gubbi/ui": "workspace:*",
         "@opentui/core": "^0.1.88",
         "@opentui/solid": "^0.1.88",
         "@tanstack/solid-hotkeys": "^0.4.1",
         "solid-js": "^1.9.11",
       },
       "devDependencies": {
+        "@gubbi/config": "workspace:*",
         "@types/bun": "latest",
-        "lefthook": "^2.1.4",
-        "oxfmt": "^0.41.0",
+        "oxlint": "^1.56.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "app/web": {
+      "name": "@gubbi/web",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@gubbi/config": "workspace:*",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/config": {
+      "name": "@gubbi/config",
+      "version": "0.1.0",
+    },
+    "packages/core": {
+      "name": "@gubbi/core",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opentui/core": "^0.1.88",
+        "@opentui/solid": "^0.1.88",
+        "@tanstack/hotkeys": "^0.4.1",
+        "@tanstack/solid-hotkeys": "^0.4.1",
+        "solid-js": "^1.9.11",
+      },
+      "devDependencies": {
+        "@gubbi/config": "workspace:*",
+        "@types/bun": "latest",
+        "oxlint": "^1.56.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/git": {
+      "name": "@gubbi/git",
+      "version": "0.1.0",
+      "dependencies": {
+        "@gubbi/core": "workspace:*",
+      },
+      "devDependencies": {
+        "@gubbi/config": "workspace:*",
+        "@types/bun": "latest",
+        "oxlint": "^1.56.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/github": {
+      "name": "@gubbi/github",
+      "version": "0.1.0",
+      "dependencies": {
+        "@gubbi/core": "workspace:*",
+        "@gubbi/git": "workspace:*",
+      },
+      "devDependencies": {
+        "@gubbi/config": "workspace:*",
+        "@types/bun": "latest",
+        "oxlint": "^1.56.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/plugin-dashboard": {
+      "name": "@gubbi/plugin-dashboard",
+      "version": "0.1.0",
+      "dependencies": {
+        "@gubbi/core": "workspace:*",
+        "@gubbi/git": "workspace:*",
+        "@gubbi/github": "workspace:*",
+        "@gubbi/ui": "workspace:*",
+        "@opentui/core": "^0.1.88",
+        "@opentui/solid": "^0.1.88",
+        "@tanstack/solid-hotkeys": "^0.4.1",
+        "solid-js": "^1.9.11",
+      },
+      "devDependencies": {
+        "@gubbi/config": "workspace:*",
+        "@types/bun": "latest",
+        "oxlint": "^1.56.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/plugin-github": {
+      "name": "@gubbi/plugin-github",
+      "version": "0.1.0",
+      "dependencies": {
+        "@gubbi/core": "workspace:*",
+        "@gubbi/git": "workspace:*",
+        "@gubbi/github": "workspace:*",
+        "@gubbi/ui": "workspace:*",
+        "@opentui/core": "^0.1.88",
+        "@opentui/solid": "^0.1.88",
+        "@tanstack/solid-hotkeys": "^0.4.1",
+        "solid-js": "^1.9.11",
+      },
+      "devDependencies": {
+        "@gubbi/config": "workspace:*",
+        "@types/bun": "latest",
+        "oxlint": "^1.56.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/plugin-repo": {
+      "name": "@gubbi/plugin-repo",
+      "version": "0.1.0",
+      "dependencies": {
+        "@gubbi/core": "workspace:*",
+        "@gubbi/git": "workspace:*",
+        "@gubbi/ui": "workspace:*",
+        "@opentui/core": "^0.1.88",
+        "@opentui/solid": "^0.1.88",
+        "@tanstack/solid-hotkeys": "^0.4.1",
+        "solid-js": "^1.9.11",
+      },
+      "devDependencies": {
+        "@gubbi/config": "workspace:*",
+        "@types/bun": "latest",
+        "oxlint": "^1.56.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/plugin-stacks": {
+      "name": "@gubbi/plugin-stacks",
+      "version": "0.1.0",
+      "dependencies": {
+        "@gubbi/core": "workspace:*",
+        "@gubbi/git": "workspace:*",
+        "@gubbi/ui": "workspace:*",
+        "@opentui/core": "^0.1.88",
+        "@opentui/solid": "^0.1.88",
+        "@tanstack/solid-hotkeys": "^0.4.1",
+        "solid-js": "^1.9.11",
+      },
+      "devDependencies": {
+        "@gubbi/config": "workspace:*",
+        "@types/bun": "latest",
+        "oxlint": "^1.56.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/ui": {
+      "name": "@gubbi/ui",
+      "version": "0.1.0",
+      "dependencies": {
+        "@gubbi/core": "workspace:*",
+        "@gubbi/github": "workspace:*",
+        "@opentui/core": "^0.1.88",
+        "@opentui/solid": "^0.1.88",
+        "solid-js": "^1.9.11",
+      },
+      "devDependencies": {
+        "@gubbi/config": "workspace:*",
+        "@types/bun": "latest",
         "oxlint": "^1.56.0",
         "typescript": "^5.9.3",
       },
@@ -79,6 +252,28 @@
     "@babel/types": ["@babel/types@7.29.0", "", { "dependencies": { "@babel/helper-string-parser": "^7.27.1", "@babel/helper-validator-identifier": "^7.28.5" } }, "sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A=="],
 
     "@dimforge/rapier2d-simd-compat": ["@dimforge/rapier2d-simd-compat@0.17.3", "", {}, "sha512-bijvwWz6NHsNj5e5i1vtd3dU2pDhthSaTUZSh14DUGGKJfw8eMnlWZsxwHBxB/a3AXVNDjL9abuHw1k9FGR+jg=="],
+
+    "@gubbi/cli": ["@gubbi/cli@workspace:app/cli"],
+
+    "@gubbi/config": ["@gubbi/config@workspace:packages/config"],
+
+    "@gubbi/core": ["@gubbi/core@workspace:packages/core"],
+
+    "@gubbi/git": ["@gubbi/git@workspace:packages/git"],
+
+    "@gubbi/github": ["@gubbi/github@workspace:packages/github"],
+
+    "@gubbi/plugin-dashboard": ["@gubbi/plugin-dashboard@workspace:packages/plugin-dashboard"],
+
+    "@gubbi/plugin-github": ["@gubbi/plugin-github@workspace:packages/plugin-github"],
+
+    "@gubbi/plugin-repo": ["@gubbi/plugin-repo@workspace:packages/plugin-repo"],
+
+    "@gubbi/plugin-stacks": ["@gubbi/plugin-stacks@workspace:packages/plugin-stacks"],
+
+    "@gubbi/ui": ["@gubbi/ui@workspace:packages/ui"],
+
+    "@gubbi/web": ["@gubbi/web@workspace:app/web"],
 
     "@jimp/core": ["@jimp/core@1.6.0", "", { "dependencies": { "@jimp/file-ops": "1.6.0", "@jimp/types": "1.6.0", "@jimp/utils": "1.6.0", "await-to-js": "^3.0.0", "exif-parser": "^0.1.12", "file-type": "^16.0.0", "mime": "3" } }, "sha512-EQQlKU3s9QfdJqiSrZWNTxBs3rKXgO2W+GxNXDtwchF3a4IqxDheFX1ti+Env9hdJXDiYLp2jTRjlxhPthsk8w=="],
 
@@ -469,6 +664,20 @@
     "tinypool": ["tinypool@2.1.0", "", {}, "sha512-Pugqs6M0m7Lv1I7FtxN4aoyToKg1C4tu+/381vH35y8oENM/Ai7f7C4StcoK4/+BSw9ebcS8jRiVrORFKCALLw=="],
 
     "token-types": ["token-types@4.2.1", "", { "dependencies": { "@tokenizer/token": "^0.3.0", "ieee754": "^1.2.1" } }, "sha512-6udB24Q737UD/SDsKAHI9FCRP7Bqc9D/MQUV02ORQg5iskjtLJlZJNdN4kKtcdtwCeWIwIHDGaUsTsCCAa8sFQ=="],
+
+    "turbo": ["turbo@2.8.17", "", { "optionalDependencies": { "turbo-darwin-64": "2.8.17", "turbo-darwin-arm64": "2.8.17", "turbo-linux-64": "2.8.17", "turbo-linux-arm64": "2.8.17", "turbo-windows-64": "2.8.17", "turbo-windows-arm64": "2.8.17" }, "bin": { "turbo": "bin/turbo" } }, "sha512-YwPsNSqU2f/RXU/+Kcb7cPkPZARxom4+me7LKEdN5jsvy2tpfze3zDZ4EiGrJnvOm9Avu9rK0aaYsP7qZ3iz7A=="],
+
+    "turbo-darwin-64": ["turbo-darwin-64@2.8.17", "", { "os": "darwin", "cpu": "x64" }, "sha512-ZFkv2hv7zHpAPEXBF6ouRRXshllOavYc+jjcrYyVHvxVTTwJWsBZwJ/gpPzmOKGvkSjsEyDO5V6aqqtZzwVF+Q=="],
+
+    "turbo-darwin-arm64": ["turbo-darwin-arm64@2.8.17", "", { "os": "darwin", "cpu": "arm64" }, "sha512-5DXqhQUt24ycEryXDfMNKEkW5TBHs+QmU23a2qxXwwFDaJsWcPo2obEhBxxdEPOv7qmotjad+09RGeWCcJ9JDw=="],
+
+    "turbo-linux-64": ["turbo-linux-64@2.8.17", "", { "os": "linux", "cpu": "x64" }, "sha512-KLUbz6w7F73D/Ihh51hVagrKR0/CTsPEbRkvXLXvoND014XJ4BCrQUqSxlQ4/hu+nqp1v5WlM85/h3ldeyujuA=="],
+
+    "turbo-linux-arm64": ["turbo-linux-arm64@2.8.17", "", { "os": "linux", "cpu": "arm64" }, "sha512-pJK67XcNJH40lTAjFu7s/rUlobgVXyB3A3lDoq+/JccB3hf+SysmkpR4Itlc93s8LEaFAI4mamhFuTV17Z6wOg=="],
+
+    "turbo-windows-64": ["turbo-windows-64@2.8.17", "", { "os": "win32", "cpu": "x64" }, "sha512-EijeQ6zszDMmGZLP2vT2RXTs/GVi9rM0zv2/G4rNu2SSRSGFapgZdxgW4b5zUYLVaSkzmkpWlGfPfj76SW9yUg=="],
+
+    "turbo-windows-arm64": ["turbo-windows-arm64@2.8.17", "", { "os": "win32", "cpu": "arm64" }, "sha512-crpfeMPkfECd4V1PQ/hMoiyVcOy04+bWedu/if89S15WhOalHZ2BYUi6DOJhZrszY+mTT99OwpOsj4wNfb/GHQ=="],
 
     "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 

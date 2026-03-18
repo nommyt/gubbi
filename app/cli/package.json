@@ -1,0 +1,42 @@
+{
+  "name": "@gubbi/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gubbi CLI — Terminal-native Git + GitHub client",
+  "type": "module",
+  "bin": {
+    "gubbi": "./src/index.tsx"
+  },
+  "exports": {
+    ".": "./src/index.tsx"
+  },
+  "scripts": {
+    "dev": "bun --hot src/index.tsx",
+    "start": "bun src/index.tsx",
+    "build": "bun run build.ts && bun run symlink",
+    "symlink": "bun run scripts/symlink.ts",
+    "lint": "oxlint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@gubbi/core": "workspace:*",
+    "@gubbi/git": "workspace:*",
+    "@gubbi/github": "workspace:*",
+    "@gubbi/ui": "workspace:*",
+    "@gubbi/plugin-dashboard": "workspace:*",
+    "@gubbi/plugin-repo": "workspace:*",
+    "@gubbi/plugin-stacks": "workspace:*",
+    "@gubbi/plugin-github": "workspace:*",
+    "solid-js": "^1.9.11",
+    "@opentui/core": "^0.1.88",
+    "@opentui/solid": "^0.1.88",
+    "@tanstack/solid-hotkeys": "^0.4.1"
+  },
+  "devDependencies": {
+    "@gubbi/config": "workspace:*",
+    "@types/bun": "latest",
+    "oxlint": "^1.56.0",
+    "typescript": "^5.9.3"
+  }
+}
