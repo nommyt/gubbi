@@ -38,38 +38,38 @@ alias gubbi="bun run /path/to/gubbi/app/cli/src/index.tsx"
 
 ## Views
 
-| Key | View | Description |
-|-----|------|-------------|
-| `d` | **dash** | Live GitHub dashboard — your PRs, tagged items, repos, notifications |
-| `1` | **smartlog** | Sapling-inspired commit graph with inline PR and CI status |
-| `2` | **status** | Git staging area with diff preview |
-| `3` | **log** | Commit log |
-| `4` | **branches** | Branch list — checkout, create, delete, merge, rebase, push |
-| `5` | **stacks** | Stacked diff workflow (Graphite-equivalent) |
-| `6` | **stash** | Stash list with preview |
-| `7` | **PRs** | Pull requests — view, review, merge, comment |
-| `8` | **issues** | Issues — browse, filter, create |
-| `9` | **actions** | GitHub Actions workflow runs |
-| `0` | **notifs** | Notifications — triage, mark read, batch ops |
+| Key | View         | Description                                                          |
+| --- | ------------ | -------------------------------------------------------------------- |
+| `d` | **dash**     | Live GitHub dashboard — your PRs, tagged items, repos, notifications |
+| `1` | **smartlog** | Sapling-inspired commit graph with inline PR and CI status           |
+| `2` | **status**   | Git staging area with diff preview                                   |
+| `3` | **log**      | Commit log                                                           |
+| `4` | **branches** | Branch list — checkout, create, delete, merge, rebase, push          |
+| `5` | **stacks**   | Stacked diff workflow (Graphite-equivalent)                          |
+| `6` | **stash**    | Stash list with preview                                              |
+| `7` | **PRs**      | Pull requests — view, review, merge, comment                         |
+| `8` | **issues**   | Issues — browse, filter, create                                      |
+| `9` | **actions**  | GitHub Actions workflow runs                                         |
+| `0` | **notifs**   | Notifications — triage, mark read, batch ops                         |
 
 ## Keybindings
 
-| Key | Action |
-|-----|--------|
-| `d`, `1`–`0` | Switch view |
-| `h/l` or `←/→` | Navigate columns (dashboard) |
-| `j/k` or `↑/↓` | Navigate lists |
-| `Enter` | Open / select |
-| `Space` | Stage / unstage |
-| `r` | Refresh current view |
-| `f` | Toggle fullscreen diff |
-| `S` | Toggle side-by-side diff |
-| `n` | New (branch, stash, PR, issue…) |
-| `u/d` | Navigate up/down stack |
-| `s` | Sync stack (pull trunk + restack) |
-| `p` | Push / submit |
-| `?` | Help overlay |
-| `Ctrl+c` | Quit |
+| Key            | Action                            |
+| -------------- | --------------------------------- |
+| `d`, `1`–`0`   | Switch view                       |
+| `h/l` or `←/→` | Navigate columns (dashboard)      |
+| `j/k` or `↑/↓` | Navigate lists                    |
+| `Enter`        | Open / select                     |
+| `Space`        | Stage / unstage                   |
+| `r`            | Refresh current view              |
+| `f`            | Toggle fullscreen diff            |
+| `S`            | Toggle side-by-side diff          |
+| `n`            | New (branch, stash, PR, issue…)   |
+| `u/d`          | Navigate up/down stack            |
+| `s`            | Sync stack (pull trunk + restack) |
+| `p`            | Push / submit                     |
+| `?`            | Help overlay                      |
+| `Ctrl+c`       | Quit                              |
 
 ## Architecture
 
@@ -89,6 +89,7 @@ gubbi/
 ```
 
 **Stack:**
+
 - [Bun](https://bun.sh) — runtime and package manager
 - [SolidJS](https://solidjs.com) — fine-grained reactivity
 - [OpenTUI](https://opentui.com/) — terminal renderer with Yoga flexbox layout
@@ -98,6 +99,7 @@ gubbi/
 ## Roadmap
 
 ### Dashboard
+
 - [x] My open PRs across all repos (cross-repo search)
 - [x] Tagged PRs and issues (review requested + @mentions)
 - [x] My repos sorted by latest activity with latest commit
@@ -108,6 +110,7 @@ gubbi/
 - [ ] Notification mark-as-read from dashboard
 
 ### Git
+
 - [x] Status with diff preview
 - [x] Stage / unstage files
 - [x] Commit log with graph
@@ -118,6 +121,7 @@ gubbi/
 - [ ] Conflict resolution UI
 
 ### GitHub
+
 - [x] PR list, detail, diff
 - [x] PR review (approve, request changes, comment)
 - [x] PR merge
@@ -130,12 +134,14 @@ gubbi/
 - [ ] PR review thread reply
 
 ### Stacks
+
 - [x] Stack visualization
 - [x] Create, sync, submit
 - [ ] Absorb, fold, split
 - [ ] Conflict resolution during sync
 
 ### General
+
 - [x] Plugin architecture
 - [x] Vim-style keyboard navigation
 - [x] Help overlay
@@ -144,6 +150,10 @@ gubbi/
 - [ ] Config file (`~/.config/gubbi/config.toml`)
 - [ ] Mouse support (partial)
 - [ ] Custom keybinding remapping
+
+## Inspirations
+
+- [Better Hub](https://github.com/better-auth/better-hub) by the Better Auth team — inspiration for the UI layouts
 
 ## Contributing
 
