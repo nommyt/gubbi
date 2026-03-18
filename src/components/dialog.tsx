@@ -298,7 +298,7 @@ export function HelpOverlay(props: HelpOverlayProps) {
       padding={1}
     >
       <text fg={C.title} paddingBottom={1}>
-        <span style={{ fg: C.key }}>gub</span> — keyboard shortcuts
+        <span style={{ fg: C.key }}>gubbi</span> — keyboard shortcuts
       </text>
       <scrollbox flexGrow={1}>
         <For each={HELP_SECTIONS}>

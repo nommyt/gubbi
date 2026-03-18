@@ -3,10 +3,10 @@
  *
  * Layout:
  * ┌─────────────────────────────────────────────┐
- * │ Header                                       │
- * ├────────┬────────────────────────────────────┤
- * │Sidebar │ Active View                         │
- * ├────────┴────────────────────────────────────┤
+ * │ Header (tabs navigation)                    │
+ * ├─────────────────────────────────────────────┤
+ * │ Active View                                  │
+ * ├─────────────────────────────────────────────┤
  * │ Status Bar                                   │
  * └─────────────────────────────────────────────┘
  */
@@ -18,7 +18,6 @@ import { useGitInit, useGitAutoRefresh, refreshAll } from "./hooks/use-git.ts"
 import { useGhInit, useGhAutoRefresh } from "./hooks/use-gh.ts"
 
 import { Header } from "./components/header.tsx"
-import { Sidebar } from "./components/sidebar.tsx"
 import { StatusBar } from "./components/status-bar.tsx"
 import { HelpOverlay } from "./components/dialog.tsx"
 
@@ -79,18 +78,17 @@ export function App() {
       return
     }
 
-    // Tab to cycle panel focus
+    // Tab to cycle panel focus (primary <-> detail)
     if (key.name === "tab" && !key.ctrl) {
       key.preventDefault()
       setState("focusedPanel", p => {
-        if (p === "sidebar") return "primary"
         if (p === "primary") return "detail"
-        return "sidebar"
+        return "primary"
       })
       return
     }
 
-    // Sidebar focus: h goes to sidebar
+    // Close help overlay
     if (key.name === "escape" || key.name === "q") {
       if (state.helpVisible) {
         setState("helpVisible", false)
@@ -101,25 +99,18 @@ export function App() {
 
   return (
     <box flexDirection="column" height="100%">
-      {/* Header */}
       <Header />
 
-      {/* Main area: sidebar + content */}
-      <box flexGrow={1} flexDirection="row">
-        {/* Sidebar */}
-        <Sidebar focused={state.focusedPanel === "sidebar"} />
+      <box flexGrow={1}>
+        <Show when={!state.isGitRepo}>
+          <box flexGrow={1} alignItems="center" justifyContent="center" flexDirection="column" gap={1}>
+            <text fg="#58a6ff">⬡ gubbi</text>
+            <text fg="#8b949e">Not inside a git repository</text>
+            <text fg="#484f58">Navigate to a git repo and run gubbi</text>
+          </box>
+        </Show>
 
-        {/* Active view */}
-        <box flexGrow={1}>
-          <Show when={!state.isGitRepo}>
-            <box flexGrow={1} alignItems="center" justifyContent="center" flexDirection="column" gap={1}>
-              <text fg="#58a6ff">⬡ gub</text>
-              <text fg="#8b949e">Not inside a git repository</text>
-              <text fg="#484f58">Navigate to a git repo and run gub</text>
-            </box>
-          </Show>
-
-          <Show when={state.isGitRepo}>
+        <Show when={state.isGitRepo}>
             <Switch>
               <Match when={state.currentView === "smartlog"}>
                 <SmartlogView />
@@ -157,15 +148,12 @@ export function App() {
             </Switch>
           </Show>
         </box>
+        
+        <StatusBar />
+
+        <Show when={state.helpVisible}>
+          <HelpOverlay onClose={() => setState("helpVisible", false)} />
+        </Show>
       </box>
-
-      {/* Status bar */}
-      <StatusBar />
-
-      {/* Help overlay */}
-      <Show when={state.helpVisible}>
-        <HelpOverlay onClose={() => setState("helpVisible", false)} />
-      </Show>
-    </box>
   )
 }

@@ -45,11 +45,8 @@ export function DiffViewer(props: DiffViewerProps) {
       >
         <scrollbox flexGrow={1} scrollbarOptions={{ visible: true }}>
           <diff
-            content={props.content}
-            style={{
-              flexGrow: 1,
-              height: "100%",
-            }}
+            diff={props.content}
+            flexGrow={1}
           />
         </scrollbox>
       </Show>

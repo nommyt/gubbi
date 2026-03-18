@@ -3,7 +3,7 @@
  *
  * Stack metadata is stored in git config so it persists across sessions
  * without requiring an external account or server:
- *   git config --local branch.<name>.gub-parent <parent-branch>
+ *   git config --local branch.<name>.gubbi-parent <parent-branch>
  */
 
 import { exec, execOrThrow } from "./shell.ts"
@@ -36,11 +36,11 @@ export interface Stack {
 // ---------------------------------------------------------------------------
 
 function parentKey(branch: string) {
-  return `branch.${branch}.gub-parent`
+  return `branch.${branch}.gubbi-parent`
 }
 
 function prKey(branch: string) {
-  return `branch.${branch}.gub-pr`
+  return `branch.${branch}.gubbi-pr`
 }
 
 async function getTrunk(cwd?: string): Promise<string> {
@@ -72,10 +72,10 @@ export async function clearStackParent(branch: string, cwd?: string): Promise<vo
 // Build stack graph
 // ---------------------------------------------------------------------------
 
-/** Get all branches that have a gub-parent config entry */
+/** Get all branches that have a gubbi-parent config entry */
 async function getTrackedBranches(cwd?: string): Promise<Map<string, string>> {
-  // git config --local --get-regexp 'branch\..*\.gub-parent'
-  const r = await exec(GIT, ["config", "--local", "--get-regexp", "branch\\..*\\.gub-parent"], { cwd })
+  // git config --local --get-regexp 'branch\..*\.gubbi-parent'
+  const r = await exec(GIT, ["config", "--local", "--get-regexp", "branch\\..*\\.gubbi-parent"], { cwd })
   const map = new Map<string, string>()
   if (r.exitCode !== 0) return map
 
@@ -84,8 +84,8 @@ async function getTrackedBranches(cwd?: string): Promise<Map<string, string>> {
     if (spaceIdx === -1) continue
     const key = line.slice(0, spaceIdx)
     const value = line.slice(spaceIdx + 1).trim()
-    // key = branch.<name>.gub-parent
-    const match = /^branch\.(.+)\.gub-parent$/.exec(key)
+    // key = branch.<name>.gubbi-parent
+      const match = /^branch\.(.+)\.gubbi-parent$/.exec(key)
     if (match?.[1]) map.set(match[1], value)
   }
 

@@ -13,7 +13,7 @@ import {
   parseBlame,
   parseRemotes,
   LOG_FORMAT,
-  BRANCH_FORMAT,
+  LOG_RECORD_SEP,
   type StatusEntry,
   type LogEntry,
   type BranchEntry,
@@ -257,7 +257,12 @@ export async function getBranches(cwd?: string): Promise<BranchEntry[]> {
   const currentBranch = await getCurrentBranch(cwd)
   const out = await execOrThrow(
     GIT,
-    ["for-each-ref", `--format=${BRANCH_FORMAT}`, "refs/heads", "refs/remotes"],
+    [
+      "for-each-ref",
+      "--format=%(refname)\x01%(objectname:short)\x01%(subject)\x01%(committerdate:relative)\x01%(upstream)\x01%(upstream:track,nobracket)",
+      "refs/heads",
+      "refs/remotes",
+    ],
     { cwd },
   )
   return parseBranches(out, currentBranch)

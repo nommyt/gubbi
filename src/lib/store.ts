@@ -57,8 +57,8 @@ export interface AppState {
   // Current view
   currentView: ViewName
 
-  // Panel focus: "sidebar" | "primary" | "detail"
-  focusedPanel: "sidebar" | "primary" | "detail"
+  // Panel focus: "primary" | "detail"
+  focusedPanel: "primary" | "detail"
 
   // Full screen diff mode
   fullscreenPanel: "primary" | "detail" | null

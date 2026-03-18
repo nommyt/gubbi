@@ -65,7 +65,8 @@ export function LogView() {
 
   async function loadDiff(entry: LogEntry) {
     try {
-      const r = await exec("git", ["show", "--no-color", entry.hash], { cwd: state.repoRoot })
+      // Get diff for the commit (changes introduced by this commit)
+      const r = await exec("git", ["diff", "--no-color", `${entry.hash}^..${entry.hash}`], { cwd: state.repoRoot })
       setDiffContent(r.stdout)
     } catch {
       setDiffContent("")

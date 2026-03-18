@@ -1,12 +1,12 @@
 {
-  "name": "gub",
+  "name": "gubbi",
   "version": "0.1.0",
   "description": "Terminal-native Git + GitHub client — an enhanced alternative to the GitHub web UI",
   "module": "src/index.tsx",
   "type": "module",
   "private": true,
   "bin": {
-    "gub": "./src/index.tsx"
+    "gubbi": "./src/index.tsx"
   },
   "scripts": {
     "dev": "bun --hot src/index.tsx",
@@ -14,14 +14,12 @@
     "test": "bun test"
   },
   "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@opentui/core": "^0.1.88",
-    "@opentui/solid": "^0.1.88",
-    "solid-js": "^1.9.11"
+    "@opentui/core": "0.1.88",
+    "@opentui/solid": "0.1.88",
+    "solid-js": "1.9.11"
   }
 }

@@ -220,7 +220,7 @@ export function StacksView() {
               <box flexGrow={1} flexDirection="column" alignItems="center" justifyContent="center" gap={1}>
                 <text fg={C.dim}>No stacks tracked yet</text>
                 <text fg={C.dim}>Press n to create a new stacked branch</text>
-                <text fg={C.dim}>or start working on a branch and gub will</text>
+                <text fg={C.dim}>or start working on a branch and gubbi will</text>
                 <text fg={C.dim}>track it automatically</text>
               </box>
             }

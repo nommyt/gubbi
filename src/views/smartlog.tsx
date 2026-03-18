@@ -6,8 +6,9 @@
 import { createSignal, For, Show, onMount } from "solid-js"
 import { useKeyboard } from "@opentui/solid"
 import { state, showToast } from "../lib/store.ts"
-import { getLog, getDiff, getGraphLog } from "../lib/git.ts"
+import { getLog, getGraphLog } from "../lib/git.ts"
 import { DiffViewer } from "../components/diff-viewer.tsx"
+import { exec } from "../lib/shell.ts"
 import type { LogEntry } from "../lib/parser.ts"
 
 const C = {
@@ -102,10 +103,8 @@ export function SmartlogView() {
 
   async function loadDiff(entry: LogEntry) {
     try {
-      const diff = await getDiff(undefined, false, state.repoRoot)
-      // Get diff for specific commit
-      const { exec } = await import("../lib/shell.ts")
-      const r = await exec("git", ["show", "--no-color", entry.hash], { cwd: state.repoRoot })
+      // Get diff for the commit (changes introduced by this commit)
+      const r = await exec("git", ["diff", "--no-color", `${entry.hash}^..${entry.hash}`], { cwd: state.repoRoot })
       setDiffContent(r.stdout)
     } catch {
       setDiffContent("")

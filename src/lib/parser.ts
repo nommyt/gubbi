@@ -134,12 +134,12 @@ export interface LogEntry {
   gpgStatus: string      // G=good, B=bad, U=untrusted, N=no sig
 }
 
-const LOG_SEP = "\x00"
-const LOG_RECORD_SEP = "\x01"
+export const LOG_SEP = "|||"
+export const LOG_RECORD_SEP = "---GUB_END---"
 
-/** Format string for git log — fields separated by NUL, records by SOH */
+/** Format string for git log — fields separated by ||| */
 export const LOG_FORMAT =
-  `%H${LOG_SEP}%h${LOG_SEP}%an${LOG_SEP}%ae${LOG_SEP}%ai${LOG_SEP}%ci${LOG_SEP}%ar${LOG_SEP}%s${LOG_SEP}%b${LOG_SEP}%D${LOG_SEP}%P${LOG_SEP}%G?${LOG_RECORD_SEP}`
+  `%H${LOG_SEP}%h${LOG_SEP}%an${LOG_SEP}%ae${LOG_SEP}%ai${LOG_SEP}%ci${LOG_SEP}%ar${LOG_SEP}%s${LOG_SEP}%D${LOG_SEP}%P${LOG_SEP}%G?${LOG_RECORD_SEP}`
 
 export function parseLog(output: string): LogEntry[] {
   const entries: LogEntry[] = []
@@ -147,7 +147,7 @@ export function parseLog(output: string): LogEntry[] {
 
   for (const record of records) {
     const fields = record.split(LOG_SEP)
-    if (fields.length < 12) continue
+    if (fields.length < 11) continue
 
     const [
       hash = "",
@@ -158,7 +158,6 @@ export function parseLog(output: string): LogEntry[] {
       committerDate = "",
       relativeDate = "",
       subject = "",
-      body = "",
       refsRaw = "",
       parentsRaw = "",
       gpgStatus = "N",
@@ -180,7 +179,7 @@ export function parseLog(output: string): LogEntry[] {
       committerDate: committerDate.trim(),
       relativeDate: relativeDate.trim(),
       subject: subject.trim(),
-      body: body.trim(),
+      body: "",
       refs,
       parents,
       gpgStatus: gpgStatus.trim(),
@@ -208,11 +207,11 @@ export interface BranchEntry {
   lastCommitDate: string
 }
 
-const BRANCH_SEP = "\t"
+const BRANCH_SEP = "\x01"
 
-/** Format for git for-each-ref */
+/** Format for git for-each-ref — fields separated by SOH (0x01) */
 export const BRANCH_FORMAT =
-  "%(refname)%(TAB)%(objectname:short)%(TAB)%(subject)%(TAB)%(committerdate:relative)%(TAB)%(upstream)%(TAB)%(upstream:track,nobracket)"
+  "%(refname)\x01%(objectname:short)\x01%(subject)\x01%(committerdate:relative)\x01%(upstream)\x01%(upstream:track,nobracket)"
 
 export function parseBranches(output: string, currentBranch: string): BranchEntry[] {
   const entries: BranchEntry[] = []
@@ -226,7 +225,7 @@ export function parseBranches(output: string, currentBranch: string): BranchEntr
       date = "",
       upstream = "",
       track = "",
-    ] = line.split(BRANCH_SEP)
+    ] = line.split("\x01")
 
     const isRemote = fullRef.startsWith("refs/remotes/")
     const isLocal = fullRef.startsWith("refs/heads/")

@@ -1,10 +1,10 @@
 /**
- * header.tsx — Top bar: repo name, branch, sync status, file counts, PR/CI info
+ * header.tsx — Top bar: repo name, branch, sync status, file counts, and tab navigation
  */
 
 import { Show, For } from "solid-js"
 import type { PullRequest } from "../lib/gh.ts"
-import { state } from "../lib/store.ts"
+import { state, setView, VIEWS, type ViewName } from "../lib/store.ts"
 
 // Colors
 const C = {
@@ -26,6 +26,22 @@ const C = {
   branding: "#58a6ff",
   dim: "#8b949e",
   text: "#e6edf3",
+  tabActive: "#161b22",
+  tabInactive: "#0d1117",
+}
+
+const VIEW_ICONS: Record<ViewName, string> = {
+  smartlog:      "◈",
+  status:        "◉",
+  log:           "≡",
+  branches:      "⎇",
+  stacks:        "⬡",
+  stash:         "⚑",
+  prs:           "⤲",
+  issues:        "◎",
+  actions:       "▶",
+  notifications: "◆",
+  remotes:       "⊙",
 }
 
 function ciIcon(status: string): string {
@@ -55,95 +71,153 @@ export function Header() {
 
   return (
     <box
-      flexDirection="row"
-      alignItems="center"
-      height={3}
+      flexDirection="column"
       border={["bottom"]}
       borderColor={C.border}
       backgroundColor={C.bg}
-      paddingLeft={1}
-      paddingRight={1}
-      gap={1}
     >
-      {/* Repo name */}
-      <text fg={C.text}>
-        <span style={{ fg: C.branding }}>⬡</span>
-        {" "}
-        <span style={{ fg: C.text }}>{state.repoName || "gub"}</span>
-      </text>
-
-      <text fg={C.dim}>│</text>
-
-      {/* Branch */}
-      <text>
-        <span style={{ fg: C.dim }}>⎇ </span>
-        <span style={{ fg: C.branch }}>{state.currentBranch || "—"}</span>
-      </text>
-
-      {/* Ahead/behind */}
-      <Show when={state.ahead > 0 || state.behind > 0}>
-        <text>
-          <Show when={state.ahead > 0}>
-            <span style={{ fg: C.ahead }}>↑{state.ahead}</span>
-          </Show>
-          <Show when={state.behind > 0}>
-            <span style={{ fg: C.behind }}> ↓{state.behind}</span>
-          </Show>
+      {/* Top row: repo info, branch, counts, branding */}
+      <box
+        flexDirection="row"
+        alignItems="center"
+        height={2}
+        paddingLeft={1}
+        paddingRight={1}
+        gap={1}
+      >
+        {/* Repo name */}
+        <text fg={C.text}>
+          <span style={{ fg: C.branding }}>⬡</span>
+          {" "}
+          <span style={{ fg: C.text }}>{state.repoName || "gubbi"}</span>
         </text>
-      </Show>
 
-      {/* File change counts */}
-      <Show when={stagedCount() > 0 || modifiedCount() > 0 || untrackedCount() > 0}>
         <text fg={C.dim}>│</text>
+
+        {/* Branch */}
         <text>
-          <Show when={stagedCount() > 0}>
-            <span style={{ fg: C.staged }}>●{stagedCount()}</span>
-          </Show>
-          <Show when={modifiedCount() > 0}>
-            <span style={{ fg: C.modified }}> ~{modifiedCount()}</span>
-          </Show>
-          <Show when={untrackedCount() > 0}>
-            <span style={{ fg: C.untracked }}> ?{untrackedCount()}</span>
-          </Show>
+          <span style={{ fg: C.dim }}>⎇ </span>
+          <span style={{ fg: C.branch }}>{state.currentBranch || "—"}</span>
         </text>
-      </Show>
 
-      {/* PR info */}
-      <Show when={currentPR()}>
-        <text fg={C.dim}>│</text>
+        {/* Ahead/behind */}
+        <Show when={state.ahead > 0 || state.behind > 0}>
+          <text>
+            <Show when={state.ahead > 0}>
+              <span style={{ fg: C.ahead }}>↑{state.ahead}</span>
+            </Show>
+            <Show when={state.behind > 0}>
+              <span style={{ fg: C.behind }}> ↓{state.behind}</span>
+            </Show>
+          </text>
+        </Show>
+
+        {/* File change counts */}
+        <Show when={stagedCount() > 0 || modifiedCount() > 0 || untrackedCount() > 0}>
+          <text fg={C.dim}>│</text>
+          <text>
+            <Show when={stagedCount() > 0}>
+              <span style={{ fg: C.staged }}>●{stagedCount()}</span>
+            </Show>
+            <Show when={modifiedCount() > 0}>
+              <span style={{ fg: C.modified }}> ~{modifiedCount()}</span>
+            </Show>
+            <Show when={untrackedCount() > 0}>
+              <span style={{ fg: C.untracked }}> ?{untrackedCount()}</span>
+            </Show>
+          </text>
+        </Show>
+
+        {/* PR info */}
+        <Show when={currentPR()}>
+          <text fg={C.dim}>│</text>
+          <text>
+            <span style={{ fg: C.dim }}>PR </span>
+            <span style={{ fg: currentPR()?.isDraft ? C.prDraft : C.prOpen }}>
+              #{currentPR()?.number}
+            </span>
+          </text>
+        </Show>
+
+        {/* Spacer */}
+        <box flexGrow={1} />
+
+        {/* GitHub auth indicator */}
+        <Show when={!state.isGhAuthenticated && state.isGitRepo}>
+          <text fg={C.dim}>gh: not authenticated</text>
+          <text fg={C.dim}>│</text>
+        </Show>
+
+        {/* Unread notifications badge */}
+        <Show when={state.unreadNotifications > 0}>
+          <text>
+            <span style={{ fg: C.modified }}>🔔 {state.unreadNotifications}</span>
+          </text>
+          <text fg={C.dim}>│</text>
+        </Show>
+
+        {/* Branding */}
         <text>
-          <span style={{ fg: C.dim }}>PR </span>
-          <span style={{ fg: currentPR()?.isDraft ? C.prDraft : C.prOpen }}>
-            #{currentPR()?.number}
-          </span>
-          <Show when={currentPR()?.isDraft}>
-            <span style={{ fg: C.prDraft }}> draft</span>
-          </Show>
+          <span style={{ fg: C.branding }}>gubbi</span>
+          <span style={{ fg: C.dim }}> v0.1</span>
         </text>
-      </Show>
+      </box>
 
-      {/* Spacer */}
-      <box flexGrow={1} />
+      {/* Tab row: navigation tabs */}
+      <box
+        flexDirection="row"
+        height={1}
+        paddingLeft={1}
+        gap={0}
+      >
+        <For each={VIEWS}>
+          {(view) => {
+            const isActive = () => state.currentView === view.id
+            const badge = () => {
+              if (view.id === "notifications") return state.unreadNotifications > 0 ? state.unreadNotifications : 0
+              if (view.id === "status") return state.statusEntries.length
+              if (view.id === "prs") return state.prs.filter(p => p.state === "OPEN").length
+              return 0
+            }
 
-      {/* GitHub auth indicator */}
-      <Show when={!state.isGhAuthenticated && state.isGitRepo}>
-        <text fg={C.dim}>gh: not authenticated</text>
-        <text fg={C.dim}>│</text>
-      </Show>
+            // Short labels for tabs
+            const shortLabel: Record<ViewName, string> = {
+              smartlog: "smartlog",
+              status: "status",
+              log: "log",
+              branches: "branches",
+              stacks: "stacks",
+              stash: "stash",
+              prs: "PRs",
+              issues: "issues",
+              actions: "actions",
+              notifications: "notifs",
+              remotes: "remotes",
+            }
 
-      {/* Unread notifications badge */}
-      <Show when={state.unreadNotifications > 0}>
-        <text>
-          <span style={{ fg: C.modified }}>🔔 {state.unreadNotifications}</span>
-        </text>
-        <text fg={C.dim}>│</text>
-      </Show>
-
-      {/* Branding */}
-      <text>
-        <span style={{ fg: C.branding }}>gub</span>
-        <span style={{ fg: C.dim }}> v0.1</span>
-      </text>
+            return (
+              <box
+                flexDirection="row"
+                alignItems="center"
+                paddingLeft={1}
+                paddingRight={1}
+                gap={1}
+                onMouseDown={() => setView(view.id)}
+                backgroundColor={isActive() ? C.tabActive : C.tabInactive}
+                border={isActive() ? ["bottom"] : []}
+                borderColor={C.branding}
+              >
+                <text fg={isActive() ? C.branding : C.dim}>
+                  {VIEW_ICONS[view.id]} {shortLabel[view.id]}
+                </text>
+                <Show when={badge() > 0}>
+                  <text fg={C.modified}>{badge()}</text>
+                </Show>
+              </box>
+            )
+          }}
+        </For>
+      </box>
     </box>
   )
 }
