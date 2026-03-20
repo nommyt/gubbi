@@ -73,6 +73,7 @@ export function PullRequestsView() {
 	const [showReview, setShowReview] = createSignal(false)
 	const [showComment, setShowComment] = createSignal(false)
 	const [showCreatePR, setShowCreatePR] = createSignal(false)
+	const [createPRDefaultTitle, setCreatePRDefaultTitle] = createSignal("")
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
 	const [filterState, setFilterState] = createSignal<"open" | "closed" | "all">("open")
 
@@ -172,8 +173,15 @@ export function PullRequestsView() {
 			showToast("info", `Filter: ${next}`)
 			await loadPRs()
 		} else if (key.name === "n") {
-			// Create new PR
+			// Create new PR — pre-fill with last commit message
 			key.preventDefault()
+			try {
+				const { getLog } = await import("@gubbi/git")
+				const log = await getLog({ count: 1 }, state.git.repoRoot)
+				setCreatePRDefaultTitle(log[0]?.subject ?? state.git.currentBranch)
+			} catch {
+				setCreatePRDefaultTitle(state.git.currentBranch)
+			}
 			setShowCreatePR(true)
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
@@ -364,13 +372,14 @@ export function PullRequestsView() {
 			<Show when={showCreatePR()}>
 				<InputDialog
 					title="Create Pull Request"
-					placeholder="PR title (defaults to branch name)"
+					placeholder="PR title"
+					initialValue={createPRDefaultTitle()}
 					onSubmit={async (title) => {
 						setShowCreatePR(false)
 						try {
 							showToast("info", "Creating PR...")
 							const pr = await createPR({
-								title: title || state.git.currentBranch,
+								title: title || createPRDefaultTitle() || state.git.currentBranch,
 								body: "",
 								base: state.git.defaultBranch,
 							})

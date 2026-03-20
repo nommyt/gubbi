@@ -2,7 +2,7 @@
  * branches.tsx — Branch management: list, checkout, create, delete, merge, rebase, push
  */
 
-import { state, showToast, setView } from "@gubbi/core"
+import { state, showToast, setView, icons } from "@gubbi/core"
 import type { GitHubPR } from "@gubbi/core"
 import {
 	getBranches,
@@ -211,6 +211,20 @@ export function BranchesView() {
 					<text fg={pr()!.isDraft ? C.dim : C.current}>
 						PR #{pr()!.number} {pr()!.isDraft ? "" : ""}
 					</text>
+					<Show when={pr()!.checks.length > 0}>
+						{(() => {
+							const checks = pr()!.checks
+							const fail = checks.some(
+								(c) => c.conclusion === "FAILURE" || c.conclusion === "TIMED_OUT",
+							)
+							const pending = checks.some(
+								(c) => c.status === "IN_PROGRESS" || c.status === "QUEUED",
+							)
+							if (fail) return <text fg={C.behind}>{icons.circleSlash}</text>
+							if (pending) return <text fg={C.dim}>{icons.sync}</text>
+							return <text fg={C.ahead}>{icons.check}</text>
+						})()}
+					</Show>
 				</Show>
 
 				<box flexGrow={1} />

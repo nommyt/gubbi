@@ -88,6 +88,11 @@ export async function pushAndCreatePR(
 				url: created.url,
 				mergeable: created.mergeable,
 				mergeStateStatus: created.mergeStateStatus,
+				checks: created.checks.map((c) => ({
+					name: c.name,
+					status: c.status,
+					conclusion: c.conclusion,
+				})),
 			},
 		}
 	}

@@ -114,6 +114,11 @@ export interface GitHubPR {
 	url: string
 	mergeable: string
 	mergeStateStatus: string
+	checks: Array<{
+		name: string
+		status: string
+		conclusion: string | null
+	}>
 }
 
 export interface GitHubIssue {

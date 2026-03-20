@@ -449,6 +449,8 @@ export function DashboardView() {
 							{(pr, idx) => {
 								const ci = () => ciSummary(pr.checks)
 								const isSelected = () => selectedColumn() === "prs" && selectedIdx() === idx()
+								const showRepo = () =>
+									idx() === 0 || sortedMyPRs()[idx() - 1]?.repository !== pr.repository
 								return (
 									<box
 										padding={1}
@@ -459,7 +461,9 @@ export function DashboardView() {
 											<text fg={pr.isDraft ? C.prDraft : C.prOpen}>
 												{pr.isDraft ? icons.circle : icons.check}
 											</text>
-											<text fg={C.repo}>{pr.repository}</text>
+											<Show when={showRepo()}>
+												<text fg={C.repo}>{pr.repository}</text>
+											</Show>
 											<box flexGrow={1} />
 											<Show when={pr.checks.length > 0}>
 												<text fg={ci().color}>{ci().icon}</text>

@@ -37,7 +37,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 **File:** `packages/plugin-repo/src/branches.tsx`
 
 - [x] Show PR indicator inline per branch: `PR #123 ○` (green=open, gray=draft)
-- [ ] Color-code with CI status (requires checks data in state — Sprint 2 concern)
+- [x] Color-code with CI status ( requires checks data in state — now available via `GitHubPR.checks`)
 - [x] `Shift+P` → push + create PR for selected branch
 - [x] `v` → open branch's PR in browser
 - [x] `M` → merge PR from branch list (SelectDialog with squash/merge/rebase)
@@ -148,7 +148,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 - [x] `c` → checkout PR branch
 - [x] `o` → open in browser
 - [ ] `r` → open review mode
-- [ ] Show repo name only when it changes between PRs (not on every row)
+- [x] Show repo name only when it changes between PRs (not on every row)
 - [x] Sort by urgency: CI failing → review requested → approved → draft
 
 ### 4.2 Notification Actions
@@ -226,7 +226,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 **File:** `packages/plugin-github/src/pull-requests.tsx`
 
 - [x] `n` → open PR creation dialog (title, body, base branch)
-- [ ] Pre-fill title from last commit message
+- [x] Pre-fill title from last commit message
 - [x] Pre-fill base from default branch
 
 ---
