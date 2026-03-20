@@ -39,15 +39,18 @@ export function IssuesView() {
 	const [showCreate, setShowCreate] = createSignal(false)
 	const [showComment, setShowComment] = createSignal(false)
 	const [showClose, setShowClose] = createSignal(false)
+	const [showFilter, setShowFilter] = createSignal(false)
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
 	const [filterState, setFilterState] = createSignal<"open" | "closed" | "all">("open")
+	const [filterAuthor, setFilterAuthor] = createSignal("")
 
 	const selectedIssue = () => issues()[selectedIdx()]
 
 	async function loadIssues() {
 		setLoading(true)
 		try {
-			const list = await listIssues({ state: filterState(), limit: 50 })
+			const author = filterAuthor() || undefined
+			const list = await listIssues({ state: filterState(), limit: 50, author })
 			setIssues(list)
 			setSelectedIdx(0)
 			const first = list[0]
@@ -71,7 +74,7 @@ export function IssuesView() {
 	onMount(() => void loadIssues())
 
 	useKeyboard(async (key) => {
-		if (showCreate() || showComment() || showClose()) return
+		if (showCreate() || showComment() || showClose() || showFilter()) return
 
 		if (key.name === "tab") {
 			key.preventDefault()
@@ -114,6 +117,9 @@ export function IssuesView() {
 			setFilterState(next)
 			showToast("info", `Filter: ${next}`)
 			await loadIssues()
+		} else if (key.name === "/" || key.name === "slash") {
+			key.preventDefault()
+			setShowFilter(true)
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadIssues()
@@ -128,7 +134,7 @@ export function IssuesView() {
 				flexDirection="column"
 				border
 				borderColor={primaryFocused() ? C.activeBorder : C.border}
-				title={`issues (${filterState()})`}
+				title={`issues (${filterState()}${filterAuthor() ? ` @${filterAuthor()}` : ""})`}
 			>
 				<Show
 					when={!loading()}
@@ -198,6 +204,7 @@ export function IssuesView() {
 					<text fg={C.dim}>
 						<span style={{ fg: "#58a6ff" }}>n</span> new · <span style={{ fg: "#58a6ff" }}>c</span>{" "}
 						comment · <span style={{ fg: "#58a6ff" }}>x</span> close ·{" "}
+						<span style={{ fg: "#58a6ff" }}>/</span> filter ·{" "}
 						<span style={{ fg: "#58a6ff" }}>o</span> open
 					</text>
 				</box>
@@ -292,6 +299,21 @@ export function IssuesView() {
 						}
 					}}
 					onCancel={() => setShowClose(false)}
+				/>
+			</Show>
+
+			{/* Filter dialog */}
+			<Show when={showFilter()}>
+				<InputDialog
+					title="Filter issues by author"
+					placeholder="username (empty to clear)"
+					initialValue={filterAuthor()}
+					onSubmit={async (author) => {
+						setShowFilter(false)
+						setFilterAuthor(author.trim())
+						await loadIssues()
+					}}
+					onCancel={() => setShowFilter(false)}
 				/>
 			</Show>
 		</box>

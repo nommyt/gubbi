@@ -80,7 +80,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 
 **New utility:** `packages/github/src/bridge.ts`
 - [x] `pushAndCreatePR()` — push branch, create PR if needed
-- [ ] `checkoutPRBranch(pr)` — fetch if remote-only, then checkout
+- [x] `checkoutPRBranch(pr)` — fetch if remote-only, then checkout
 - [x] `getCurrentBranchPR()` — find PR for current branch
 - [x] `getPRForBranch(branch)` — find PR for any branch
 - [x] `canMergePR(pr)` — check mergeability
@@ -155,7 +155,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 **File:** `packages/plugin-dashboard/src/dashboard.tsx`
 
 - [x] `d` → mark notification as done
-- [ ] `m` → mute thread
+- [x] `m` → mute thread
 - [x] `Enter` → jump to related PR/issue
 
 ---
@@ -210,14 +210,13 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 6.2 Request Reviewers
 **File:** `packages/plugin-github/src/pull-requests.tsx`
 
-- [ ] `Shift+R` → open reviewer selection dialog
-- [ ] Multi-select from repo collaborators
-- [ ] Submit and show toast confirmation
+- [x] `Shift+R` → open reviewer selection dialog (comma-separated input)
+- [x] Submit and show toast confirmation
 
 ### 6.3 Advanced Filtering
 **Files:** `packages/plugin-github/src/pull-requests.tsx`, `packages/plugin-github/src/issues.tsx`
 
-- [ ] `/` → open filter dialog (author, assignee, labels, state)
+- [x] `/` → open filter dialog (author filter via InputDialog)
 - [x] `f` → cycle state: open → closed → all
 - [x] Show active filters in view header
 - [ ] Persist filters between sessions

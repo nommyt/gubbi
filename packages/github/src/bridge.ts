@@ -6,7 +6,7 @@ import { state } from "@gubbi/core/state"
 import type { GitHubPR } from "@gubbi/core/types"
 import { push } from "@gubbi/git"
 
-import { createPR } from "./gh.ts"
+import { createPR, checkoutPR } from "./gh.ts"
 import type { PullRequest } from "./gh.ts"
 
 /**
@@ -25,6 +25,21 @@ export function getCurrentBranchPR(): GitHubPR | null {
  */
 export function getPRForBranch(branch: string, prs: GitHubPR[]): GitHubPR | null {
 	return prs.find((pr) => pr.headRefName === branch && pr.state === "OPEN") ?? null
+}
+
+/**
+ * Checkout a PR branch, fetching from remote first if it doesn't exist locally.
+ */
+export async function checkoutPRBranch(pr: PullRequest): Promise<void> {
+	const hasLocal = state.git.branches.some((b) => b.name === pr.headRefName && !b.remote)
+	if (hasLocal) {
+		// Branch exists locally — use git checkout
+		const { checkout } = await import("@gubbi/git")
+		await checkout(pr.headRefName, state.git.repoRoot)
+	} else {
+		// Branch only on remote — use gh pr checkout which handles fetch+checkout
+		await checkoutPR(pr.number)
+	}
 }
 
 /**

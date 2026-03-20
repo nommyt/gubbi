@@ -156,10 +156,19 @@ function mapPR(raw: Record<string, unknown>): PullRequest {
 }
 
 export async function listPRs(
-	opts: { state?: "open" | "closed" | "merged" | "all"; limit?: number } = {},
+	opts: {
+		state?: "open" | "closed" | "merged" | "all"
+		limit?: number
+		author?: string
+		label?: string
+		search?: string
+	} = {},
 ): Promise<PullRequest[]> {
 	const args = ["pr", "list", "--json", PR_FIELDS, "--limit", String(opts.limit ?? 50)]
 	if (opts.state && opts.state !== "all") args.push("--state", opts.state)
+	if (opts.author) args.push("--author", opts.author)
+	if (opts.label) args.push("--label", opts.label)
+	if (opts.search) args.push("--search", opts.search)
 
 	const r = await exec(GH, args)
 	if (r.exitCode !== 0) return []
@@ -254,6 +263,13 @@ export async function reopenPR(number: number): Promise<boolean> {
 	return r.exitCode === 0
 }
 
+export async function requestReviewers(number: number, reviewers: string[]): Promise<boolean> {
+	if (reviewers.length === 0) return true
+	const args = ["pr", "edit", String(number), ...reviewers.flatMap((r) => ["--add-reviewer", r])]
+	const result = await exec(GH, args)
+	return result.exitCode === 0
+}
+
 // ---------------------------------------------------------------------------
 // Issues
 // ---------------------------------------------------------------------------
@@ -336,12 +352,14 @@ export async function listIssues(
 		limit?: number
 		labels?: string[]
 		mention?: string
+		author?: string
 	} = {},
 ): Promise<Issue[]> {
 	const args = ["issue", "list", "--json", ISSUE_FIELDS, "--limit", String(opts.limit ?? 50)]
 	if (opts.state && opts.state !== "all") args.push("--state", opts.state)
 	if (opts.labels?.length) args.push("--label", opts.labels.join(","))
 	if (opts.mention) args.push("--mention", opts.mention)
+	if (opts.author) args.push("--author", opts.author)
 
 	const r = await exec(GH, args)
 	if (r.exitCode !== 0) return []
@@ -596,6 +614,13 @@ export async function markNotificationRead(id: string): Promise<boolean> {
 
 export async function markAllNotificationsRead(): Promise<boolean> {
 	const r = await exec(GH, ["api", "--method", "PUT", "notifications"])
+	return r.exitCode === 0
+}
+
+export async function muteNotificationThread(id: string): Promise<boolean> {
+	const r = await exec(GH, ["api", "--method", "PUT", `notifications/threads/${id}/subscription`], {
+		input: JSON.stringify({ ignored: true }),
+	})
 	return r.exitCode === 0
 }
 

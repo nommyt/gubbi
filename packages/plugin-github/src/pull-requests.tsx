@@ -12,6 +12,7 @@ import {
 	createPR,
 	closePR,
 	checkoutPR,
+	requestReviewers,
 	canMergePR,
 	githubService,
 	type PullRequest,
@@ -73,9 +74,12 @@ export function PullRequestsView() {
 	const [showReview, setShowReview] = createSignal(false)
 	const [showComment, setShowComment] = createSignal(false)
 	const [showCreatePR, setShowCreatePR] = createSignal(false)
+	const [showFilter, setShowFilter] = createSignal(false)
+	const [showRequestReviewers, setShowRequestReviewers] = createSignal(false)
 	const [createPRDefaultTitle, setCreatePRDefaultTitle] = createSignal("")
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
 	const [filterState, setFilterState] = createSignal<"open" | "closed" | "all">("open")
+	const [filterAuthor, setFilterAuthor] = createSignal("")
 
 	const selectedPR = () => prs()[selectedIdx()]
 
@@ -83,7 +87,8 @@ export function PullRequestsView() {
 		setLoading(true)
 		try {
 			const state = filterState()
-			const list = await listPRs({ state, limit: 50 })
+			const author = filterAuthor() || undefined
+			const list = await listPRs({ state, limit: 50, author })
 			setPRs(list)
 			setSelectedIdx(0)
 			const first = list[0]
@@ -107,7 +112,15 @@ export function PullRequestsView() {
 	onMount(() => void loadPRs())
 
 	useKeyboard(async (key) => {
-		if (showMerge() || showReview() || showComment() || showCreatePR()) return
+		if (
+			showMerge() ||
+			showReview() ||
+			showComment() ||
+			showCreatePR() ||
+			showFilter() ||
+			showRequestReviewers()
+		)
+			return
 
 		if (key.name === "tab") {
 			key.preventDefault()
@@ -183,6 +196,12 @@ export function PullRequestsView() {
 				setCreatePRDefaultTitle(state.git.currentBranch)
 			}
 			setShowCreatePR(true)
+		} else if (key.name === "/" || key.name === "slash") {
+			key.preventDefault()
+			setShowFilter(true)
+		} else if (key.name === "R" && key.shift && pr) {
+			key.preventDefault()
+			setShowRequestReviewers(true)
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadPRs()
@@ -197,7 +216,7 @@ export function PullRequestsView() {
 				flexDirection="column"
 				border
 				borderColor={primaryFocused() ? C.activeBorder : C.border}
-				title={`pull requests (${filterState()})`}
+				title={`pull requests (${filterState()}${filterAuthor() ? ` @${filterAuthor()}` : ""})`}
 			>
 				<Show
 					when={!loading()}
@@ -277,9 +296,10 @@ export function PullRequestsView() {
 					<text fg={C.dim}>
 						<span style={{ fg: "#58a6ff" }}>m</span> merge ·{" "}
 						<span style={{ fg: "#58a6ff" }}>a</span> approve ·{" "}
+						<span style={{ fg: "#58a6ff" }}>R</span> reviewers ·{" "}
 						<span style={{ fg: "#58a6ff" }}>c</span> comment ·{" "}
 						<span style={{ fg: "#58a6ff" }}>C</span> checkout ·{" "}
-						<span style={{ fg: "#58a6ff" }}>b</span> branches ·{" "}
+						<span style={{ fg: "#58a6ff" }}>/</span> filter ·{" "}
 						<span style={{ fg: "#58a6ff" }}>o</span> open
 					</text>
 				</box>
@@ -395,6 +415,46 @@ export function PullRequestsView() {
 						}
 					}}
 					onCancel={() => setShowCreatePR(false)}
+				/>
+			</Show>
+
+			{/* Filter dialog */}
+			<Show when={showFilter()}>
+				<InputDialog
+					title="Filter PRs by author"
+					placeholder="username (empty to clear)"
+					initialValue={filterAuthor()}
+					onSubmit={async (author) => {
+						setShowFilter(false)
+						setFilterAuthor(author.trim())
+						await loadPRs()
+					}}
+					onCancel={() => setShowFilter(false)}
+				/>
+			</Show>
+
+			{/* Request reviewers dialog */}
+			<Show when={showRequestReviewers() && selectedPR()}>
+				<InputDialog
+					title={`Request reviewers for PR #${selectedPR()?.number}`}
+					placeholder="usernames, comma-separated"
+					onSubmit={async (input) => {
+						setShowRequestReviewers(false)
+						const pr = selectedPR()
+						if (!pr) return
+						const reviewers = input
+							.split(",")
+							.map((r) => r.trim())
+							.filter(Boolean)
+						if (reviewers.length === 0) return
+						try {
+							await requestReviewers(pr.number, reviewers)
+							showToast("success", `Requested review from ${reviewers.join(", ")}`)
+						} catch (err) {
+							showToast("error", String(err))
+						}
+					}}
+					onCancel={() => setShowRequestReviewers(false)}
 				/>
 			</Show>
 		</box>

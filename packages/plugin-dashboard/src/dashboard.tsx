@@ -22,6 +22,7 @@ import {
 	checkoutPR,
 	canMergePR,
 	markNotificationRead,
+	muteNotificationThread,
 	githubService,
 	type SearchPR,
 	type PullRequest,
@@ -315,9 +316,23 @@ export function DashboardView() {
 			return
 		}
 
-		// PR actions — m: merge, c: checkout, o: open in browser
+		// PR actions — m: merge (PR columns) / mute (notifications column), c: checkout, o: open in browser
 		if (key.name === "m" && !key.shift) {
 			key.preventDefault()
+			if (selectedColumn() === "notifications") {
+				const notif = notifications()[selectedIdx()]
+				if (!notif) return
+				void (async () => {
+					try {
+						await muteNotificationThread(notif.id)
+						await fetchNotifications()
+						showToast("success", "Thread muted")
+					} catch (err) {
+						showToast("error", String(err))
+					}
+				})()
+				return
+			}
 			const pr = getSelectedPR()
 			if (!pr) return
 			const check = canMergePR(pr)
