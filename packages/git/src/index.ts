@@ -11,6 +11,8 @@ export * from "./git.ts"
 
 // Parsers
 export * from "./parser.ts"
+export { parseDiff, hunkToPatch } from "./hunk-parser.ts"
+export type { DiffHunk, ParsedDiff } from "./hunk-parser.ts"
 
 // Stack management
 export * from "./stack.ts"

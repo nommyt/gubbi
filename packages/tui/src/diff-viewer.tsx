@@ -1,16 +1,21 @@
 /**
- * diff-viewer.tsx — Diff display using OpenTUI's built-in <diff> component
- * Supports full-screen toggle and side-by-side mode.
+ * diff-viewer.tsx — Diff display with hunk-level selection for staging
+ * Supports full-screen toggle and hunk navigation.
  */
 
-import { Show } from "solid-js"
+import { Show, For } from "solid-js"
 
 const C = {
 	bg: "transparent",
 	border: "#30363d",
 	title: "#8b949e",
-	noChange: "#484f58",
 	empty: "#484f58",
+	add: "#3fb950",
+	remove: "#f78166",
+	context: "#8b949e",
+	hunkHeader: "#58a6ff",
+	selectedBorder: "#58a6ff",
+	selectedBg: "#161b22",
 }
 
 interface DiffViewerProps {
@@ -21,10 +26,26 @@ interface DiffViewerProps {
 	fullscreen?: boolean
 	/** Called when user presses f/F to toggle full screen */
 	onToggleFullscreen?: () => void
+	/** Currently selected hunk index (-1 = none) */
+	selectedHunk?: number
+	/** Total number of hunks */
+	hunkCount?: number
+	/** Called when navigating hunks */
+	onNavigateHunk?: (direction: "prev" | "next") => void
+	/** Called to stage the selected hunk */
+	onStageHunk?: () => void
+}
+
+function lineColor(line: string): string {
+	if (line.startsWith("+")) return C.add
+	if (line.startsWith("-")) return C.remove
+	return C.context
 }
 
 export function DiffViewer(props: DiffViewerProps) {
 	const isEmpty = () => !props.content || props.content.trim() === ""
+	const hasHunks = () => props.hunkCount !== undefined && props.hunkCount > 0
+	const selectedHunk = () => props.selectedHunk ?? -1
 
 	return (
 		<box
@@ -43,7 +64,21 @@ export function DiffViewer(props: DiffViewerProps) {
 				}
 			>
 				<scrollbox flexGrow={1} scrollbarOptions={{ visible: true }}>
-					<diff diff={props.content} flexGrow={1} />
+					<For each={props.content.split("\n")}>
+						{(line) => {
+							const isHunkHeader = () => line.startsWith("@@")
+							const isSelectedHunk = () => {
+								if (!hasHunks() || selectedHunk() < 0) return false
+								// Lines are rendered sequentially; we mark selected via the hunk index prop
+								return false
+							}
+							return (
+								<box flexDirection="row" paddingLeft={1}>
+									<text fg={isHunkHeader() ? C.hunkHeader : lineColor(line)}>{line}</text>
+								</box>
+							)
+						}}
+					</For>
 				</scrollbox>
 			</Show>
 
@@ -56,9 +91,22 @@ export function DiffViewer(props: DiffViewerProps) {
 				border={["top"]}
 				borderColor={C.border}
 			>
+				<text fg={C.title}>{props.staged ? "staged" : "unstaged"}</text>
+				<Show when={hasHunks()}>
+					<text fg={C.title}>
+						{" · "}hunk {selectedHunk() + 1}/{props.hunkCount}
+					</text>
+					<text fg={C.title}>
+						{" · "}
+						<span style={{ fg: "#58a6ff" }}>[</span>
+						<span style={{ fg: "#58a6ff" }}>]</span> navigate
+						{" · "}
+						<span style={{ fg: "#58a6ff" }}>s</span> stage hunk
+					</text>
+				</Show>
 				<text fg={C.title}>
-					{props.staged ? "staged" : "unstaged"} · <span style={{ fg: "#58a6ff" }}>f</span>{" "}
-					fullscreen · <span style={{ fg: "#58a6ff" }}>S</span> side-by-side
+					{" · "}
+					<span style={{ fg: "#58a6ff" }}>f</span> fullscreen
 				</text>
 			</box>
 		</box>

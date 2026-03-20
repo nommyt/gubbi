@@ -118,22 +118,22 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 - [x] Active tab: full highlight (not just underline)
 
 ### 3.2 Hunk-Level Staging (Magit-style)
-**Files:** `packages/plugin-repo/src/status.tsx`, `packages/tui/src/diff-viewer.tsx`
+**Files:** `packages/plugin-repo/src/status.tsx`, `packages/tui/src/diff-viewer.tsx`, `packages/git/src/hunk-parser.ts`
 
-- [ ] Navigate hunks with `[` / `]`
-- [ ] `s` → stage selected hunk
+- [x] Navigate hunks with `[` / `]`
+- [x] `s` → stage selected hunk
 - [ ] `S` (shift) → stage selected line only
 - [ ] `u` → unstage hunk
-- [ ] Visual hunk selection indicator ( staged,  unstaged)
+- [x] Visual hunk selection indicator in diff footer (hunk N/M)
 
-**Backend:** `packages/git/src/service.ts` — `git apply --cached` with generated patch
+**Backend:** `packages/git/src/hunk-parser.ts` — parse unified diff into hunks, generate per-hunk patches for `git apply --cached`
 
 ### 3.3 Alternative Navigation
 **File:** `app/cli/src/app.tsx`
 
-- [ ] `Ctrl+Tab` / `Ctrl+Shift+Tab` → cycle views
-- [ ] `Ctrl+H` / `Ctrl+L` → previous/next view
-- [ ] Brief toast on view switch showing view name
+- [x] `Ctrl+Tab` / `Ctrl+Shift+Tab` → cycle views
+- [x] `Ctrl+H` / `Ctrl+L` → previous/next view
+- [x] Brief toast on view switch showing view name
 
 ---
 

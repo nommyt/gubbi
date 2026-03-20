@@ -11,6 +11,9 @@ import {
 	unstageAll,
 	discardFile,
 	getDiff,
+	stageHunk,
+	parseDiff,
+	hunkToPatch,
 	gitService,
 } from "@gubbi/git"
 import { getCurrentBranchPR, pushAndCreatePR, githubService } from "@gubbi/github"
@@ -83,6 +86,7 @@ export function StatusView() {
 	const [pendingCommitMessage, setPendingCommitMessage] = createSignal("")
 	const [diffContent, setDiffContent] = createSignal("")
 	const [diffStaged, setDiffStaged] = createSignal(false)
+	const [selectedHunk, setSelectedHunk] = createSignal(0)
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
 
 	const entries = () => state.git.status
@@ -94,11 +98,16 @@ export function StatusView() {
 	const currentBranchEntry = () =>
 		state.git.branches.find((b) => b.name === state.git.currentBranch && !b.remote) ?? null
 
+	const parsedDiff = () => parseDiff(diffContent())
+	const hunks = () => parsedDiff().hunks
+	const hunkCount = () => hunks().length
+
 	async function loadDiff(entry: GitStatusEntry) {
 		const staged = entry.staged && !entry.unstaged
 		const diff = await getDiff(entry.path, staged, state.git.repoRoot)
 		setDiffContent(diff)
 		setDiffStaged(staged)
+		setSelectedHunk(0)
 	}
 
 	onMount(async () => {
@@ -120,7 +129,34 @@ export function StatusView() {
 			return
 		}
 
-		if (!primaryFocused()) return
+		if (!primaryFocused()) {
+			// Diff panel focused — hunk navigation and staging
+			if (key.name === "[" || key.name === "]") {
+				key.preventDefault()
+				const count = hunkCount()
+				if (count === 0) return
+				const current = selectedHunk()
+				const next = key.name === "]" ? (current + 1) % count : (current - 1 + count) % count
+				setSelectedHunk(next)
+				showToast("info", `Hunk ${next + 1}/${count}`)
+			} else if (key.name === "s" && !key.shift) {
+				key.preventDefault()
+				const hunk = hunks()[selectedHunk()]
+				if (!hunk) return
+				try {
+					const patch = hunkToPatch(hunk, parsedDiff().fileHeaders)
+					await stageHunk(patch, state.git.repoRoot)
+					await gitService.refreshStatus()
+					// Reload diff to reflect staged changes
+					const entry = selectedEntry()
+					if (entry) await loadDiff(entry)
+					showToast("success", `Staged hunk ${selectedHunk() + 1}`)
+				} catch (err) {
+					showToast("error", String(err))
+				}
+			}
+			return
+		}
 
 		if (key.name === "j" || key.name === "down") {
 			key.preventDefault()
@@ -370,6 +406,8 @@ export function StatusView() {
 					staged={diffStaged()}
 					fullscreen={isFullscreen()}
 					onToggleFullscreen={() => toggleFullscreen("detail")}
+					selectedHunk={selectedHunk()}
+					hunkCount={hunkCount()}
 				/>
 			</box>
 
