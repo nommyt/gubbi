@@ -32,4 +32,5 @@ export const icons = {
 	bookmark: "\ueaa5", //
 	flame: "\ueaf2", //
 	lightbulb: "\uea61", //
+	clipboard: "\uea66", //
 } as const

@@ -57,6 +57,7 @@ export function LogView() {
 	const [showBranchInput, setShowBranchInput] = createSignal(false)
 	const [showCherryPickConfirm, setShowCherryPickConfirm] = createSignal(false)
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
+	const [clipboardHashes, setClipboardHashes] = createSignal<string[]>([])
 
 	const selectedEntry = () => entries()[selectedIdx()]
 
@@ -126,6 +127,13 @@ export function LogView() {
 		} else if (key.name === "/") {
 			key.preventDefault()
 			setShowSearch(true)
+		} else if (key.name === "escape") {
+			key.preventDefault()
+			if (searchQuery()) {
+				setSearchQuery("")
+				await loadEntries()
+				showToast("info", "Filter cleared")
+			}
 		} else if (key.name === "b" && entry) {
 			key.preventDefault()
 			setShowBranchInput(true)
@@ -137,6 +145,38 @@ export function LogView() {
 			const pr = getPRForEntry(entry)
 			if (pr) await openURL(pr.url)
 			else showToast("info", "No PR found for this commit")
+		} else if (key.name === "C" && key.shift && entry) {
+			key.preventDefault()
+			const hashes = clipboardHashes()
+			if (hashes.includes(entry.hash)) {
+				// Remove if already copied
+				setClipboardHashes(hashes.filter((h) => h !== entry.hash))
+				showToast("info", `Removed ${entry.shortHash} from clipboard`)
+			} else {
+				setClipboardHashes([...hashes, entry.hash])
+				showToast(
+					"success",
+					`Copied ${entry.shortHash} (${hashes.length + 1} commit(s) in clipboard)`,
+				)
+			}
+		} else if (key.name === "V" && key.shift) {
+			key.preventDefault()
+			const hashes = clipboardHashes()
+			if (hashes.length === 0) {
+				showToast("info", "Clipboard empty — use Shift+C to copy commits")
+				return
+			}
+			try {
+				for (const hash of hashes) {
+					await cherryPick(hash, state.git.repoRoot)
+				}
+				await gitService.refreshStatus()
+				await loadEntries(searchQuery() || undefined)
+				setClipboardHashes([])
+				showToast("success", `Cherry-picked ${hashes.length} commit(s)`)
+			} catch (err) {
+				showToast("error", String(err))
+			}
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadEntries(searchQuery() || undefined)
@@ -245,10 +285,18 @@ export function LogView() {
 					<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
 						<text fg={C.dim}>
 							<span style={{ fg: "#58a6ff" }}>/</span> search ·{" "}
-							<span style={{ fg: "#58a6ff" }}>b</span> branch here ·{" "}
+							<span style={{ fg: "#58a6ff" }}>b</span> branch ·{" "}
 							<span style={{ fg: "#58a6ff" }}>y</span> cherry-pick ·{" "}
+							<span style={{ fg: "#58a6ff" }}>C</span> copy ·{" "}
+							<span style={{ fg: "#58a6ff" }}>V</span> paste ·{" "}
 							<span style={{ fg: "#58a6ff" }}>v</span> open PR
 						</text>
+						<Show when={clipboardHashes().length > 0}>
+							<text fg={C.prMerged}>
+								{" "}
+								{icons.clipboard} {clipboardHashes().length}
+							</text>
+						</Show>
 					</box>
 				</Show>
 			</box>

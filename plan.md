@@ -175,9 +175,9 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 5.2 Cherry-Pick Copy/Paste
 **File:** `packages/plugin-repo/src/log.tsx`
 
-- [ ] `Shift+C` → copy commit(s) to clipboard
-- [ ] `Shift+V` → cherry-pick copied commits onto current branch
-- [ ] Show clipboard indicator: `📋 2 commit(s) copied`
+- [x] `Shift+C` → copy commit(s) to clipboard (toggle: add/remove)
+- [x] `Shift+V` → cherry-pick copied commits onto current branch
+- [x] Show clipboard indicator: `2 commit(s) copied` in footer
 
 ### 5.3 Commit Graph Visualization
 **Files:** `packages/plugin-dashboard/src/smartlog.tsx`, new `packages/tui/src/commit-graph.tsx`
@@ -189,8 +189,8 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 5.4 Commit Filtering
 **File:** `packages/plugin-repo/src/log.tsx`
 
-- [ ] `/` → open filter prompt (filter by message, author, date)
-- [ ] Show active filter indicator, `Esc` to clear
+- [x] `/` → open filter prompt (filter by message, author, date)
+- [x] Show active filter indicator, `Esc` to clear
 
 ---
 
