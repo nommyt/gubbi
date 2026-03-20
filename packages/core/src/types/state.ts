@@ -171,6 +171,9 @@ export interface GitHubState {
 
 	// Badge counts
 	unreadNotificationCount: number
+
+	// Refresh tracking
+	lastRefreshTime: number
 }
 
 // ---------------------------------------------------------------------------

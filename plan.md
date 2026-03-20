@@ -101,7 +101,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
   - Branches + branch with PR: `P: push | V: view PR | M: merge`
   - PR view + CI failing: `⚠ CI failing | C: checkout | r: review`
 - [ ] Show `↻ syncing...` when background polling is active
-- [ ] Show `updated Xs ago` for last GitHub refresh
+- [x] Show `updated Xs ago` for last GitHub refresh
 
 ---
 

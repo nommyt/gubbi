@@ -61,6 +61,7 @@ const initialGitHubState: GitHubState = {
 	selectedIssue: null,
 	selectedRun: null,
 	unreadNotificationCount: 0,
+	lastRefreshTime: 0,
 }
 
 const initialUIState: UIState = {

@@ -3,7 +3,7 @@
  */
 
 import { state } from "@gubbi/core"
-import { For, Show, Switch, Match } from "solid-js"
+import { For, Show, Switch, Match, createSignal, onMount, onCleanup } from "solid-js"
 
 const C = {
 	bg: "#0d1117",
@@ -143,6 +143,23 @@ export function StatusBar() {
 	const hints = () => getContextHints()
 	const latestToast = () => state.ui.toasts.at(-1)
 
+	// Tick every 10s to update relative time display
+	const [now, setNow] = createSignal(Date.now())
+	onMount(() => {
+		const id = setInterval(() => setNow(Date.now()), 10_000)
+		onCleanup(() => clearInterval(id))
+	})
+
+	const refreshedAgo = () => {
+		const t = state.github.lastRefreshTime
+		if (!t) return ""
+		const s = Math.floor((now() - t) / 1000)
+		if (s < 60) return `${s}s ago`
+		const m = Math.floor(s / 60)
+		if (m < 60) return `${m}m ago`
+		return `${Math.floor(m / 60)}h ago`
+	}
+
 	return (
 		<box
 			flexDirection="row"
@@ -213,6 +230,9 @@ export function StatusBar() {
 
 			{/* Current view name */}
 			<text fg={C.activeView}>{VIEWS_DISPLAY[state.ui.currentView]}</text>
+			<Show when={refreshedAgo()}>
+				<text fg={C.sep}> {refreshedAgo()}</text>
+			</Show>
 		</box>
 	)
 }

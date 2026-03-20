@@ -84,6 +84,7 @@ export function createGitHubService(): GitHubService {
 		try {
 			const prs = await listPRs({ state: "open", limit: 50 })
 			updateGitHubPRs(prs)
+			setState("github", "lastRefreshTime", Date.now())
 		} catch (err) {
 			showToast("error", `Failed to load PRs: ${err}`)
 		}
