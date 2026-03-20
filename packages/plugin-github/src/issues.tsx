@@ -40,14 +40,16 @@ export function IssuesView() {
 	const [showComment, setShowComment] = createSignal(false)
 	const [showClose, setShowClose] = createSignal(false)
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
+	const [filterState, setFilterState] = createSignal<"open" | "closed" | "all">("open")
 
 	const selectedIssue = () => issues()[selectedIdx()]
 
 	async function loadIssues() {
 		setLoading(true)
 		try {
-			const list = await listIssues({ state: "open", limit: 50 })
+			const list = await listIssues({ state: filterState(), limit: 50 })
 			setIssues(list)
+			setSelectedIdx(0)
 			const first = list[0]
 			if (first) await loadComments(first)
 		} catch (err) {
@@ -104,6 +106,14 @@ export function IssuesView() {
 		} else if (key.name === "o" && issue) {
 			key.preventDefault()
 			await openURL(issue.url)
+		} else if (key.name === "f") {
+			key.preventDefault()
+			const states: Array<"open" | "closed" | "all"> = ["open", "closed", "all"]
+			const current = states.indexOf(filterState())
+			const next = states[(current + 1) % states.length]!
+			setFilterState(next)
+			showToast("info", `Filter: ${next}`)
+			await loadIssues()
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadIssues()
@@ -118,7 +128,7 @@ export function IssuesView() {
 				flexDirection="column"
 				border
 				borderColor={primaryFocused() ? C.activeBorder : C.border}
-				title="issues"
+				title={`issues (${filterState()})`}
 			>
 				<Show
 					when={!loading()}

@@ -218,16 +218,16 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 **Files:** `packages/plugin-github/src/pull-requests.tsx`, `packages/plugin-github/src/issues.tsx`
 
 - [ ] `/` → open filter dialog (author, assignee, labels, state)
-- [ ] `f` → cycle state: open → closed → all
-- [ ] Show active filters in view header
+- [x] `f` → cycle state: open → closed → all
+- [x] Show active filters in view header
 - [ ] Persist filters between sessions
 
 ### 6.4 Create PR/Issue Dialog
 **File:** `packages/plugin-github/src/pull-requests.tsx`
 
-- [ ] `n` → open PR creation dialog (title, body, base branch, labels, assignees)
+- [x] `n` → open PR creation dialog (title, body, base branch)
 - [ ] Pre-fill title from last commit message
-- [ ] Pre-fill base from default branch
+- [x] Pre-fill base from default branch
 
 ---
 

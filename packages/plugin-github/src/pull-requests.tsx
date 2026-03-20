@@ -9,6 +9,7 @@ import {
 	getPRDiff,
 	mergePR,
 	reviewPR,
+	createPR,
 	closePR,
 	checkoutPR,
 	canMergePR,
@@ -71,16 +72,19 @@ export function PullRequestsView() {
 	const [showMerge, setShowMerge] = createSignal(false)
 	const [showReview, setShowReview] = createSignal(false)
 	const [showComment, setShowComment] = createSignal(false)
+	const [showCreatePR, setShowCreatePR] = createSignal(false)
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
-	const [viewMode, setViewMode] = createSignal<"list" | "diff">("list")
+	const [filterState, setFilterState] = createSignal<"open" | "closed" | "all">("open")
 
 	const selectedPR = () => prs()[selectedIdx()]
 
 	async function loadPRs() {
 		setLoading(true)
 		try {
-			const list = await listPRs({ state: "open", limit: 50 })
+			const state = filterState()
+			const list = await listPRs({ state, limit: 50 })
 			setPRs(list)
+			setSelectedIdx(0)
 			const first = list[0]
 			if (first) await loadDiff(first)
 		} catch (err) {
@@ -102,7 +106,7 @@ export function PullRequestsView() {
 	onMount(() => void loadPRs())
 
 	useKeyboard(async (key) => {
-		if (showMerge() || showReview() || showComment()) return
+		if (showMerge() || showReview() || showComment() || showCreatePR()) return
 
 		if (key.name === "tab") {
 			key.preventDefault()
@@ -127,7 +131,7 @@ export function PullRequestsView() {
 			if (p) await loadDiff(p)
 		} else if (key.name === "enter" && pr) {
 			key.preventDefault()
-			setViewMode((m) => (m === "list" ? "diff" : "list"))
+			await loadDiff(pr)
 		} else if (key.name === "m" && pr && pr.state === "OPEN") {
 			key.preventDefault()
 			const check = canMergePR(pr)
@@ -158,6 +162,19 @@ export function PullRequestsView() {
 			// Jump to branches view
 			key.preventDefault()
 			setView("branches")
+		} else if (key.name === "f") {
+			// Cycle filter state
+			key.preventDefault()
+			const states: Array<"open" | "closed" | "all"> = ["open", "closed", "all"]
+			const current = states.indexOf(filterState())
+			const next = states[(current + 1) % states.length]!
+			setFilterState(next)
+			showToast("info", `Filter: ${next}`)
+			await loadPRs()
+		} else if (key.name === "n") {
+			// Create new PR
+			key.preventDefault()
+			setShowCreatePR(true)
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadPRs()
@@ -172,7 +189,7 @@ export function PullRequestsView() {
 				flexDirection="column"
 				border
 				borderColor={primaryFocused() ? C.activeBorder : C.border}
-				title="pull requests"
+				title={`pull requests (${filterState()})`}
 			>
 				<Show
 					when={!loading()}
@@ -340,6 +357,35 @@ export function PullRequestsView() {
 						}
 					}}
 					onCancel={() => setShowComment(false)}
+				/>
+			</Show>
+
+			{/* Create PR dialog */}
+			<Show when={showCreatePR()}>
+				<InputDialog
+					title="Create Pull Request"
+					placeholder="PR title (defaults to branch name)"
+					onSubmit={async (title) => {
+						setShowCreatePR(false)
+						try {
+							showToast("info", "Creating PR...")
+							const pr = await createPR({
+								title: title || state.git.currentBranch,
+								body: "",
+								base: state.git.defaultBranch,
+							})
+							if (pr) {
+								await githubService.refreshPRs()
+								await loadPRs()
+								showToast("success", `Created PR #${pr.number}`)
+							} else {
+								showToast("error", "Failed to create PR")
+							}
+						} catch (err) {
+							showToast("error", String(err))
+						}
+					}}
+					onCancel={() => setShowCreatePR(false)}
 				/>
 			</Show>
 		</box>
