@@ -101,7 +101,11 @@ export function DiffViewer(props: DiffViewerProps) {
 						<span style={{ fg: "#58a6ff" }}>[</span>
 						<span style={{ fg: "#58a6ff" }}>]</span> navigate
 						{" · "}
-						<span style={{ fg: "#58a6ff" }}>s</span> stage hunk
+						<span style={{ fg: "#58a6ff" }}>s</span> stage
+						{" · "}
+						<span style={{ fg: "#58a6ff" }}>u</span> unstage
+						{" · "}
+						<span style={{ fg: "#58a6ff" }}>S</span> stage line
 					</text>
 				</Show>
 				<text fg={C.title}>

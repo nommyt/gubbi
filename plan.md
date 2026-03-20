@@ -122,8 +122,8 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 
 - [x] Navigate hunks with `[` / `]`
 - [x] `s` → stage selected hunk
-- [ ] `S` (shift) → stage selected line only
-- [ ] `u` → unstage hunk
+- [x] `S` (shift) → stage selected line only
+- [x] `u` → unstage hunk
 - [x] Visual hunk selection indicator in diff footer (hunk N/M)
 
 **Backend:** `packages/git/src/hunk-parser.ts` — parse unified diff into hunks, generate per-hunk patches for `git apply --cached`

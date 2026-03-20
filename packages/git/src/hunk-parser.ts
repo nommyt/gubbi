@@ -135,6 +135,78 @@ export function hunkToPatch(hunk: DiffHunk, fileHeaders: string[]): string {
 	return patch.join("\n") + "\n"
 }
 
+/**
+ * Generate an apply-able patch for a single line within a hunk.
+ * Uses the changed line plus surrounding context lines.
+ */
+export function lineToPatch(hunk: DiffHunk, fileHeaders: string[], lineIndex: number): string {
+	const line = hunk.lines[lineIndex]
+	if (!line) return hunkToPatch(hunk, fileHeaders)
+
+	const isChange = line.startsWith("+") || line.startsWith("-")
+	if (!isChange) return hunkToPatch(hunk, fileHeaders)
+
+	// Build a minimal hunk: context lines before, the change line, context lines after
+	const contextBefore: string[] = []
+	const contextAfter: string[] = []
+
+	// Gather context before
+	for (let i = lineIndex - 1; i >= 0; i--) {
+		const l = hunk.lines[i]
+		if (l && l.startsWith(" ")) {
+			contextBefore.unshift(l)
+		} else {
+			break
+		}
+	}
+
+	// Gather context after
+	for (let i = lineIndex + 1; i < hunk.lines.length; i++) {
+		const l = hunk.lines[i]
+		if (l && l.startsWith(" ")) {
+			contextAfter.push(l)
+		} else {
+			break
+		}
+	}
+
+	const patchLines = [...contextBefore, line, ...contextAfter]
+
+	// Build the @@ header with correct line numbers
+	const parsed = parseHunkHeader(hunk.header)
+	if (!parsed) return hunkToPatch(hunk, fileHeaders)
+
+	// Calculate new start based on offset of our line within the hunk
+	let oldStart = parsed.oldStart
+	let newStart = parsed.newStart
+	for (let i = 0; i < lineIndex; i++) {
+		const l = hunk.lines[i]
+		if (!l?.startsWith("+")) oldStart++
+		if (!l?.startsWith("-")) newStart++
+	}
+	// Back up for context before
+	oldStart -= contextBefore.length
+	newStart -= contextBefore.length
+
+	const oldCount = patchLines.filter((l) => !l.startsWith("+")).length
+	const newCount = patchLines.filter((l) => !l.startsWith("-")).length
+
+	const patch: string[] = []
+	for (const h of fileHeaders) {
+		if (h.startsWith("diff --git") && !h.includes(hunk.file)) continue
+		if (h.startsWith("---") && !h.includes(hunk.file)) continue
+		if (h.startsWith("+++") && !h.includes(hunk.file)) continue
+		patch.push(h)
+	}
+	if (!patch.some((l) => l.startsWith("---"))) patch.push(`--- a/${hunk.file}`)
+	if (!patch.some((l) => l.startsWith("+++"))) patch.push(`+++ b/${hunk.file}`)
+
+	patch.push(`@@ -${oldStart},${oldCount} +${newStart},${newCount} @@`)
+	patch.push(...patchLines)
+
+	return patch.join("\n") + "\n"
+}
+
 function parseHunkHeader(header: string): {
 	oldStart: number
 	oldCount: number

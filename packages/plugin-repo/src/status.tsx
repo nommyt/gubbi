@@ -12,8 +12,10 @@ import {
 	discardFile,
 	getDiff,
 	stageHunk,
+	unstageHunk,
 	parseDiff,
 	hunkToPatch,
+	lineToPatch,
 	gitService,
 } from "@gubbi/git"
 import { getCurrentBranchPR, pushAndCreatePR, githubService } from "@gubbi/github"
@@ -147,10 +149,40 @@ export function StatusView() {
 					const patch = hunkToPatch(hunk, parsedDiff().fileHeaders)
 					await stageHunk(patch, state.git.repoRoot)
 					await gitService.refreshStatus()
-					// Reload diff to reflect staged changes
 					const entry = selectedEntry()
 					if (entry) await loadDiff(entry)
 					showToast("success", `Staged hunk ${selectedHunk() + 1}`)
+				} catch (err) {
+					showToast("error", String(err))
+				}
+			} else if (key.name === "u") {
+				key.preventDefault()
+				const hunk = hunks()[selectedHunk()]
+				if (!hunk) return
+				try {
+					const patch = hunkToPatch(hunk, parsedDiff().fileHeaders)
+					await unstageHunk(patch, state.git.repoRoot)
+					await gitService.refreshStatus()
+					const entry = selectedEntry()
+					if (entry) await loadDiff(entry)
+					showToast("success", `Unstaged hunk ${selectedHunk() + 1}`)
+				} catch (err) {
+					showToast("error", String(err))
+				}
+			} else if (key.name === "S" && key.shift) {
+				key.preventDefault()
+				const hunk = hunks()[selectedHunk()]
+				if (!hunk) return
+				// Find first change line in the selected hunk
+				const changeIdx = hunk.lines.findIndex((l) => l.startsWith("+") || l.startsWith("-"))
+				if (changeIdx < 0) return
+				try {
+					const patch = lineToPatch(hunk, parsedDiff().fileHeaders, changeIdx)
+					await stageHunk(patch, state.git.repoRoot)
+					await gitService.refreshStatus()
+					const entry = selectedEntry()
+					if (entry) await loadDiff(entry)
+					showToast("success", "Staged line")
 				} catch (err) {
 					showToast("error", String(err))
 				}

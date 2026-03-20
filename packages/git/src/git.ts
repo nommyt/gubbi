@@ -201,6 +201,10 @@ export async function stageHunk(patch: string, cwd?: string): Promise<void> {
 	await execOrThrow(GIT, ["apply", "--cached", "--recount"], { cwd, input: patch })
 }
 
+export async function unstageHunk(patch: string, cwd?: string): Promise<void> {
+	await execOrThrow(GIT, ["apply", "--cached", "--reverse", "--recount"], { cwd, input: patch })
+}
+
 // ---------------------------------------------------------------------------
 // Commits
 // ---------------------------------------------------------------------------
