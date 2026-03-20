@@ -2,8 +2,6 @@
  * registry/hotkeys.ts — Hotkey registry for plugin-contributed keyboard shortcuts
  */
 
-import type { RegisterableHotkey } from "@tanstack/hotkeys"
-
 export type HotkeyHandler = () => void
 
 export interface HotkeyRegistration {
@@ -91,10 +89,7 @@ export class HotkeyRegistry {
 	 * Format hotkey for display
 	 */
 	formatForDisplay(hotkey: string): string {
-		return hotkey
-			.replace("Mod+", process.platform === "darwin" ? "⌘" : "Ctrl+")
-			.replace("Alt+", "⌥")
-			.replace("Shift+", "⇧")
+		return hotkey.replace("Mod+", "Ctrl+").replace("Alt+", "⌥").replace("Shift+", "⇧")
 	}
 }
 
