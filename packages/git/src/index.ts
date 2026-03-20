@@ -3,7 +3,7 @@
  */
 
 // Shell execution
-export { exec, execOrThrow, execInteractive, commandExists, ShellError } from "./shell.ts"
+export { exec, execOrThrow, execInteractive, commandExists, openURL, ShellError } from "./shell.ts"
 export type { ExecResult, ExecOptions } from "./shell.ts"
 
 // Git command wrappers

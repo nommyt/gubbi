@@ -2,7 +2,8 @@
  * branches.tsx — Branch management: list, checkout, create, delete, merge, rebase, push
  */
 
-import { state, showToast } from "@gubbi/core"
+import { state, showToast, setView } from "@gubbi/core"
+import type { GitHubPR } from "@gubbi/core"
 import {
 	getBranches,
 	checkout,
@@ -12,8 +13,10 @@ import {
 	rebaseBranch,
 	push,
 	gitService,
+	openURL,
 } from "@gubbi/git"
 import type { BranchEntry } from "@gubbi/git"
+import { createPR, mergePR, githubService } from "@gubbi/github"
 import { InputDialog, SelectDialog, ConfirmDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
@@ -40,6 +43,7 @@ export function BranchesView() {
 	const [showDelete, setShowDelete] = createSignal(false)
 	const [showMerge, setShowMerge] = createSignal(false)
 	const [showRebase, setShowRebase] = createSignal(false)
+	const [showMergePR, setShowMergePR] = createSignal(false)
 	const [showAction, setShowAction] = createSignal(false)
 	const [filter, setFilter] = createSignal("")
 
@@ -51,15 +55,26 @@ export function BranchesView() {
 	}
 	const selectedBranch = () => branches()[selectedIdx()]
 
+	const branchPRs = () => {
+		const map = new Map<string, GitHubPR>()
+		for (const pr of state.github.prs) {
+			if (pr.state === "OPEN") map.set(pr.headRefName, pr)
+		}
+		return map
+	}
+
 	async function refreshBranches() {
 		const list = await getBranches(state.git.repoRoot)
 		setAllBranches(list)
 	}
 
-	onMount(() => void refreshBranches())
+	onMount(() => {
+		void refreshBranches()
+		if (state.github.isAuthenticated) void githubService.refreshPRs()
+	})
 
 	useKeyboard(async (key) => {
-		if (showCreate() || showDelete() || showMerge() || showRebase()) return
+		if (showCreate() || showDelete() || showMerge() || showRebase() || showMergePR()) return
 
 		const branch = selectedBranch()
 
@@ -105,6 +120,51 @@ export function BranchesView() {
 			} catch (err) {
 				showToast("error", String(err))
 			}
+		} else if (key.name === "P" && key.shift && branch && !branch.remote) {
+			// Push + create PR if none exists
+			key.preventDefault()
+			try {
+				showToast("info", `Pushing ${branch.name}...`)
+				await push({ branch: branch.name, setUpstream: !branch.upstream }, state.git.repoRoot)
+				const existingPR = branchPRs().get(branch.name)
+				if (!existingPR && state.github.isAuthenticated) {
+					showToast("info", "Creating PR...")
+					const created = await createPR({
+						title: branch.name,
+						body: "",
+						base: state.git.defaultBranch,
+					})
+					if (created) {
+						await githubService.refreshPRs()
+						showToast("success", `Pushed and created PR #${created.number}`)
+					} else {
+						showToast("error", "Push succeeded but PR creation failed")
+					}
+				} else {
+					await refreshBranches()
+					showToast("success", `Pushed ${branch.name}`)
+				}
+			} catch (err) {
+				showToast("error", String(err))
+			}
+		} else if (key.name === "v" && branch) {
+			// Open PR in browser
+			key.preventDefault()
+			const pr = branchPRs().get(branch.name)
+			if (pr) await openURL(pr.url)
+			else showToast("info", "No open PR for this branch")
+		} else if (key.name === "M" && key.shift && branch) {
+			// Merge PR for selected branch
+			key.preventDefault()
+			const pr = branchPRs().get(branch.name)
+			if (!pr) showToast("info", "No open PR for this branch")
+			else setShowMergePR(true)
+		} else if (key.name === "V" && key.shift && branch) {
+			// Jump to PR view
+			key.preventDefault()
+			const pr = branchPRs().get(branch.name)
+			if (pr) setView("prs")
+			else showToast("info", "No open PR for this branch")
 		} else if (key.name === "/" || key.name === "f") {
 			key.preventDefault()
 			setShowAction(true)
@@ -122,6 +182,7 @@ export function BranchesView() {
 			const globalIdx = branches().indexOf(props.branch)
 			return selectedIdx() === globalIdx
 		}
+		const pr = () => branchPRs().get(props.branch.name)
 
 		return (
 			<box
@@ -144,6 +205,13 @@ export function BranchesView() {
 				<text fg={props.branch.current ? C.current : props.branch.remote ? C.remote : C.local}>
 					{props.branch.name}
 				</text>
+
+				{/* PR badge */}
+				<Show when={pr()}>
+					<text fg={pr()!.isDraft ? C.dim : C.current}>
+						PR #{pr()!.number} {pr()!.isDraft ? "◌" : "○"}
+					</text>
+				</Show>
 
 				<box flexGrow={1} />
 
@@ -192,7 +260,9 @@ export function BranchesView() {
 						<span style={{ fg: "#58a6ff" }}>n</span> new · <span style={{ fg: "#58a6ff" }}>D</span>{" "}
 						delete · <span style={{ fg: "#58a6ff" }}>m</span> merge ·{" "}
 						<span style={{ fg: "#58a6ff" }}>r</span> rebase ·{" "}
-						<span style={{ fg: "#58a6ff" }}>p</span> push
+						<span style={{ fg: "#58a6ff" }}>p</span> push · <span style={{ fg: "#58a6ff" }}>P</span>{" "}
+						push·PR · <span style={{ fg: "#58a6ff" }}>v</span> open PR ·{" "}
+						<span style={{ fg: "#58a6ff" }}>M</span> merge PR
 					</text>
 				</box>
 			</box>
@@ -288,6 +358,34 @@ export function BranchesView() {
 						}
 					}}
 					onCancel={() => setShowRebase(false)}
+				/>
+			</Show>
+			{/* Merge PR */}
+			<Show when={showMergePR() && selectedBranch()}>
+				<SelectDialog
+					title={`Merge PR for "${selectedBranch()?.name}"`}
+					options={[
+						{ label: "Squash and merge", description: "Squash commits and merge", value: "squash" },
+						{ label: "Merge commit", description: "Create a merge commit", value: "merge" },
+						{ label: "Rebase and merge", description: "Rebase commits and merge", value: "rebase" },
+					]}
+					onSelect={async (method) => {
+						setShowMergePR(false)
+						const branch = selectedBranch()
+						if (!branch) return
+						const pr = branchPRs().get(branch.name)
+						if (!pr) return
+						try {
+							await mergePR(pr.number, method as "merge" | "squash" | "rebase", {
+								deleteAfterMerge: true,
+							})
+							await Promise.all([refreshBranches(), githubService.refreshPRs()])
+							showToast("success", `Merged PR #${pr.number}`)
+						} catch (err) {
+							showToast("error", String(err))
+						}
+					}}
+					onCancel={() => setShowMergePR(false)}
 				/>
 			</Show>
 		</box>

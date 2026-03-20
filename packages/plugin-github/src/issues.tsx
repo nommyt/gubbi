@@ -3,7 +3,7 @@
  */
 
 import { state, showToast } from "@gubbi/core"
-import { exec } from "@gubbi/git"
+import { openURL } from "@gubbi/git"
 import {
 	listIssues,
 	getIssueComments,
@@ -103,7 +103,7 @@ export function IssuesView() {
 			setShowClose(true)
 		} else if (key.name === "o" && issue) {
 			key.preventDefault()
-			await exec("open", [issue.url])
+			await openURL(issue.url)
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadIssues()

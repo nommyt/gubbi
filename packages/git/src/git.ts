@@ -59,6 +59,21 @@ export async function getRemoteUrl(remote = "origin", cwd?: string): Promise<str
 	return r.exitCode === 0 ? r.stdout.trim() : ""
 }
 
+export async function getDefaultBranch(cwd?: string): Promise<string> {
+	// Try to read from origin/HEAD symbolic ref
+	const r = await exec(GIT, ["symbolic-ref", "refs/remotes/origin/HEAD"], { cwd })
+	if (r.exitCode === 0) {
+		const ref = r.stdout.trim() // e.g. "refs/remotes/origin/main"
+		return ref.replace("refs/remotes/origin/", "")
+	}
+	// Fallback: check for common branch names
+	for (const name of ["main", "master"]) {
+		const check = await exec(GIT, ["rev-parse", "--verify", `refs/remotes/origin/${name}`], { cwd })
+		if (check.exitCode === 0) return name
+	}
+	return "main"
+}
+
 export async function getRemotes(cwd?: string): Promise<RemoteEntry[]> {
 	const r = await exec(GIT, ["remote", "-v"], { cwd })
 	return parseRemotes(r.stdout)

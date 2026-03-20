@@ -3,7 +3,7 @@
  */
 
 import { state, showToast } from "@gubbi/core"
-import { exec } from "@gubbi/git"
+import { openURL } from "@gubbi/git"
 import { listRuns, getRunLogs, rerunRun, type WorkflowRun } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
@@ -119,7 +119,7 @@ export function ActionsView() {
 			}
 		} else if (key.name === "o" && run) {
 			key.preventDefault()
-			await exec("open", [run.url])
+			await openURL(run.url)
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadRuns()

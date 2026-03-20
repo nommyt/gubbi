@@ -3,7 +3,7 @@
  */
 
 import { state, showToast } from "@gubbi/core"
-import { exec } from "@gubbi/git"
+import { openURL } from "@gubbi/git"
 import {
 	listNotifications,
 	markNotificationRead,
@@ -141,7 +141,7 @@ export function NotificationsView() {
 				.replace("/pulls/", "/pull/")
 				.replace("/issues/", "/issues/")
 				.replace("/commits/", "/commit/")
-			await exec("open", [webUrl])
+			await openURL(webUrl)
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadNotifications()

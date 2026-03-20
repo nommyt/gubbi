@@ -3,7 +3,7 @@
  */
 
 import type { GitStatusEntry } from "@gubbi/core"
-import { state, setState, setFocus, showToast, toggleFullscreen } from "@gubbi/core"
+import { state, setState, setFocus, showToast, toggleFullscreen, setView } from "@gubbi/core"
 import {
 	stageFile,
 	unstageFile,
@@ -12,7 +12,9 @@ import {
 	discardFile,
 	getDiff,
 	gitService,
+	push,
 } from "@gubbi/git"
+import { createPR, githubService } from "@gubbi/github"
 import { ConfirmDialog, InputDialog, DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, Show, For, onMount } from "solid-js"
@@ -84,6 +86,12 @@ export function StatusView() {
 
 	const entries = () => state.git.status
 	const selectedEntry = () => entries()[selectedIdx()]
+	const currentBranchPR = () =>
+		state.github.prs.find(
+			(pr) => pr.headRefName === state.git.currentBranch && pr.state === "OPEN",
+		) ?? null
+	const currentBranchEntry = () =>
+		state.git.branches.find((b) => b.name === state.git.currentBranch && !b.remote) ?? null
 
 	async function loadDiff(entry: GitStatusEntry) {
 		const staged = entry.staged && !entry.unstaged
@@ -94,6 +102,7 @@ export function StatusView() {
 
 	onMount(async () => {
 		await gitService.refreshStatus()
+		if (state.github.isAuthenticated) void githubService.refreshPRs()
 		const first = entries()[0]
 		if (first) await loadDiff(first)
 	})
@@ -179,6 +188,38 @@ export function StatusView() {
 		} else if (key.name === "r" || (key.ctrl && key.name === "r")) {
 			key.preventDefault()
 			await gitService.refreshStatus()
+		} else if (key.name === "P" && key.shift) {
+			key.preventDefault()
+			try {
+				showToast("info", `Pushing ${state.git.currentBranch}...`)
+				await push(
+					{ branch: state.git.currentBranch, setUpstream: !currentBranchEntry()?.upstream },
+					state.git.repoRoot,
+				)
+				const pr = currentBranchPR()
+				if (!pr && state.github.isAuthenticated) {
+					showToast("info", "Creating PR...")
+					const created = await createPR({
+						title: state.git.currentBranch,
+						body: "",
+						base: state.git.defaultBranch,
+					})
+					if (created) {
+						await githubService.refreshPRs()
+						showToast("success", `Pushed and created PR #${created.number}`)
+					} else {
+						showToast("error", "Push succeeded but PR creation failed")
+					}
+				} else {
+					showToast("success", `Pushed ${state.git.currentBranch}`)
+				}
+			} catch (err) {
+				showToast("error", String(err))
+			}
+		} else if (key.name === "V" && key.shift) {
+			key.preventDefault()
+			if (currentBranchPR()) setView("prs")
+			else showToast("info", "No open PR for current branch")
 		}
 	})
 
@@ -190,6 +231,22 @@ export function StatusView() {
 
 	return (
 		<box flexGrow={1} flexDirection="column">
+			{/* PR context banner */}
+			<Show when={currentBranchPR() !== null && state.github.isAuthenticated}>
+				<box height={1} paddingLeft={2} border={["bottom"]} borderColor={C.border}>
+					<text fg={C.dim}>
+						{state.git.currentBranch} •{" "}
+						<span style={{ fg: "#58a6ff" }}>PR #{currentBranchPR()!.number}</span>{" "}
+						<span style={{ fg: currentBranchPR()!.isDraft ? C.dim : C.staged }}>
+							{currentBranchPR()!.isDraft ? "◌ draft" : "○ open"}
+						</span>
+						{currentBranchPR()!.mergeable === "MERGEABLE" ? (
+							<span style={{ fg: C.staged }}> • mergeable</span>
+						) : null}
+					</text>
+				</box>
+			</Show>
+
 			{/* Main split: file list + diff */}
 			<box flexGrow={1} flexDirection="row">
 				{/* File list — hidden in fullscreen diff mode */}
@@ -304,7 +361,9 @@ export function StatusView() {
 								<span style={{ fg: "#58a6ff" }}>Space</span> stage ·{" "}
 								<span style={{ fg: "#58a6ff" }}>a</span> all ·{" "}
 								<span style={{ fg: "#58a6ff" }}>d</span> discard ·{" "}
-								<span style={{ fg: "#58a6ff" }}>c</span> commit
+								<span style={{ fg: "#58a6ff" }}>c</span> commit ·{" "}
+								<span style={{ fg: "#58a6ff" }}>P</span> push·PR ·{" "}
+								<span style={{ fg: "#58a6ff" }}>V</span> view PR
 							</text>
 						</box>
 					</box>

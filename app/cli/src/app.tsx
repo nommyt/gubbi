@@ -21,8 +21,9 @@ export function App() {
 	const gitService = createGitService()
 	const githubService = createGitHubService()
 
-	// Check gh auth at startup; trigger web login if not logged in
+	// Initialize git repo detection and GitHub auth at startup
 	onMount(() => {
+		void gitService.initialize()
 		void githubService.checkAuth()
 	})
 

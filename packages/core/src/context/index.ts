@@ -13,6 +13,7 @@ import type { ViewDefinition } from "../types/view.ts"
  */
 export interface GitService {
 	// Will be implemented by @gubbi/git package
+	initialize: () => Promise<void>
 	refreshStatus: () => Promise<void>
 	refreshLog: () => Promise<void>
 	refreshBranches: () => Promise<void>

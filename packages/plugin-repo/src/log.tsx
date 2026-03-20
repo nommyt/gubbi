@@ -3,7 +3,7 @@
  */
 
 import { state, showToast } from "@gubbi/core"
-import { getLog, checkout, cherryPick, createBranch, gitService } from "@gubbi/git"
+import { getLog, checkout, cherryPick, createBranch, gitService, openURL } from "@gubbi/git"
 import type { LogEntry } from "@gubbi/git"
 import { exec } from "@gubbi/git"
 import { InputDialog, SelectDialog, ConfirmDialog } from "@gubbi/tui"
@@ -27,12 +27,24 @@ const C = {
 	current: "#58a6ff",
 	gpgGood: "#3fb950",
 	gpgBad: "#f78166",
+	prOpen: "#3fb950",
+	prMerged: "#a371f7",
 }
 
 function gpgIcon(status: string): string {
 	if (status === "G") return " ✓"
 	if (status === "B" || status === "E") return " ✗"
 	return ""
+}
+
+function getPRForEntry(entry: LogEntry) {
+	for (const pr of state.github.prs) {
+		for (const ref of entry.refs) {
+			const cleaned = ref.replace("HEAD -> ", "").replace(/^origin\//, "")
+			if (cleaned === pr.headRefName) return pr
+		}
+	}
+	return null
 }
 
 export function LogView() {
@@ -120,6 +132,11 @@ export function LogView() {
 		} else if (key.name === "y" && entry) {
 			key.preventDefault()
 			setShowCherryPickConfirm(true)
+		} else if (key.name === "v" && entry) {
+			key.preventDefault()
+			const pr = getPRForEntry(entry)
+			if (pr) await openURL(pr.url)
+			else showToast("info", "No PR found for this commit")
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadEntries(searchQuery() || undefined)
@@ -183,6 +200,18 @@ export function LogView() {
 										{/* Subject */}
 										<text fg={isSelected() ? "#e6edf3" : C.subject}>{entry.subject}</text>
 
+										{/* PR badge */}
+										{(() => {
+											const pr = getPRForEntry(entry)
+											if (!pr) return null
+											const merged = pr.state === "MERGED"
+											return (
+												<text fg={merged ? C.prMerged : C.prOpen}>
+													[PR #{pr.number} {merged ? "●" : "○"}]
+												</text>
+											)
+										})()}
+
 										<box flexGrow={1} />
 
 										{/* Author */}
@@ -217,7 +246,8 @@ export function LogView() {
 						<text fg={C.dim}>
 							<span style={{ fg: "#58a6ff" }}>/</span> search ·{" "}
 							<span style={{ fg: "#58a6ff" }}>b</span> branch here ·{" "}
-							<span style={{ fg: "#58a6ff" }}>y</span> cherry-pick
+							<span style={{ fg: "#58a6ff" }}>y</span> cherry-pick ·{" "}
+							<span style={{ fg: "#58a6ff" }}>v</span> open PR
 						</text>
 					</box>
 				</Show>

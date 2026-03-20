@@ -2,8 +2,8 @@
  * pull-requests.tsx — GitHub PRs: list, detail, create, review, merge, diff
  */
 
-import { state, setState, showToast } from "@gubbi/core"
-import { exec } from "@gubbi/git"
+import { state, setState, showToast, setView } from "@gubbi/core"
+import { openURL } from "@gubbi/git"
 import {
 	listPRs,
 	getPRDiff,
@@ -137,16 +137,20 @@ export function PullRequestsView() {
 			setShowComment(true)
 		} else if (key.name === "o" && pr) {
 			key.preventDefault()
-			await exec("open", [pr.url])
+			await openURL(pr.url)
 		} else if (key.name === "C" && key.shift && pr) {
 			// Checkout PR branch
 			key.preventDefault()
 			try {
 				await checkoutPR(pr.number)
-				showToast("success", `Checked out PR #${pr.number}: ${pr.headRefName}`)
+				showToast("success", `Checked out ${pr.headRefName} → Switch to Status (2)`)
 			} catch (err) {
 				showToast("error", String(err))
 			}
+		} else if (key.name === "b" && pr) {
+			// Jump to branches view
+			key.preventDefault()
+			setView("branches")
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadPRs()
@@ -215,6 +219,9 @@ export function PullRequestsView() {
 												<text fg={C.dim}>
 													+{pr.additions} -{pr.deletions}
 												</text>
+												<Show when={state.git.branches.some((b) => b.name === pr.headRefName)}>
+													<text fg={C.dim}>⎇ local</text>
+												</Show>
 												<For each={pr.labels.slice(0, 3)}>
 													{(label) => <text fg={C.label}>[{label}]</text>}
 												</For>
@@ -240,6 +247,7 @@ export function PullRequestsView() {
 						<span style={{ fg: "#58a6ff" }}>a</span> approve ·{" "}
 						<span style={{ fg: "#58a6ff" }}>c</span> comment ·{" "}
 						<span style={{ fg: "#58a6ff" }}>C</span> checkout ·{" "}
+						<span style={{ fg: "#58a6ff" }}>b</span> branches ·{" "}
 						<span style={{ fg: "#58a6ff" }}>o</span> open
 					</text>
 				</box>
