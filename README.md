@@ -13,6 +13,7 @@ Built on [Bun](https://bun.sh), [SolidJS](https://solidjs.com), and [OpenTUI](ht
 - [Bun](https://bun.sh) >= 1.3
 - [git](https://git-scm.com)
 - [gh](https://cli.github.com) — GitHub CLI, authenticated (`gh auth login`)
+- [Nerd Font](https://www.nerdfonts.com/) — required for icons. Install any Nerd Font (e.g. JetBrains Mono Nerd Font, Hack Nerd Font) and set it as your terminal font.
 
 ## Installation
 

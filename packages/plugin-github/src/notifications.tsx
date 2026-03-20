@@ -2,7 +2,7 @@
  * notifications.tsx — GitHub notifications: triage, filter, mark read, batch ops
  */
 
-import { state, showToast } from "@gubbi/core"
+import { state, showToast, icons } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	listNotifications,
@@ -30,15 +30,15 @@ const C = {
 function typeIcon(type: string): string {
 	switch (type) {
 		case "PullRequest":
-			return "⤲"
+			return icons.pullRequest
 		case "Issue":
-			return "◎"
+			return icons.lightbulb
 		case "Release":
-			return "⬡"
+			return icons.flame
 		case "Commit":
-			return "○"
+			return icons.commit
 		default:
-			return "◆"
+			return icons.bell
 	}
 }
 
@@ -188,7 +188,9 @@ export function NotificationsView() {
 										onMouseDown={() => setSelectedIdx(i())}
 									>
 										{/* Unread dot */}
-										<text fg={notif.unread ? C.unread : C.dim}>{notif.unread ? "●" : "○"}</text>
+										<text fg={notif.unread ? C.unread : C.dim}>
+											{notif.unread ? icons.circleFilled : icons.circle}
+										</text>
 
 										{/* Type icon */}
 										<text fg={typeColor(notif.subject.type)}>{typeIcon(notif.subject.type)}</text>

@@ -3,7 +3,7 @@
  * Shows only your work: unpushed commits, branches you authored, with inline GitHub data.
  */
 
-import { state, showToast } from "@gubbi/core"
+import { state, showToast, icons } from "@gubbi/core"
 import { getLog, getGraphLog } from "@gubbi/git"
 import type { LogEntry } from "@gubbi/git"
 import { exec } from "@gubbi/git"
@@ -36,8 +36,8 @@ const C = {
 }
 
 function gpgIcon(status: string): string | null {
-	if (status === "G") return "✓"
-	if (status === "B" || status === "E") return "✗"
+	if (status === "G") return icons.check
+	if (status === "B" || status === "E") return icons.circleSlash
 	return null
 }
 
@@ -57,11 +57,11 @@ function ciStatusForPR(_prNumber: number): string | null {
 function ciIcon(status: string | null): string {
 	switch (status) {
 		case "passing":
-			return "✓"
+			return icons.check
 		case "failing":
-			return "✗"
+			return icons.circleSlash
 		case "pending":
-			return "●"
+			return icons.sync
 		default:
 			return ""
 	}
@@ -208,7 +208,9 @@ export function SmartlogView() {
 									>
 										<box flexDirection="row" gap={1}>
 											{/* Current indicator */}
-											<text fg={isCurrent() ? C.current : C.graph}>{isCurrent() ? "●" : "○"}</text>
+											<text fg={isCurrent() ? C.current : C.graph}>
+												{isCurrent() ? icons.circleFilled : icons.circle}
+											</text>
 
 											{/* Short hash */}
 											<text fg={C.hash}>{entry.shortHash}</text>
@@ -236,7 +238,7 @@ export function SmartlogView() {
 													{(ref) => (
 														<text>
 															<span style={{ fg: ref.includes("HEAD") ? C.current : C.branch }}>
-																⎇ {ref.replace("HEAD -> ", "")}
+																{icons.branch} {ref.replace("HEAD -> ", "")}
 															</span>
 														</text>
 													)}

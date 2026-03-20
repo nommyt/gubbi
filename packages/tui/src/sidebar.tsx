@@ -2,7 +2,7 @@
  * sidebar.tsx — Left navigation panel with view list
  */
 
-import { state, setView, setFocus, VIEWS } from "@gubbi/core"
+import { state, setView, setFocus, VIEWS, icons } from "@gubbi/core"
 import { For, Show } from "solid-js"
 
 const C = {
@@ -21,17 +21,18 @@ interface SidebarProps {
 }
 
 const VIEW_ICONS: Record<string, string> = {
-	smartlog: "◈",
-	status: "◉",
-	log: "≡",
-	branches: "⎇",
-	stacks: "⬡",
-	stash: "⚑",
-	prs: "⤲",
-	issues: "◎",
-	actions: "▶",
-	notifications: "◆",
-	remotes: "⊙",
+	dashboard: icons.star,
+	smartlog: icons.commit,
+	status: icons.circleFilled,
+	log: icons.commit,
+	branches: icons.branch,
+	stacks: icons.merge,
+	stash: icons.bookmark,
+	prs: icons.pullRequest,
+	issues: icons.lightbulb,
+	actions: icons.play,
+	notifications: icons.bell,
+	remotes: icons.sync,
 }
 
 export function Sidebar(props: SidebarProps) {
@@ -101,11 +102,13 @@ export function Sidebar(props: SidebarProps) {
 							when={state.github.isCheckingAuth}
 							fallback={<text fg={C.keyHint}>⚠ gh: not logged in</text>}
 						>
-							<text fg={C.keyHint}>⬡ gh: checking...</text>
+							<text fg={C.keyHint}>{icons.sync} gh: checking...</text>
 						</Show>
 					}
 				>
-					<text fg={C.keyHint}>⬡ {state.github.user || "authenticated"}</text>
+					<text fg={C.keyHint}>
+						{icons.check} {state.github.user || "authenticated"}
+					</text>
 				</Show>
 			</box>
 		</box>

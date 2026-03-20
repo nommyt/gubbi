@@ -17,5 +17,8 @@ export * from "./context/index.ts"
 // Hotkeys
 export * from "./hotkeys.ts"
 
+// Icons
+export { icons } from "./icons.ts"
+
 // Hooks
 export * from "./hooks/use-interval.ts"

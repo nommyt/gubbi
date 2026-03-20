@@ -10,7 +10,7 @@
  * Polling intervals — adjust POLL below to tune refresh cadence.
  */
 
-import { state, showToast, useInterval } from "@gubbi/core"
+import { state, showToast, useInterval, icons } from "@gubbi/core"
 import {
 	searchMyOpenPRs,
 	listPRs,
@@ -118,12 +118,12 @@ function ciSummary(checks: Array<{ status: string; conclusion: string | null }>)
 			c.conclusion === "TIMED_OUT" ||
 			c.conclusion === "ACTION_REQUIRED",
 	)
-	if (hasFailure) return { icon: "✗", color: C.ciFail }
+	if (hasFailure) return { icon: icons.circleSlash, color: C.ciFail }
 	const hasPending = checks.some(
 		(c) => c.status === "IN_PROGRESS" || c.status === "QUEUED" || c.conclusion === null,
 	)
-	if (hasPending) return { icon: "●", color: C.ciPending }
-	return { icon: "✓", color: C.ciPass }
+	if (hasPending) return { icon: icons.sync, color: C.ciPending }
+	return { icon: icons.check, color: C.ciPass }
 }
 
 // ---------------------------------------------------------------------------
@@ -347,7 +347,9 @@ export function DashboardView() {
 										flexDirection="column"
 									>
 										<box flexDirection="row" gap={1}>
-											<text fg={pr.isDraft ? C.prDraft : C.prOpen}>{pr.isDraft ? "◌" : "○"}</text>
+											<text fg={pr.isDraft ? C.prDraft : C.prOpen}>
+												{pr.isDraft ? icons.circle : icons.check}
+											</text>
 											<text fg={C.repo}>{pr.repository}</text>
 											<box flexGrow={1} />
 											<Show when={pr.checks.length > 0}>
@@ -502,7 +504,9 @@ export function DashboardView() {
 										flexDirection="column"
 									>
 										<box flexDirection="row" gap={1}>
-											<text fg={notif.unread ? C.prOpen : C.dim}>{notif.unread ? "●" : "○"}</text>
+											<text fg={notif.unread ? C.prOpen : C.dim}>
+												{notif.unread ? icons.circleFilled : icons.circle}
+											</text>
 											<text fg={C.dim}>{notif.subject.type}</text>
 											<box flexGrow={1} />
 											<text fg={C.dim}>{relativeTime(notif.updatedAt)}</text>

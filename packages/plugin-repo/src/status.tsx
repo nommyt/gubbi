@@ -3,7 +3,7 @@
  */
 
 import type { GitStatusEntry } from "@gubbi/core"
-import { state, setState, setFocus, showToast, toggleFullscreen, setView } from "@gubbi/core"
+import { state, setState, setFocus, showToast, toggleFullscreen, setView, icons } from "@gubbi/core"
 import {
 	stageFile,
 	unstageFile,
@@ -232,7 +232,7 @@ export function StatusView() {
 						{state.git.currentBranch} •{" "}
 						<span style={{ fg: "#58a6ff" }}>PR #{currentBranchPR()!.number}</span>{" "}
 						<span style={{ fg: currentBranchPR()!.isDraft ? C.dim : C.staged }}>
-							{currentBranchPR()!.isDraft ? "◌ draft" : "○ open"}
+							{currentBranchPR()!.isDraft ? `${icons.circle} draft` : `${icons.check} open`}
 						</span>
 						{currentBranchPR()!.mergeable === "MERGEABLE" ? (
 							<span style={{ fg: C.staged }}> • mergeable</span>

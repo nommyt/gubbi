@@ -3,7 +3,7 @@
  * Visualize, create, navigate, sync, and submit stacks of dependent branches.
  */
 
-import { state, showToast } from "@gubbi/core"
+import { state, showToast, icons } from "@gubbi/core"
 import { getDiffBetween, gitService } from "@gubbi/git"
 import {
 	getStacks,
@@ -58,15 +58,15 @@ function prStatusColor(status?: string): string {
 function prStatusIcon(status?: string): string {
 	switch (status) {
 		case "open":
-			return "○"
+			return icons.pullRequest
 		case "draft":
-			return "◌"
+			return icons.circle
 		case "merged":
-			return "●"
+			return icons.merge
 		case "closed":
-			return "✗"
+			return icons.circleSlash
 		default:
-			return "○"
+			return icons.circle
 	}
 }
 
@@ -285,7 +285,7 @@ export function StacksView() {
 														<box flexDirection="row" gap={1}>
 															{/* Stack graph */}
 															<text fg={isCurrent() ? C.current : C.branch}>
-																{isCurrent() ? "⬡" : "○"}
+																{isCurrent() ? icons.circleFilled : icons.circle}
 															</text>
 
 															{/* Branch name */}
@@ -312,7 +312,11 @@ export function StacksView() {
 																				: C.ciPending
 																	}
 																>
-																	{ci() === "passing" ? "✓" : ci() === "failing" ? "✗" : "●"}
+																	{ci() === "passing"
+																		? icons.check
+																		: ci() === "failing"
+																			? icons.circleSlash
+																			: icons.sync}
 																</text>
 															</Show>
 														</box>
@@ -338,7 +342,9 @@ export function StacksView() {
 
 										{/* Trunk base */}
 										<box paddingLeft={2}>
-											<text fg={C.trunk}>○ {stack.trunk} (base)</text>
+											<text fg={C.trunk}>
+												{icons.branch} {stack.trunk} (base)
+											</text>
 										</box>
 									</box>
 								)}

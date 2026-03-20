@@ -1,11 +1,10 @@
 /**
- * header.tsx — Top bar: repo name, branch, sync status, file counts, and tab navigation
+ * header.tsx — Top bar: repo/branch info and tab navigation
  */
 
-import { state, setView, VIEWS } from "@gubbi/core"
+import { state, setView, VIEWS, icons } from "@gubbi/core"
 import { Show, For } from "solid-js"
 
-// Colors
 const C = {
 	bg: "#0d1117",
 	border: "#30363d",
@@ -14,61 +13,23 @@ const C = {
 	behind: "#f78166",
 	staged: "#3fb950",
 	modified: "#d29922",
-	deleted: "#f78166",
 	untracked: "#8b949e",
 	prOpen: "#3fb950",
 	prDraft: "#8b949e",
-	prMerged: "#a371f7",
-	ciPass: "#3fb950",
-	ciFail: "#f78166",
-	ciPending: "#d29922",
 	branding: "#58a6ff",
 	dim: "#8b949e",
 	text: "#e6edf3",
-	tabActive: "#161b22",
+	tabActive: "#1c2128",
 	tabInactive: "#0d1117",
+	sep: "#484f58",
 }
 
-const VIEW_ICONS: Record<string, string> = {
-	dashboard: "◈",
-	smartlog: "◈",
-	status: "◉",
-	log: "≡",
-	branches: "⎇",
-	stacks: "⬡",
-	stash: "⚑",
-	prs: "⤲",
-	issues: "◎",
-	actions: "▶",
-	notifications: "◆",
-	remotes: "⊙",
-}
-
-function ciIcon(status: string): string {
-	switch (status) {
-		case "passing":
-			return "✓"
-		case "failing":
-			return "✗"
-		case "pending":
-			return "●"
-		default:
-			return "○"
-	}
-}
-
-function ciColor(status: string): string {
-	switch (status) {
-		case "passing":
-			return C.ciPass
-		case "failing":
-			return C.ciFail
-		case "pending":
-			return C.ciPending
-		default:
-			return C.dim
-	}
-}
+// Tab groups separated by dividers
+const TAB_GROUPS = [
+	{ views: ["dashboard"], label: "" },
+	{ views: ["smartlog", "status", "log", "branches", "stacks", "stash"], label: "git" },
+	{ views: ["prs", "issues", "actions", "notifications"], label: "github" },
+]
 
 export function Header() {
 	const stagedCount = () => state.git.status?.filter((e) => e.staged).length ?? 0
@@ -80,31 +41,36 @@ export function Header() {
 
 	return (
 		<box flexDirection="column" border={["bottom"]} borderColor={C.border} backgroundColor={C.bg}>
-			{/* Top row: repo info, branch, counts, branding */}
+			{/* Slim info row */}
 			<box
 				flexDirection="row"
 				alignItems="center"
-				height={2}
+				height={1}
 				paddingLeft={1}
 				paddingRight={1}
 				gap={1}
 			>
-				{/* Repo name */}
-				<text fg={C.text}>
-					<span style={{ fg: C.branding }}>⬡</span>{" "}
-					<span style={{ fg: C.text }}>{state.git.repoName || "gubbi"}</span>
-				</text>
-
-				<text fg={C.dim}>│</text>
-
 				{/* Branch */}
 				<text>
-					<span style={{ fg: C.dim }}>⎇ </span>
 					<span style={{ fg: C.branch }}>{state.git.currentBranch || "—"}</span>
 				</text>
 
+				{/* PR badge */}
+				<Show when={currentPR()}>
+					<text>
+						<span style={{ fg: currentPR()?.isDraft ? C.prDraft : C.prOpen }}>
+							PR #{currentPR()?.number}
+						</span>
+						<span style={{ fg: currentPR()?.isDraft ? C.prDraft : C.prOpen }}>
+							{" "}
+							{currentPR()?.isDraft ? icons.circle : icons.check}
+						</span>
+					</text>
+				</Show>
+
 				{/* Ahead/behind */}
 				<Show when={state.git.ahead > 0 || state.git.behind > 0}>
+					<text fg={C.dim}>·</text>
 					<text>
 						<Show when={state.git.ahead > 0}>
 							<span style={{ fg: C.ahead }}>↑{state.git.ahead}</span>
@@ -117,10 +83,10 @@ export function Header() {
 
 				{/* File change counts */}
 				<Show when={stagedCount() > 0 || modifiedCount() > 0 || untrackedCount() > 0}>
-					<text fg={C.dim}>│</text>
+					<text fg={C.dim}>·</text>
 					<text>
 						<Show when={stagedCount() > 0}>
-							<span style={{ fg: C.staged }}>●{stagedCount()}</span>
+							<span style={{ fg: C.staged }}>+{stagedCount()}</span>
 						</Show>
 						<Show when={modifiedCount() > 0}>
 							<span style={{ fg: C.modified }}> ~{modifiedCount()}</span>
@@ -131,97 +97,62 @@ export function Header() {
 					</text>
 				</Show>
 
-				{/* PR info */}
-				<Show when={currentPR()}>
-					<text fg={C.dim}>│</text>
+				<box flexGrow={1} />
+
+				{/* Notification badge */}
+				<Show when={state.github.unreadNotificationCount > 0}>
 					<text>
-						<span style={{ fg: C.dim }}>PR </span>
-						<span style={{ fg: currentPR()?.isDraft ? C.prDraft : C.prOpen }}>
-							#{currentPR()?.number}
+						<span style={{ fg: C.modified }}>
+							{icons.bell}
+							{state.github.unreadNotificationCount}
 						</span>
 					</text>
 				</Show>
-
-				{/* Spacer */}
-				<box flexGrow={1} />
-
-				{/* GitHub auth indicator — only show after auth check completes */}
-				<Show
-					when={!state.github.isAuthenticated && !state.github.isCheckingAuth && state.git.isRepo}
-				>
-					<text fg={C.dim}>gh: not logged in</text>
-					<text fg={C.dim}>│</text>
-				</Show>
-
-				{/* Unread notifications badge */}
-				<Show when={state.github.unreadNotificationCount > 0}>
-					<text>
-						<span style={{ fg: C.modified }}>🔔 {state.github.unreadNotificationCount}</span>
-					</text>
-					<text fg={C.dim}>│</text>
-				</Show>
-
-				{/* Branding */}
-				<text>
-					<span style={{ fg: C.branding }}>gubbi</span>
-					<span style={{ fg: C.dim }}> v0.1</span>
-				</text>
 			</box>
 
-			{/* Tab row: navigation tabs */}
-			<box flexDirection="row" height={1} paddingLeft={1} gap={0}>
-				<For each={VIEWS}>
-					{(view) => {
-						const isActive = () => state.ui.currentView === view.id
-						const badge = () => {
-							if (view.id === "notifications")
-								return state.github.unreadNotificationCount > 0
-									? state.github.unreadNotificationCount
-									: 0
-							if (view.id === "status") return state.git.status.length
-							if (view.id === "prs")
-								return state.github.prs.filter((p) => p.state === "OPEN").length
-							return 0
-						}
+			{/* Tab row with group separators */}
+			<box flexDirection="row" height={1} paddingLeft={0} gap={0}>
+				<For each={TAB_GROUPS}>
+					{(group, gi) => (
+						<>
+							<Show when={gi() > 0}>
+								<text fg={C.sep}> │ </text>
+							</Show>
+							<For each={VIEWS.filter((v) => group.views.includes(v.id))}>
+								{(view) => {
+									const isActive = () => state.ui.currentView === view.id
+									const badge = () => {
+										if (view.id === "notifications")
+											return state.github.unreadNotificationCount > 0
+												? state.github.unreadNotificationCount
+												: 0
+										if (view.id === "status") return state.git.status.length
+										if (view.id === "prs")
+											return state.github.prs.filter((p) => p.state === "OPEN").length
+										return 0
+									}
 
-						// Short labels for tabs
-						const shortLabel: Record<string, string> = {
-							dashboard: "dash",
-							smartlog: "smartlog",
-							status: "status",
-							log: "log",
-							branches: "branches",
-							stacks: "stacks",
-							stash: "stash",
-							prs: "PRs",
-							issues: "issues",
-							actions: "actions",
-							notifications: "notifs",
-							remotes: "remotes",
-						}
-
-						return (
-							<box
-								flexDirection="row"
-								alignItems="center"
-								paddingLeft={1}
-								paddingRight={1}
-								gap={1}
-								onMouseDown={() => setView(view.id)}
-								backgroundColor={isActive() ? C.tabActive : C.tabInactive}
-								border={isActive() ? ["bottom"] : []}
-								borderColor={C.branding}
-							>
-								<text fg={C.dim}>{view.key}</text>
-								<text fg={isActive() ? C.branding : C.dim}>
-									{VIEW_ICONS[view.id]} {shortLabel[view.id]}
-								</text>
-								<Show when={badge() > 0}>
-									<text fg={C.modified}>{badge()}</text>
-								</Show>
-							</box>
-						)
-					}}
+									return (
+										<box
+											flexDirection="row"
+											alignItems="center"
+											paddingLeft={1}
+											paddingRight={1}
+											gap={0}
+											onMouseDown={() => setView(view.id)}
+											backgroundColor={isActive() ? C.tabActive : C.tabInactive}
+										>
+											<text fg={isActive() ? C.text : C.dim}>{view.key}</text>
+											<text fg={isActive() ? C.branding : C.dim}> {view.label}</text>
+											<Show when={badge() > 0}>
+												<text fg={C.modified}> {badge()}</text>
+											</Show>
+										</box>
+									)
+								}}
+							</For>
+						</>
+					)}
 				</For>
 			</box>
 		</box>

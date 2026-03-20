@@ -2,7 +2,7 @@
  * issues.tsx — GitHub issues: list, detail, create, comment
  */
 
-import { state, showToast } from "@gubbi/core"
+import { state, showToast, icons } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	listIssues,
@@ -156,7 +156,7 @@ export function IssuesView() {
 										>
 											<box flexDirection="row" gap={1}>
 												<text fg={issue.state === "OPEN" ? C.open : C.closed}>
-													{issue.state === "OPEN" ? "○" : "●"}
+													{issue.state === "OPEN" ? icons.circle : icons.circleFilled}
 												</text>
 												<text fg={C.dim}>#{issue.number}</text>
 												<text fg={isSelected() ? "#e6edf3" : C.text}>{issue.title}</text>

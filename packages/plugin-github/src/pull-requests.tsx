@@ -2,7 +2,7 @@
  * pull-requests.tsx — GitHub PRs: list, detail, create, review, merge, diff
  */
 
-import { state, showToast, setView } from "@gubbi/core"
+import { state, showToast, setView, icons } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	listPRs,
@@ -45,21 +45,22 @@ function prStateColor(pr: PullRequest): string {
 }
 
 function prStateIcon(pr: PullRequest): string {
-	if (pr.isDraft) return "◌"
-	if (pr.state === "MERGED") return "●"
-	if (pr.state === "CLOSED") return "✗"
-	return "○"
+	if (pr.isDraft) return icons.circle
+	if (pr.state === "MERGED") return icons.merge
+	if (pr.state === "CLOSED") return icons.circleSlash
+	return icons.check
 }
 
 function checksIcon(pr: PullRequest): { icon: string; color: string } {
 	const checks = pr.checks
 	if (checks.length === 0) return { icon: "", color: C.dim }
-	if (checks.some((c) => c.conclusion === "FAILURE")) return { icon: "✗", color: C.ciFail }
+	if (checks.some((c) => c.conclusion === "FAILURE"))
+		return { icon: icons.circleSlash, color: C.ciFail }
 	if (checks.some((c) => c.status === "IN_PROGRESS" || c.status === "QUEUED"))
-		return { icon: "●", color: C.ciPending }
+		return { icon: icons.sync, color: C.ciPending }
 	if (checks.every((c) => c.conclusion === "SUCCESS" || c.conclusion === "SKIPPED"))
-		return { icon: "✓", color: C.ciPass }
-	return { icon: "○", color: C.dim }
+		return { icon: icons.check, color: C.ciPass }
+	return { icon: icons.circle, color: C.dim }
 }
 
 export function PullRequestsView() {
@@ -226,7 +227,7 @@ export function PullRequestsView() {
 													+{pr.additions} -{pr.deletions}
 												</text>
 												<Show when={state.git.branches.some((b) => b.name === pr.headRefName)}>
-													<text fg={C.dim}>⎇ local</text>
+													<text fg={C.dim}> local</text>
 												</Show>
 												<For each={pr.labels.slice(0, 3)}>
 													{(label) => <text fg={C.label}>[{label}]</text>}

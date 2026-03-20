@@ -209,7 +209,7 @@ export function BranchesView() {
 				{/* PR badge */}
 				<Show when={pr()}>
 					<text fg={pr()!.isDraft ? C.dim : C.current}>
-						PR #{pr()!.number} {pr()!.isDraft ? "◌" : "○"}
+						PR #{pr()!.number} {pr()!.isDraft ? "" : ""}
 					</text>
 				</Show>
 

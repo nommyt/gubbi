@@ -2,7 +2,7 @@
  * actions.tsx — GitHub Actions workflow runs: list, status, logs, re-run
  */
 
-import { state, showToast } from "@gubbi/core"
+import { state, showToast, icons } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import { listRuns, getRunLogs, rerunRun, type WorkflowRun } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
@@ -30,13 +30,13 @@ function statusColor(run: WorkflowRun): string {
 }
 
 function statusIcon(run: WorkflowRun): string {
-	if (run.status === "in_progress") return "●"
-	if (run.status === "queued") return "○"
-	if (run.conclusion === "success") return "✓"
-	if (run.conclusion === "failure" || run.conclusion === "timed_out") return "✗"
-	if (run.conclusion === "cancelled") return "⊘"
+	if (run.status === "in_progress") return icons.sync
+	if (run.status === "queued") return icons.clock
+	if (run.conclusion === "success") return icons.check
+	if (run.conclusion === "failure" || run.conclusion === "timed_out") return icons.circleSlash
+	if (run.conclusion === "cancelled") return icons.circleSlash
 	if (run.conclusion === "skipped") return "—"
-	return "○"
+	return icons.circle
 }
 
 function formatDate(iso: string): string {
@@ -176,7 +176,9 @@ export function ActionsView() {
 												<text fg={C.dim}>{formatDate(run.updatedAt)}</text>
 											</box>
 											<box flexDirection="row" paddingLeft={2} gap={1}>
-												<text fg={C.branch}>⎇ {run.branch}</text>
+												<text fg={C.branch}>
+													{icons.branch} {run.branch}
+												</text>
 												<text fg={C.dim}>{run.event}</text>
 												<text fg={C.dim}>{run.headSha.slice(0, 7)}</text>
 											</box>

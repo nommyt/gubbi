@@ -2,7 +2,7 @@
  * log.tsx — Full commit history with graph visualization and search
  */
 
-import { state, showToast } from "@gubbi/core"
+import { state, showToast, icons } from "@gubbi/core"
 import { getLog, checkout, cherryPick, createBranch, gitService, openURL } from "@gubbi/git"
 import type { LogEntry } from "@gubbi/git"
 import { exec } from "@gubbi/git"
@@ -32,8 +32,8 @@ const C = {
 }
 
 function gpgIcon(status: string): string {
-	if (status === "G") return " ✓"
-	if (status === "B" || status === "E") return " ✗"
+	if (status === "G") return ` ${icons.check}`
+	if (status === "B" || status === "E") return ` ${icons.circleSlash}`
 	return ""
 }
 
@@ -207,7 +207,7 @@ export function LogView() {
 											const merged = pr.state === "MERGED"
 											return (
 												<text fg={merged ? C.prMerged : C.prOpen}>
-													[PR #{pr.number} {merged ? "●" : "○"}]
+													[PR #{pr.number} {merged ? icons.merge : icons.pullRequest}]
 												</text>
 											)
 										})()}
