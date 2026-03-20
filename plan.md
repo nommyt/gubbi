@@ -112,10 +112,10 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 3.1 Header Redesign
 **File:** `packages/tui/src/header.tsx`
 
-- [ ] Slim top row: `⬡ feature/new-ui  •  PR #123 ✓  •  +3 ~2  •  🔔 5`
-- [ ] Remove: version number, verbose auth status (move to status bar)
-- [ ] Tab row: visual grouping with separator — `[d] │ [1][2][3][4][5][6] │ [7][8][9][0]`
-- [ ] Active tab: full highlight (not just underline)
+- [x] Slim top row: `feature/new-ui  PR #123 ✓  ·  +3 ~2  🔔5`
+- [x] Remove: version number, verbose auth status (move to status bar)
+- [x] Tab row: visual grouping with separator — `[d] │ [1][2][3][4][5][6] │ [7][8][9][0]`
+- [x] Active tab: full highlight (not just underline)
 
 ### 3.2 Hunk-Level Staging (Magit-style)
 **Files:** `packages/plugin-repo/src/status.tsx`, `packages/tui/src/diff-viewer.tsx`
@@ -124,7 +124,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 - [ ] `s` → stage selected hunk
 - [ ] `S` (shift) → stage selected line only
 - [ ] `u` → unstage hunk
-- [ ] Visual hunk selection indicator (● staged, ○ unstaged)
+- [ ] Visual hunk selection indicator ( staged,  unstaged)
 
 **Backend:** `packages/git/src/service.ts` — `git apply --cached` with generated patch
 
@@ -328,6 +328,87 @@ actions:
 - [ ] Apply custom keybindings to registry
 - [ ] Load custom dashboard sections
 - [ ] Execute custom actions via `packages/core/src/actions/custom.ts`
+
+---
+
+## Sprint 9 — Query & Cache System
+
+> Goal: TanStack Query-style caching for all data fetching. Stale-while-revalidate, deduplication, targeted invalidation.
+
+Currently each view re-implements fetching and caching ad-hoc (dashboard has a module-level cache object, other views have no caching). This sprint creates a centralized query layer.
+
+### 9.1 Query Cache Core
+**New file:** `packages/core/src/query.ts`
+
+API inspired by TanStack Query, adapted for SolidJS + terminal:
+
+```ts
+// Query: fetch + cache + stale detection
+const prsQuery = createQuery({
+  queryKey: () => ["prs", { state: "open" }],
+  queryFn: () => listPRs({ state: "open" }),
+  staleTime: 60_000,        // data fresh for 60s
+  refetchInterval: 120_000, // background poll every 2m
+})
+
+// Read: returns signal-like { data, isLoading, isStale, error, refetch }
+prsQuery.data       // cached data (immediately available)
+prsQuery.isLoading  // true only on first fetch
+prsQuery.isStale    // true when staleTime expired
+prsQuery.refetch()  // manual refresh
+```
+
+- [ ] `createQuery()` — keyed fetcher with `staleTime`, `refetchInterval`, `gcTime`
+- [ ] Query key serialization + deduplication (same key = single in-flight request)
+- [ ] Stale-while-revalidate: show cached data, refetch in background
+- [ ] `invalidateQuery(key)` — mark query stale, triggers refetch
+- [ ] Garbage collection: evict queries unused for `gcTime` (default 5min)
+- [ ] `useQuery()` hook — wraps `createQuery` with SolidJS reactivity (auto-dispose on unmount)
+
+### 9.2 Mutation Layer
+**File:** `packages/core/src/query.ts`
+
+```ts
+const mergeMutation = createMutation({
+  mutationFn: (pr: PullRequest) => mergePR(pr.number, "squash"),
+  onMutate: (pr) => {
+    // optimistic: remove PR from list immediately
+    setQueryData(["prs"], (old) => old.filter(p => p.number !== pr.number))
+  },
+  onError: (err, pr) => {
+    // rollback on failure
+    invalidateQuery(["prs"])
+  },
+  onSuccess: () => invalidateQuery(["prs"]),
+})
+```
+
+- [ ] `createMutation()` — `mutationFn`, `onMutate`, `onSuccess`, `onError`
+- [ ] `setQueryData(key, updater)` — direct cache write for optimistic updates
+- [ ] `getQueryData(key)` — read cached value without triggering fetch
+
+### 9.3 Migrate Existing Views
+**Files:** all plugin views
+
+- [ ] Dashboard: replace module-level cache with `createQuery` per column
+- [ ] PRs view: `createQuery({ queryKey: ["prs"], queryFn: listPRs })`
+- [ ] Issues view: same pattern
+- [ ] Branches: `createQuery({ queryKey: ["branches"], queryFn: getBranches })`
+- [ ] Status: cache diff content per file path
+- [ ] Notifications: `createQuery` with `refetchInterval: 120_000`
+- [ ] Remove manual `useInterval` calls; replace with `refetchInterval`
+- [ ] Add `invalidateQuery(["prs"])` after merge/create PR operations
+
+### 9.4 Targeted Queries
+**File:** `packages/github/src/gh.ts`
+
+Current queries fetch full lists every time. Targeted queries fetch only what changed:
+
+- [ ] `getPR(number)` — fetch single PR by number (for detail view)
+- [ ] `getIssue(number)` — fetch single issue
+- [ ] `getPRDiff(number)` — already exists, ensure cached by PR number
+- [ ] Pagination: `listPRs({ limit: 20, cursor })` — fetch pages on demand
+- [ ] Background refresh only fetches pages already viewed
 
 ---
 
