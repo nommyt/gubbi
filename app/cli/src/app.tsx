@@ -3,7 +3,16 @@
  */
 
 import { createPluginContext } from "@gubbi/core"
-import { state, setState, setView, setFocus, viewRegistry } from "@gubbi/core"
+import {
+	state,
+	setState,
+	setView,
+	setFocus,
+	viewRegistry,
+	showToast,
+	VIEWS,
+	icons,
+} from "@gubbi/core"
 import { createGitService } from "@gubbi/git"
 import { createGitHubService } from "@gubbi/github"
 import { Header, StatusBar, HelpOverlay } from "@gubbi/tui"
@@ -72,6 +81,39 @@ export function App() {
 		if (match) {
 			setView(match.id)
 			setFocus("primary")
+			return
+		}
+
+		// Ctrl+Tab / Ctrl+Shift+Tab — cycle views
+		if (key.ctrl && key.name === "tab") {
+			const views = VIEWS
+			const currentIdx = views.findIndex((v) => v.id === state.ui.currentView)
+			const nextIdx = key.shift
+				? (currentIdx - 1 + views.length) % views.length
+				: (currentIdx + 1) % views.length
+			const nextView = views[nextIdx]
+			if (nextView) {
+				setView(nextView.id)
+				setFocus("primary")
+				showToast("info", `${icons.branch} ${nextView.label}`)
+			}
+			return
+		}
+
+		// Ctrl+H / Ctrl+L — previous/next view
+		if (key.ctrl && (key.name === "h" || key.name === "l")) {
+			const views = VIEWS
+			const currentIdx = views.findIndex((v) => v.id === state.ui.currentView)
+			const nextIdx =
+				key.name === "h"
+					? (currentIdx - 1 + views.length) % views.length
+					: (currentIdx + 1) % views.length
+			const nextView = views[nextIdx]
+			if (nextView) {
+				setView(nextView.id)
+				setFocus("primary")
+				showToast("info", `${icons.branch} ${nextView.label}`)
+			}
 			return
 		}
 	})
