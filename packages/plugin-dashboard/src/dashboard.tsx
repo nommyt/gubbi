@@ -11,18 +11,25 @@
  */
 
 import { state, showToast, useInterval, icons } from "@gubbi/core"
+import { openURL } from "@gubbi/git"
 import {
 	searchMyOpenPRs,
 	listPRs,
 	listIssues,
 	listUserRepos,
 	listNotifications,
+	mergePR,
+	checkoutPR,
+	canMergePR,
+	markNotificationRead,
+	githubService,
 	type SearchPR,
 	type PullRequest,
 	type Issue,
 	type Notification,
 	type UserRepo,
 } from "@gubbi/github"
+import { SelectDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -126,6 +133,24 @@ function ciSummary(checks: Array<{ status: string; conclusion: string | null }>)
 	return { icon: icons.check, color: C.ciPass }
 }
 
+function urgencyScore(pr: SearchPR, _currentUser: string): number {
+	let score = 0
+	// CI failing = highest priority
+	if (pr.checks && pr.checks.length > 0) {
+		const hasFailure = pr.checks.some(
+			(c) => c.conclusion === "FAILURE" || c.conclusion === "TIMED_OUT",
+		)
+		if (hasFailure) score += 100
+		const hasPending = pr.checks.some((c) => c.status === "IN_PROGRESS" || c.status === "QUEUED")
+		if (hasPending) score += 40
+		const allPass = pr.checks.every((c) => c.conclusion === "SUCCESS" || c.conclusion === "SKIPPED")
+		if (allPass) score += 30
+	}
+	// Draft = lowest
+	if (pr.isDraft) score -= 20
+	return score
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -144,6 +169,19 @@ export function DashboardView() {
 		"prs" | "tagged" | "repos" | "notifications"
 	>("prs")
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
+	const [showMerge, setShowMerge] = createSignal(false)
+
+	// Sorted by urgency: CI failing → review requested → approved → draft
+	const sortedMyPRs = () => {
+		const prs = [...myPRs()]
+		const currentUser = state.github.user
+		prs.sort((a, b) => {
+			const aScore = urgencyScore(a, currentUser)
+			const bScore = urgencyScore(b, currentUser)
+			return bScore - aScore
+		})
+		return prs
+	}
 
 	// ------------------------------------------------------------------
 	// Fetch functions — each updates its own slice, never touches loading
@@ -233,6 +271,8 @@ export function DashboardView() {
 	const cols = ["prs", "tagged", "repos", "notifications"] as const
 
 	useKeyboard((key) => {
+		if (showMerge()) return
+
 		if (key.name === "r" && !key.ctrl) {
 			key.preventDefault()
 			void refresh()
@@ -271,7 +311,64 @@ export function DashboardView() {
 		if (key.name === "enter") {
 			key.preventDefault()
 			const url = getSelectedUrl()
-			if (url) Bun.$`open ${url}`.catch(() => {})
+			if (url) openURL(url)
+			return
+		}
+
+		// PR actions — m: merge, c: checkout, o: open in browser
+		if (key.name === "m" && !key.shift) {
+			key.preventDefault()
+			const pr = getSelectedPR()
+			if (!pr) return
+			const check = canMergePR(pr)
+			if (!check.ok) {
+				showToast("warning", `Cannot merge: ${check.reason}`)
+				return
+			}
+			setShowMerge(true)
+			return
+		}
+		if (key.name === "c" && !key.shift) {
+			key.preventDefault()
+			const pr = getSelectedPR()
+			if (!pr) {
+				showToast("info", "Select a PR first")
+				return
+			}
+			void (async () => {
+				try {
+					showToast("info", `Checking out ${pr.headRefName}...`)
+					await checkoutPR(pr.number)
+					await githubService.refreshPRs()
+					showToast("success", `Checked out ${pr.headRefName}`)
+				} catch (err) {
+					showToast("error", String(err))
+				}
+			})()
+			return
+		}
+		if (key.name === "o") {
+			key.preventDefault()
+			const url = getSelectedUrl()
+			if (url) openURL(url)
+			return
+		}
+
+		// Notification actions — d: mark as done
+		if (key.name === "d" && !key.shift) {
+			key.preventDefault()
+			if (selectedColumn() !== "notifications") return
+			const notif = notifications()[selectedIdx()]
+			if (!notif) return
+			void (async () => {
+				try {
+					await markNotificationRead(notif.id)
+					await fetchNotifications()
+					showToast("success", "Marked as read")
+				} catch (err) {
+					showToast("error", String(err))
+				}
+			})()
 			return
 		}
 	})
@@ -280,7 +377,7 @@ export function DashboardView() {
 		const idx = selectedIdx()
 		switch (selectedColumn()) {
 			case "prs":
-				return myPRs()[idx]?.url ?? ""
+				return sortedMyPRs()[idx]?.url ?? ""
 			case "tagged":
 				return tagged()[idx]?.data.url ?? ""
 			case "repos":
@@ -295,10 +392,22 @@ export function DashboardView() {
 		}
 	}
 
+	function getSelectedPR(): PullRequest | null {
+		const idx = selectedIdx()
+		if (selectedColumn() === "prs") {
+			return sortedMyPRs()[idx] as unknown as PullRequest
+		}
+		if (selectedColumn() === "tagged") {
+			const item = tagged()[idx]
+			if (item?.kind === "pr") return item.data
+		}
+		return null
+	}
+
 	function count(col: (typeof cols)[number]) {
 		switch (col) {
 			case "prs":
-				return myPRs().length
+				return sortedMyPRs().length
 			case "tagged":
 				return tagged().length
 			case "repos":
@@ -336,7 +445,7 @@ export function DashboardView() {
 						</box>
 					</Show>
 					<Show when={!loading()}>
-						<For each={myPRs()}>
+						<For each={sortedMyPRs()}>
 							{(pr, idx) => {
 								const ci = () => ciSummary(pr.checks)
 								const isSelected = () => selectedColumn() === "prs" && selectedIdx() === idx()
@@ -364,7 +473,7 @@ export function DashboardView() {
 								)
 							}}
 						</For>
-						<Show when={myPRs().length === 0}>
+						<Show when={sortedMyPRs().length === 0}>
 							<box padding={1}>
 								<text fg={C.dim}>No open PRs</text>
 							</box>
@@ -528,6 +637,32 @@ export function DashboardView() {
 					</Show>
 				</box>
 			</box>
+
+			{/* Merge dialog */}
+			<Show when={showMerge()}>
+				<SelectDialog
+					title={`Merge PR #${getSelectedPR()?.number ?? ""}`}
+					options={[
+						{ label: "Squash merge", value: "squash" },
+						{ label: "Create a merge commit", value: "merge" },
+						{ label: "Rebase and merge", value: "rebase" },
+					]}
+					onSelect={async (method) => {
+						setShowMerge(false)
+						const pr = getSelectedPR()
+						if (!pr) return
+						try {
+							showToast("info", `Merging PR #${pr.number}...`)
+							await mergePR(pr.number, method as "squash" | "merge" | "rebase")
+							await Promise.all([fetchMyPRs(), fetchTagged()])
+							showToast("success", `Merged PR #${pr.number}`)
+						} catch (err) {
+							showToast("error", String(err))
+						}
+					}}
+					onCancel={() => setShowMerge(false)}
+				/>
+			</Show>
 		</box>
 	)
 }

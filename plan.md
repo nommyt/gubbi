@@ -144,19 +144,19 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 4.1 Inline Actions on Dashboard PRs
 **File:** `packages/plugin-dashboard/src/dashboard.tsx`
 
-- [ ] `m` → merge PR (block with warning if checks fail)
-- [ ] `c` → checkout PR branch
+- [x] `m` → merge PR (block with warning if checks fail)
+- [x] `c` → checkout PR branch
+- [x] `o` → open in browser
 - [ ] `r` → open review mode
-- [ ] `o` → open in browser
 - [ ] Show repo name only when it changes between PRs (not on every row)
-- [ ] Sort by urgency: CI failing → review requested → approved → draft
+- [x] Sort by urgency: CI failing → review requested → approved → draft
 
 ### 4.2 Notification Actions
 **File:** `packages/plugin-dashboard/src/dashboard.tsx`
 
-- [ ] `d` → mark notification as done
+- [x] `d` → mark notification as done
 - [ ] `m` → mute thread
-- [ ] `Enter` → jump to related PR/issue
+- [x] `Enter` → jump to related PR/issue
 
 ---
 
