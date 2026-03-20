@@ -12,9 +12,8 @@ import {
 	discardFile,
 	getDiff,
 	gitService,
-	push,
 } from "@gubbi/git"
-import { createPR, githubService } from "@gubbi/github"
+import { getCurrentBranchPR, pushAndCreatePR, githubService } from "@gubbi/github"
 import { ConfirmDialog, InputDialog, DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, Show, For, onMount } from "solid-js"
@@ -80,6 +79,8 @@ export function StatusView() {
 	const [showDiscard, setShowDiscard] = createSignal(false)
 	const [showCommit, setShowCommit] = createSignal(false)
 	const [showStash, setShowStash] = createSignal(false)
+	const [showPushPR, setShowPushPR] = createSignal(false)
+	const [pendingCommitMessage, setPendingCommitMessage] = createSignal("")
 	const [diffContent, setDiffContent] = createSignal("")
 	const [diffStaged, setDiffStaged] = createSignal(false)
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
@@ -108,7 +109,7 @@ export function StatusView() {
 	})
 
 	useKeyboard(async (key) => {
-		if (showDiscard() || showCommit() || showStash()) return
+		if (showDiscard() || showCommit() || showStash() || showPushPR()) return
 
 		const entry = selectedEntry()
 
@@ -191,27 +192,20 @@ export function StatusView() {
 		} else if (key.name === "P" && key.shift) {
 			key.preventDefault()
 			try {
-				showToast("info", `Pushing ${state.git.currentBranch}...`)
-				await push(
-					{ branch: state.git.currentBranch, setUpstream: !currentBranchEntry()?.upstream },
-					state.git.repoRoot,
-				)
-				const pr = currentBranchPR()
-				if (!pr && state.github.isAuthenticated) {
-					showToast("info", "Creating PR...")
-					const created = await createPR({
-						title: state.git.currentBranch,
-						body: "",
-						base: state.git.defaultBranch,
-					})
-					if (created) {
-						await githubService.refreshPRs()
-						showToast("success", `Pushed and created PR #${created.number}`)
-					} else {
-						showToast("error", "Push succeeded but PR creation failed")
-					}
+				const existingPR = currentBranchPR()
+				if (existingPR) {
+					showToast("info", `Pushing ${state.git.currentBranch}...`)
+					const result = await pushAndCreatePR(state.git.currentBranch)
+					if (result.pushed) showToast("success", `Pushed ${state.git.currentBranch}`)
 				} else {
-					showToast("success", `Pushed ${state.git.currentBranch}`)
+					showToast("info", `Pushing ${state.git.currentBranch}...`)
+					const result = await pushAndCreatePR(state.git.currentBranch)
+					if (result.pr) {
+						await githubService.refreshPRs()
+						showToast("success", `Pushed and created PR #${result.pr.number}`)
+					} else if (result.pushed) {
+						showToast("success", `Pushed ${state.git.currentBranch}`)
+					}
 				}
 			} catch (err) {
 				showToast("error", String(err))
@@ -413,6 +407,10 @@ export function StatusView() {
 							await commit(message, {}, state.git.repoRoot)
 							await gitService.refreshStatus()
 							showToast("success", "Committed successfully")
+							if (state.github.isAuthenticated) {
+								setPendingCommitMessage(message)
+								setShowPushPR(true)
+							}
 						} catch (err) {
 							showToast("error", String(err))
 						}
@@ -437,6 +435,33 @@ export function StatusView() {
 						}
 					}}
 					onCancel={() => setShowStash(false)}
+				/>
+			</Show>
+
+			<Show when={showPushPR()}>
+				<ConfirmDialog
+					title="Push and create PR?"
+					message={
+						currentBranchPR()
+							? `Push ${state.git.currentBranch}? (PR #${currentBranchPR()!.number} already exists)`
+							: `Push ${state.git.currentBranch} and create a PR?`
+					}
+					confirmLabel="Push"
+					onConfirm={async () => {
+						setShowPushPR(false)
+						try {
+							const result = await pushAndCreatePR(state.git.currentBranch, pendingCommitMessage())
+							if (result.pr && !currentBranchPR()) {
+								await githubService.refreshPRs()
+								showToast("success", `Pushed and created PR #${result.pr.number}`)
+							} else if (result.pushed) {
+								showToast("success", `Pushed ${state.git.currentBranch}`)
+							}
+						} catch (err) {
+							showToast("error", String(err))
+						}
+					}}
+					onCancel={() => setShowPushPR(false)}
 				/>
 			</Show>
 		</box>

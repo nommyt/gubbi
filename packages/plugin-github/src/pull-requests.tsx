@@ -2,7 +2,7 @@
  * pull-requests.tsx — GitHub PRs: list, detail, create, review, merge, diff
  */
 
-import { state, setState, showToast, setView } from "@gubbi/core"
+import { state, showToast, setView } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	listPRs,
@@ -11,6 +11,7 @@ import {
 	reviewPR,
 	closePR,
 	checkoutPR,
+	canMergePR,
 	githubService,
 	type PullRequest,
 } from "@gubbi/github"
@@ -128,6 +129,11 @@ export function PullRequestsView() {
 			setViewMode((m) => (m === "list" ? "diff" : "list"))
 		} else if (key.name === "m" && pr && pr.state === "OPEN") {
 			key.preventDefault()
+			const check = canMergePR(pr)
+			if (!check.ok) {
+				showToast("warning", `Cannot merge: ${check.reason}`)
+				return
+			}
 			setShowMerge(true)
 		} else if (key.name === "a" && pr) {
 			key.preventDefault()

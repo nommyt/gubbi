@@ -8,7 +8,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 - `app/cli/src/app.tsx` — main app, global keyboard handler
 - `packages/core/` — plugin API, state, registry, hotkeys
 - `packages/git/` — git operations (git.ts, service.ts, parser.ts, stack.ts)
-- `packages/github/` — GitHub CLI wrapper (gh.ts, service.ts)
+- `packages/github/` — GitHub CLI wrapper (gh.ts, service.ts, bridge.ts)
 - `packages/tui/` — shared components (header.tsx, status-bar.tsx, dialog.tsx, diff-viewer.tsx)
 - `packages/plugin-repo/` — status.tsx, log.tsx, branches.tsx, stash.tsx, remotes.tsx
 - `packages/plugin-github/` — pull-requests.tsx, issues.tsx, notifications.tsx, actions.tsx
@@ -29,7 +29,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 - [x] Show PR context banner when on a PR branch: `branch • PR #123 ○ open • mergeable`
 - [x] `Shift+P` → push branch + create PR if none exists, or just push if PR exists
 - [x] Show progress toasts: `Pushing...` → `Creating PR...` → `Done ✓`
-- [ ] After commit, prompt: "Push and create PR? (P/n)"
+- [x] After commit, prompt: "Push and create PR? (P/n)"
 
 **State needed:** `state.github.prs` must be searchable by `headRefName === state.git.currentBranch`
 
@@ -63,7 +63,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 
 - [x] `Shift+V` in Status/Branches → jump to PR view for current/selected branch
 - [x] `b` in PR view → jump to Branches view
-- [ ] Show contextual hint in status bar when on a PR branch (Sprint 2.3)
+- [x] Show contextual hint in status bar when on a PR branch (Sprint 2.3)
 
 ---
 
@@ -74,31 +74,31 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 2.1 Commit → Push → PR Flow
 **Files:** `packages/plugin-repo/src/status.tsx`, `packages/core/src/state/index.ts`
 
-- [ ] After commit, show confirm prompt: "Push and create PR?"
-- [ ] Smart PR creation: if branch has no PR → create with commit message as title; if PR exists → just push
+- [x] After commit, show confirm prompt: "Push and create PR?"
+- [x] Smart PR creation: if branch has no PR → create with commit message as title; if PR exists → just push
 - [ ] Show inline progress feedback during push and PR creation
 
-**New utility:** `packages/core/src/utils/git-gh-bridge.ts`
-- `pushAndCreatePR()` — push branch, create PR if needed
-- `checkoutPRBranch(pr)` — fetch if remote-only, then checkout
-- `getCurrentBranchPR()` — find PR for current branch
-- `getPRForBranch(branch)` — find PR for any branch
-- `canMergePR(pr)` — check mergeability
+**New utility:** `packages/github/src/bridge.ts`
+- [x] `pushAndCreatePR()` — push branch, create PR if needed
+- [ ] `checkoutPRBranch(pr)` — fetch if remote-only, then checkout
+- [x] `getCurrentBranchPR()` — find PR for current branch
+- [x] `getPRForBranch(branch)` — find PR for any branch
+- [x] `canMergePR(pr)` — check mergeability
 
 ### 2.2 Inline PR Merge from PR View
 **File:** `packages/plugin-github/src/pull-requests.tsx`
 
-- [ ] `M` → merge selected PR inline (no browser)
-- [ ] Show merge method options: squash / merge / rebase
-- [ ] Block merge with warning if CI failing or approvals missing
+- [x] `M` → merge selected PR inline (no browser)
+- [x] Show merge method options: squash / merge / rebase
+- [x] Block merge with warning if CI failing or approvals missing
 
 ### 2.3 Context-Aware Status Bar
 **File:** `packages/tui/src/status-bar.tsx`
 
-- [ ] Show hints based on **selected item**, not just current view:
+- [x] Show hints based on **selected item**, not just current view:
   - Status + file selected: `Space: stage | d: discard | Enter: diff`
-  - Status + on PR branch: `P: push & update PR | G: view PR #123`
-  - Branches + branch with PR: `P: push | G: view PR | M: merge`
+  - Status + on PR branch: `P: push & update PR | V: view PR #123`
+  - Branches + branch with PR: `P: push | V: view PR | M: merge`
   - PR view + CI failing: `⚠ CI failing | C: checkout | r: review`
 - [ ] Show `↻ syncing...` when background polling is active
 - [ ] Show `updated Xs ago` for last GitHub refresh

@@ -30,7 +30,7 @@ const GLOBAL_HINTS: KeyHint[] = [
 	{ key: "^c", label: "quit" },
 ]
 
-const VIEW_HINTS: Record<string, KeyHint[]> = {
+const BASE_VIEW_HINTS: Record<string, KeyHint[]> = {
 	smartlog: [
 		{ key: "j/k", label: "nav" },
 		{ key: "Enter", label: "view" },
@@ -45,7 +45,6 @@ const VIEW_HINTS: Record<string, KeyHint[]> = {
 		{ key: "c", label: "commit" },
 		{ key: "s", label: "stash" },
 		{ key: "f", label: "fullscreen" },
-		{ key: "S", label: "side-by-side" },
 	],
 	log: [
 		{ key: "j/k", label: "nav" },
@@ -115,8 +114,33 @@ const VIEW_HINTS: Record<string, KeyHint[]> = {
 	],
 }
 
+function currentBranchPR() {
+	return (
+		state.github.prs.find(
+			(pr) => pr.headRefName === state.git.currentBranch && pr.state === "OPEN",
+		) ?? null
+	)
+}
+
+function getContextHints(): KeyHint[] {
+	const view = state.ui.currentView
+	const base = BASE_VIEW_HINTS[view] ?? []
+	const pr = currentBranchPR()
+
+	if (view === "status" && pr) {
+		return [...base, { key: "P", label: `push·PR` }, { key: "V", label: `PR #${pr.number}` }]
+	}
+	if (view === "status") {
+		return [...base, { key: "P", label: "push·PR" }]
+	}
+	if (view === "branches" && pr) {
+		return [...base, { key: "P", label: "push·PR" }, { key: "V", label: "view PR" }]
+	}
+	return base
+}
+
 export function StatusBar() {
-	const hints = () => VIEW_HINTS[state.ui.currentView] ?? []
+	const hints = () => getContextHints()
 	const latestToast = () => state.ui.toasts.at(-1)
 
 	return (
