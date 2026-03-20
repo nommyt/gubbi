@@ -14,6 +14,12 @@
     "build:web": "turbo run build --filter @gubbi/web",
     "build:npm": "bun run app/cli/build-npm.ts",
     "version:npm": "bun run scripts/version.ts",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:status": "changeset status",
+    "pre-publish": "bun run scripts/pre-publish.ts",
+    "release": "bun run scripts/release.ts",
+    "release:preview": "bun run scripts/release.ts --dry-run",
     "lint": "turbo run lint",
     "format": "oxfmt .",
     "test": "turbo run test",
@@ -21,11 +27,21 @@
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "@types/bun": "latest",
     "lefthook": "^2.1.4",
     "oxfmt": "^0.41.0",
     "oxlint": "^1.56.0",
     "turbo": "^2.8.17",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.88"
+  },
+  "optionalDependencies": {
+    "@opentui/core-darwin-arm64": "^0.1.88",
+    "@opentui/core-darwin-x64": "^0.1.88",
+    "@opentui/core-linux-arm64": "^0.1.88",
+    "@opentui/core-linux-x64": "^0.1.88"
   }
 }

@@ -1,21 +1,24 @@
 /**
  * build-npm.ts — Build platform-specific binaries for npm publishing
  *
- * Produces standalone Bun executables for each supported platform using
- * `bun build --compile`. The outputs land in app/npm/<pkg>/bin/gubbi.
+ * Two-step process per platform:
+ *   1. Bundle src/index.tsx → a single JS file using solidPlugin (handles JSX)
+ *   2. bun build --compile that JS file → standalone executable for the target platform
  *
- * Supported targets (matching Bun's target strings):
- *   bun-darwin-arm64
- *   bun-darwin-x64
- *   bun-linux-arm64
- *   bun-linux-x64
+ * Supported targets:
+ *   bun-darwin-arm64 / bun-darwin-x64 / bun-linux-arm64 / bun-linux-x64
  *
- * Usage:
+ * Usage (from repo root or app/cli):
  *   bun run build-npm.ts                  # all platforms
  *   bun run build-npm.ts darwin-arm64     # single platform
  */
 
+import { createHash } from "node:crypto"
+import { mkdirSync, rmSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "path"
+
+import solidPlugin from "@opentui/solid/bun-plugin"
+import { build } from "bun"
 
 const PLATFORMS = [
 	{ target: "bun-darwin-arm64", pkg: "gubbi-darwin-arm64" },
@@ -25,12 +28,13 @@ const PLATFORMS = [
 ]
 
 const cliDir = import.meta.dir
-const repoRoot = resolve(cliDir, "../..")
 const npmDir = resolve(cliDir, "../npm")
+// Use the same bun binary that's running this script
+const bunBin = process.execPath
 
 // Allow filtering to a single platform via CLI arg
 const filter = process.argv[2] // e.g. "darwin-arm64"
-const targets = filter ? PLATFORMS.filter((p) => p.target.endsWith(filter)) : PLATFORMS
+const targets = filter ? PLATFORMS.filter((p) => p.target.endsWith(filter)) : [...PLATFORMS]
 
 if (targets.length === 0) {
 	console.error(`No matching platform for filter: ${filter}`)
@@ -40,45 +44,78 @@ if (targets.length === 0) {
 
 console.log(`Building for ${targets.map((t) => t.target).join(", ")}...`)
 
+// ---------------------------------------------------------------------------
+// Step 1: Bundle once with solidPlugin → intermediate JS bundle
+// ---------------------------------------------------------------------------
+const bundleDir = resolve(cliDir, ".build-npm-tmp")
+const bundleFile = resolve(bundleDir, "bundle.js")
+
+mkdirSync(bundleDir, { recursive: true })
+
+console.log("\n[bundle] Bundling with solidPlugin...")
+
+const bundleResult = await build({
+	entrypoints: [resolve(cliDir, "src/index.tsx")],
+	outdir: bundleDir,
+	naming: { entry: "bundle.js" },
+	target: "bun",
+	format: "esm",
+	minify: true,
+	sourcemap: "none",
+	plugins: [solidPlugin],
+})
+
+if (!bundleResult.success) {
+	for (const log of bundleResult.logs) {
+		console.error(log)
+	}
+	console.error("[bundle] Bundle step failed")
+	process.exit(1)
+}
+
+console.log(`[bundle] ✓ Bundle written to ${bundleFile}`)
+
+// ---------------------------------------------------------------------------
+// Step 2: Compile the bundle into a standalone executable per platform
+// ---------------------------------------------------------------------------
 for (const { target, pkg } of targets) {
 	const outDir = resolve(npmDir, pkg, "bin")
 	const outBin = resolve(outDir, "gubbi")
 
-	await Bun.$`mkdir -p ${outDir}`.quiet()
+	mkdirSync(outDir, { recursive: true })
 
-	console.log(`\n[${target}] Building → ${outBin}`)
+	console.log(`\n[${target}] Compiling → ${outBin}`)
 
-	const result = await Bun.spawnSync(
-		[
-			"bun",
-			"build",
-			"--compile",
-			`--target=${target}`,
-			"--minify",
-			"--sourcemap=none",
-			`--outfile=${outBin}`,
-			"src/index.tsx",
-		],
+	const result = Bun.spawnSync(
+		[bunBin, "build", "--compile", `--target=${target}`, `--outfile=${outBin}`, bundleFile],
 		{
-			cwd: cliDir,
-			env: {
-				...process.env,
-				// Ensure Bun can find workspace packages
-				BUN_INSTALL: resolve(repoRoot, "node_modules/.bun"),
-			},
+			cwd: bundleDir,
 			stdout: "inherit",
 			stderr: "inherit",
 		},
 	)
 
 	if (result.exitCode !== 0) {
-		console.error(`[${target}] Build failed with exit code ${result.exitCode}`)
+		console.error(`[${target}] Compile failed with exit code ${result.exitCode}`)
+		rmSync(bundleDir, { recursive: true, force: true })
 		process.exit(result.exitCode ?? 1)
 	}
 
-	// Ensure binary is executable
 	await Bun.$`chmod +x ${outBin}`.quiet()
+
+	// Generate SHA256 checksum
+	const binaryData = readFileSync(outBin)
+	const hash = createHash("sha256")
+	hash.update(binaryData)
+	const checksum = hash.digest("hex")
+	const checksumPath = `${outBin}.sha256`
+	writeFileSync(checksumPath, `${checksum}  gubbi\n`)
+
 	console.log(`[${target}] ✓ Built ${outBin}`)
+	console.log(`[${target}] ✓ SHA256: ${checksum}`)
 }
+
+// Clean up intermediate bundle
+rmSync(bundleDir, { recursive: true, force: true })
 
 console.log("\nAll builds complete.")
