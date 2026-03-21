@@ -2,9 +2,17 @@
  * log.tsx — Full commit history with graph visualization and search
  */
 
-import { state, showToast, icons } from "@gubbi/core"
-import { getLog, checkout, cherryPick, createBranch, gitService, openURL } from "@gubbi/git"
-import type { LogEntry } from "@gubbi/git"
+import { state, showToast, updateToast, icons } from "@gubbi/core"
+import {
+	getLog,
+	checkout,
+	cherryPick,
+	createBranch,
+	gitService,
+	openURL,
+	interactiveRebase,
+} from "@gubbi/git"
+import type { LogEntry, RebaseAction, RebaseTodo } from "@gubbi/git"
 import { exec } from "@gubbi/git"
 import { InputDialog, SelectDialog, ConfirmDialog } from "@gubbi/tui"
 import { DiffViewer } from "@gubbi/tui"
@@ -29,6 +37,12 @@ const C = {
 	gpgBad: "#f78166",
 	prOpen: "#3fb950",
 	prMerged: "#a371f7",
+	rebasePick: "#3fb950",
+	rebaseSquash: "#a371f7",
+	rebaseFixup: "#58a6ff",
+	rebaseDrop: "#f78166",
+	rebaseEdit: "#d29922",
+	rebaseReword: "#58a6ff",
 }
 
 function gpgIcon(status: string): string {
@@ -59,7 +73,98 @@ export function LogView() {
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
 	const [clipboardHashes, setClipboardHashes] = createSignal<string[]>([])
 
+	// Rebase mode state
+	const [rebaseMode, setRebaseMode] = createSignal(false)
+	const [rebaseActions, setRebaseActions] = createSignal<Map<string, RebaseAction>>(new Map())
+	const [rebaseStartIdx, setRebaseStartIdx] = createSignal(0)
+
 	const selectedEntry = () => entries()[selectedIdx()]
+
+	const REBASE_ACTION_ORDER: RebaseAction[] = ["pick", "squash", "fixup", "drop", "edit", "reword"]
+
+	function rebaseActionColor(action: RebaseAction): string {
+		switch (action) {
+			case "pick":
+				return C.rebasePick
+			case "squash":
+				return C.rebaseSquash
+			case "fixup":
+				return C.rebaseFixup
+			case "drop":
+				return C.rebaseDrop
+			case "edit":
+				return C.rebaseEdit
+			case "reword":
+				return C.rebaseReword
+		}
+	}
+
+	function getAction(hash: string): RebaseAction {
+		return rebaseActions().get(hash) ?? "pick"
+	}
+
+	function cycleAction(hash: string) {
+		const current = getAction(hash)
+		const idx = REBASE_ACTION_ORDER.indexOf(current)
+		const next = REBASE_ACTION_ORDER[(idx + 1) % REBASE_ACTION_ORDER.length]!
+		const map = new Map(rebaseActions())
+		map.set(hash, next)
+		setRebaseActions(map)
+	}
+
+	function toggleAction(hash: string, action: RebaseAction) {
+		const current = getAction(hash)
+		const map = new Map(rebaseActions())
+		if (current === action) {
+			map.set(hash, "pick")
+		} else {
+			map.set(hash, action)
+		}
+		setRebaseActions(map)
+	}
+
+	function enterRebaseMode() {
+		const idx = selectedIdx()
+		if (idx >= entries().length - 1) {
+			showToast("info", "Cannot rebase from the oldest commit")
+			return
+		}
+		setRebaseStartIdx(idx)
+		setRebaseActions(new Map())
+		setRebaseMode(true)
+		showToast("info", "Rebase mode — s: squash, f: fixup, d: drop, e: edit, r: reword")
+	}
+
+	function exitRebaseMode() {
+		setRebaseMode(false)
+		setRebaseActions(new Map())
+	}
+
+	async function executeRebase() {
+		const startIdx = rebaseStartIdx()
+		const allEntries = entries()
+		const startEntry = allEntries[startIdx]
+		if (!startEntry) return
+
+		// Build todo list from startIdx to 0 (newest commits first in log, but rebase needs oldest first)
+		const todos: RebaseTodo[] = []
+		for (let i = startIdx; i >= 0; i--) {
+			const e = allEntries[i]!
+			const action = getAction(e.hash)
+			todos.push({ hash: e.hash, action, subject: e.subject })
+		}
+
+		exitRebaseMode()
+		const toastId = showToast("info", "Rebasing...", 0)
+		try {
+			await interactiveRebase(`${startEntry.hash}^`, todos, state.git.repoRoot)
+			await gitService.refreshStatus()
+			await loadEntries(searchQuery() || undefined)
+			showToast("success", "Rebase complete")
+		} catch (err) {
+			updateToast(toastId, "error", `Rebase failed: ${err}`)
+		}
+	}
 
 	async function loadEntries(grep?: string) {
 		setLoading(true)
@@ -91,6 +196,60 @@ export function LogView() {
 
 	useKeyboard(async (key) => {
 		if (showSearch() || showBranchInput() || showCherryPickConfirm()) return
+
+		// Rebase mode keyboard handling
+		if (rebaseMode()) {
+			const entry = selectedEntry()
+			if (!entry) return
+
+			// Only allow actions on commits within the rebase range (from startIdx down to 0)
+			const idx = selectedIdx()
+			const inRange = idx <= rebaseStartIdx()
+
+			if (key.name === "escape") {
+				key.preventDefault()
+				exitRebaseMode()
+				showToast("info", "Rebase cancelled")
+			} else if (key.name === "return") {
+				key.preventDefault()
+				await executeRebase()
+			} else if (key.name === "j" || key.name === "down") {
+				key.preventDefault()
+				const next = Math.min(idx + 1, entries().length - 1)
+				setSelectedIdx(next)
+				const e = entries()[next]
+				if (e) await loadDiff(e)
+			} else if (key.name === "k" || key.name === "up") {
+				key.preventDefault()
+				const prev = Math.max(idx - 1, 0)
+				setSelectedIdx(prev)
+				const e = entries()[prev]
+				if (e) await loadDiff(e)
+			} else if (inRange) {
+				if (key.name === " " || key.name === "s") {
+					key.preventDefault()
+					toggleAction(entry.hash, "squash")
+				} else if (key.name === "f") {
+					key.preventDefault()
+					toggleAction(entry.hash, "fixup")
+				} else if (key.name === "d") {
+					key.preventDefault()
+					toggleAction(entry.hash, "drop")
+				} else if (key.name === "e") {
+					key.preventDefault()
+					toggleAction(entry.hash, "edit")
+				} else if (key.name === "r") {
+					key.preventDefault()
+					toggleAction(entry.hash, "reword")
+				} else if (key.name === "p") {
+					key.preventDefault()
+					const map = new Map(rebaseActions())
+					map.set(entry.hash, "pick")
+					setRebaseActions(map)
+				}
+			}
+			return
+		}
 
 		if (key.name === "tab") {
 			key.preventDefault()
@@ -177,6 +336,9 @@ export function LogView() {
 			} catch (err) {
 				showToast("error", String(err))
 			}
+		} else if (key.name === "i" && entry) {
+			key.preventDefault()
+			enterRebaseMode()
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadEntries(searchQuery() || undefined)
@@ -190,8 +352,14 @@ export function LogView() {
 				width={65}
 				flexDirection="column"
 				border
-				borderColor={primaryFocused() ? C.activeBorder : C.border}
-				title={searchQuery() ? `log: "${searchQuery()}"` : "log"}
+				borderColor={rebaseMode() ? C.rebasePick : primaryFocused() ? C.activeBorder : C.border}
+				title={
+					rebaseMode()
+						? `rebase: interactive (${selectedEntry()?.shortHash ?? ""})`
+						: searchQuery()
+							? `log: "${searchQuery()}"`
+							: "log"
+				}
 			>
 				<Show
 					when={!loading()}
@@ -223,6 +391,13 @@ export function LogView() {
 											setPrimaryFocused(true)
 										}}
 									>
+										{/* Rebase action label */}
+										<Show when={rebaseMode() && i() <= rebaseStartIdx()}>
+											<text fg={rebaseActionColor(getAction(entry.hash))}>
+												{getAction(entry.hash).padEnd(6)}
+											</text>
+										</Show>
+
 										{/* Hash */}
 										<text fg={C.hash}>{entry.shortHash}</text>
 
@@ -283,14 +458,31 @@ export function LogView() {
 
 					{/* Footer hints */}
 					<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-						<text fg={C.dim}>
-							<span style={{ fg: "#58a6ff" }}>/</span> search ·{" "}
-							<span style={{ fg: "#58a6ff" }}>b</span> branch ·{" "}
-							<span style={{ fg: "#58a6ff" }}>y</span> cherry-pick ·{" "}
-							<span style={{ fg: "#58a6ff" }}>C</span> copy ·{" "}
-							<span style={{ fg: "#58a6ff" }}>V</span> paste ·{" "}
-							<span style={{ fg: "#58a6ff" }}>v</span> open PR
-						</text>
+						<Show
+							when={rebaseMode()}
+							fallback={
+								<text fg={C.dim}>
+									<span style={{ fg: "#58a6ff" }}>/</span> search ·{" "}
+									<span style={{ fg: "#58a6ff" }}>i</span> rebase ·{" "}
+									<span style={{ fg: "#58a6ff" }}>b</span> branch ·{" "}
+									<span style={{ fg: "#58a6ff" }}>y</span> cherry-pick ·{" "}
+									<span style={{ fg: "#58a6ff" }}>C</span> copy ·{" "}
+									<span style={{ fg: "#58a6ff" }}>V</span> paste ·{" "}
+									<span style={{ fg: "#58a6ff" }}>v</span> open PR
+								</text>
+							}
+						>
+							<text fg={C.dim}>
+								<span style={{ fg: C.rebasePick }}>REBASE</span> ·{" "}
+								<span style={{ fg: "#58a6ff" }}>s</span> squash ·{" "}
+								<span style={{ fg: "#58a6ff" }}>f</span> fixup ·{" "}
+								<span style={{ fg: "#58a6ff" }}>d</span> drop ·{" "}
+								<span style={{ fg: "#58a6ff" }}>e</span> edit ·{" "}
+								<span style={{ fg: "#58a6ff" }}>r</span> reword ·{" "}
+								<span style={{ fg: "#58a6ff" }}>Enter</span> execute ·{" "}
+								<span style={{ fg: "#58a6ff" }}>Esc</span> cancel
+							</text>
+						</Show>
 						<Show when={clipboardHashes().length > 0}>
 							<text fg={C.prMerged}>
 								{" "}

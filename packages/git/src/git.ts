@@ -339,6 +339,33 @@ export async function continueRebase(cwd?: string): Promise<void> {
 	await execOrThrow(GIT, ["rebase", "--continue"], { cwd })
 }
 
+export type RebaseAction = "pick" | "squash" | "fixup" | "drop" | "edit" | "reword"
+
+export interface RebaseTodo {
+	hash: string
+	action: RebaseAction
+	subject: string
+}
+
+/**
+ * Execute an interactive rebase using GIT_SEQUENCE_EDITOR to set the todo list.
+ * @param onto - The commit to rebase onto (e.g. "abc123^" to rebase from parent of abc123)
+ * @param todos - The rebase todo list (ordered oldest-first)
+ * @param cwd - Repository root
+ */
+export async function interactiveRebase(
+	onto: string,
+	todos: RebaseTodo[],
+	cwd?: string,
+): Promise<void> {
+	const todoContent = todos.map((t) => `${t.action} ${t.hash} ${t.subject}`).join("\n") + "\n"
+	const editor = `echo '${todoContent.replace(/'/g, "'\\''")}' > "$1"`
+	await execOrThrow(GIT, ["rebase", "-i", "--autosquash", onto], {
+		cwd,
+		env: { GIT_SEQUENCE_EDITOR: editor },
+	})
+}
+
 // ---------------------------------------------------------------------------
 // Stash
 // ---------------------------------------------------------------------------

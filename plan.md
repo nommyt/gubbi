@@ -167,10 +167,10 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 5.1 Interactive Rebase UI
 **File:** `packages/plugin-repo/src/log.tsx`
 
-- [ ] `i` → enter rebase mode (shows rebase TODO list)
-- [ ] In rebase mode: `s` squash, `f` fixup, `d` drop, `e` edit, `r` reword
-- [ ] Visual mode shows action labels on each commit
-- [ ] `Enter` → execute rebase, `Esc` → cancel
+- [x] `i` → enter rebase mode (shows rebase TODO list)
+- [x] In rebase mode: `s` squash, `f` fixup, `d` drop, `e` edit, `r` reword
+- [x] Visual mode shows action labels on each commit
+- [x] `Enter` → execute rebase, `Esc` → cancel
 
 ### 5.2 Cherry-Pick Copy/Paste
 **File:** `packages/plugin-repo/src/log.tsx`
