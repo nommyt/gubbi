@@ -4,8 +4,8 @@
  */
 
 import { state, showToast, icons } from "@gubbi/core"
-import { getLog, getGraphLog } from "@gubbi/git"
-import type { LogEntry } from "@gubbi/git"
+import { getLog, getGraphLog, parseGraphLog } from "@gubbi/git"
+import type { LogEntry, GraphEntry } from "@gubbi/git"
 import { exec } from "@gubbi/git"
 import { DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
@@ -82,6 +82,7 @@ function ciColor(status: string | null): string {
 
 export function SmartlogView() {
 	const [entries, setEntries] = createSignal<LogEntry[]>([])
+	const [graphData, setGraphData] = createSignal<Map<string, GraphEntry>>(new Map())
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [diffContent, setDiffContent] = createSignal("")
 	const [loading, setLoading] = createSignal(true)
@@ -92,9 +93,20 @@ export function SmartlogView() {
 	async function loadEntries() {
 		setLoading(true)
 		try {
-			// Load recent commits — prioritize current user's work
-			const all = await getLog({ count: 150, all: true }, state.git.repoRoot)
+			const [all, rawGraph] = await Promise.all([
+				getLog({ count: 150, all: true }, state.git.repoRoot),
+				getGraphLog({ count: 150, all: true }, state.git.repoRoot),
+			])
 			setEntries(all)
+
+			// Build graph map: short hash -> graph entry
+			const graphEntries = parseGraphLog(rawGraph)
+			const map = new Map<string, GraphEntry>()
+			for (const ge of graphEntries) {
+				map.set(ge.hash, ge)
+			}
+			setGraphData(map)
+
 			const first = all[0]
 			if (first) await loadDiff(first)
 		} catch (err) {
@@ -181,6 +193,9 @@ export function SmartlogView() {
 									state.git.currentBranch !== "" &&
 									entry.refs.some((r) => r.includes(state.git.currentBranch) && r.includes("HEAD"))
 
+								// Graph data for this commit
+								const graphEntry = () => graphData().get(entry.shortHash)
+
 								// Extract branch/tag refs
 								const localRefs = () =>
 									entry.refs.filter(
@@ -207,10 +222,17 @@ export function SmartlogView() {
 										}}
 									>
 										<box flexDirection="row" gap={1}>
-											{/* Current indicator */}
-											<text fg={isCurrent() ? C.current : C.graph}>
-												{isCurrent() ? icons.circleFilled : icons.circle}
-											</text>
+											{/* Graph indicator */}
+											<Show
+												when={graphEntry()}
+												fallback={
+													<text fg={isCurrent() ? C.current : C.graph}>
+														{isCurrent() ? icons.circleFilled : icons.circle}
+													</text>
+												}
+											>
+												<text fg={isCurrent() ? C.current : C.graph}>{graphEntry()!.graph}</text>
+											</Show>
 
 											{/* Short hash */}
 											<text fg={C.hash}>{entry.shortHash}</text>

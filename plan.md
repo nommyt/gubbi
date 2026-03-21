@@ -182,9 +182,9 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 5.3 Commit Graph Visualization
 **Files:** `packages/plugin-dashboard/src/smartlog.tsx`, new `packages/tui/src/commit-graph.tsx`
 
-- [ ] ASCII graph showing branch relationships (`*`, `|`, `\`, `/`)
-- [ ] Branch labels inline: `(HEAD -> feature/new-ui, origin/feature/new-ui)`
-- [ ] Navigate chunks in commit diff with `[` / `]`
+- [x] ASCII graph showing branch relationships (`*`, `|`, `\`, `/`)
+- [x] Branch labels inline: `(HEAD -> feature/new-ui, origin/feature/new-ui)`
+- [x] Navigate chunks in commit diff with `[` / `]`
 
 ### 5.4 Commit Filtering
 **File:** `packages/plugin-repo/src/log.tsx`

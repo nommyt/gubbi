@@ -156,6 +156,45 @@ export async function getGraphLog(
 	return r.stdout
 }
 
+export interface GraphEntry {
+	graph: string
+	hash: string
+	refs: string[]
+	subject: string
+}
+
+/**
+ * Parse git log --graph output into structured entries.
+ * Each line has a graph prefix (e.g. "* ", "| \\ ", "| / ") and commit info.
+ */
+export function parseGraphLog(raw: string): GraphEntry[] {
+	const lines = raw.split("\n").filter((l) => l.trim())
+	const entries: GraphEntry[] = []
+
+	for (const line of lines) {
+		// Graph characters are everything before the first 7-char hash
+		const hashMatch = line.match(/([*|\\/\\ _\-]+)\s*([a-f0-9]{7,})\s*(.*)/)
+		if (!hashMatch) continue
+
+		const graph = hashMatch[1] ?? ""
+		const hash = hashMatch[2] ?? ""
+		const rest = hashMatch[3] ?? ""
+
+		// Parse refs and subject from "(HEAD -> main, origin/main) subject"
+		const refMatch = rest.match(/^\(([^)]+)\)\s*(.*)$/)
+		let refs: string[] = []
+		let subject = rest
+		if (refMatch) {
+			refs = refMatch[1]!.split(", ").map((r) => r.trim())
+			subject = refMatch[2] ?? ""
+		}
+
+		entries.push({ graph, hash, refs, subject })
+	}
+
+	return entries
+}
+
 export async function getFileLog(
 	path: string,
 	opts: { count?: number; follow?: boolean } = {},
