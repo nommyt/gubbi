@@ -79,6 +79,7 @@ const initialUIState: UIState = {
 	},
 	toasts: [],
 	helpVisible: false,
+	syncing: false,
 }
 
 const initialState: AppState = {
@@ -112,9 +113,29 @@ export function toggleFullscreen(panel: "primary" | "detail") {
 export function showToast(type: ToastType, message: string, durationMs = 3000) {
 	const id = `${Date.now()}-${Math.random()}`
 	setState("ui", "toasts", (prev) => [...prev, { id, type, message }])
-	setTimeout(() => {
-		setState("ui", "toasts", (prev) => prev.filter((t) => t.id !== id))
-	}, durationMs)
+	if (durationMs > 0) {
+		setTimeout(() => {
+			setState("ui", "toasts", (prev) => prev.filter((t) => t.id !== id))
+		}, durationMs)
+	}
+	return id
+}
+
+export function updateToast(id: string, type: ToastType, message: string, durationMs = 3000) {
+	setState("ui", "toasts", (prev) => prev.map((t) => (t.id === id ? { ...t, type, message } : t)))
+	if (durationMs > 0) {
+		setTimeout(() => {
+			setState("ui", "toasts", (prev) => prev.filter((t) => t.id !== id))
+		}, durationMs)
+	}
+}
+
+export function removeToast(id: string) {
+	setState("ui", "toasts", (prev) => prev.filter((t) => t.id !== id))
+}
+
+export function setSyncing(value: boolean) {
+	setState("ui", "syncing", value)
 }
 
 export function setLoading(key: keyof UIState["loading"], value: boolean) {

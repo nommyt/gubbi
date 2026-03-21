@@ -2,7 +2,7 @@
  * branches.tsx — Branch management: list, checkout, create, delete, merge, rebase, push
  */
 
-import { state, showToast, setView, icons } from "@gubbi/core"
+import { state, showToast, updateToast, setView, icons } from "@gubbi/core"
 import type { GitHubPR } from "@gubbi/core"
 import {
 	getBranches,
@@ -123,29 +123,30 @@ export function BranchesView() {
 		} else if (key.name === "P" && key.shift && branch && !branch.remote) {
 			// Push + create PR if none exists
 			key.preventDefault()
+			const toastId = showToast("info", `Pushing ${branch.name}...`, 0)
 			try {
-				showToast("info", `Pushing ${branch.name}...`)
 				await push({ branch: branch.name, setUpstream: !branch.upstream }, state.git.repoRoot)
 				const existingPR = branchPRs().get(branch.name)
 				if (!existingPR && state.github.isAuthenticated) {
-					showToast("info", "Creating PR...")
+					updateToast(toastId, "info", "Creating PR...", 0)
 					const created = await createPR({
 						title: branch.name,
 						body: "",
 						base: state.git.defaultBranch,
 					})
 					if (created) {
+						updateToast(toastId, "info", "Updating PR list...", 0)
 						await githubService.refreshPRs()
-						showToast("success", `Pushed and created PR #${created.number}`)
+						updateToast(toastId, "success", `Pushed and created PR #${created.number}`)
 					} else {
-						showToast("error", "Push succeeded but PR creation failed")
+						updateToast(toastId, "error", "Push succeeded but PR creation failed")
 					}
 				} else {
 					await refreshBranches()
-					showToast("success", `Pushed ${branch.name}`)
+					updateToast(toastId, "success", `Pushed ${branch.name}`)
 				}
 			} catch (err) {
-				showToast("error", String(err))
+				updateToast(toastId, "error", String(err))
 			}
 		} else if (key.name === "v" && branch) {
 			// Open PR in browser

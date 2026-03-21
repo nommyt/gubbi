@@ -10,7 +10,7 @@
  * Polling intervals — adjust POLL below to tune refresh cadence.
  */
 
-import { state, showToast, useInterval, icons } from "@gubbi/core"
+import { state, showToast, setSyncing, useInterval, icons } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	searchMyOpenPRs,
@@ -247,7 +247,22 @@ export function DashboardView() {
 
 	// Manual refresh — silent (no loading state reset, cache stays visible)
 	async function refresh() {
-		await Promise.all([fetchMyPRs(), fetchTagged(), fetchRepos(), fetchNotifications()])
+		setSyncing(true)
+		try {
+			await Promise.all([fetchMyPRs(), fetchTagged(), fetchRepos(), fetchNotifications()])
+		} finally {
+			setSyncing(false)
+		}
+	}
+
+	// Background polling wrapper — shows syncing indicator
+	async function poll(fn: () => Promise<void>) {
+		setSyncing(true)
+		try {
+			await fn()
+		} finally {
+			setSyncing(false)
+		}
 	}
 
 	onMount(() => {
@@ -259,11 +274,10 @@ export function DashboardView() {
 
 	// ------------------------------------------------------------------
 	// Background polling — cleans up automatically when component unmounts
-	// ------------------------------------------------------------------
-	useInterval(fetchNotifications, POLL.notifications)
-	useInterval(fetchTagged, POLL.tagged)
-	useInterval(fetchMyPRs, POLL.myPRs)
-	useInterval(fetchRepos, POLL.repos)
+	useInterval(() => poll(fetchNotifications), POLL.notifications)
+	useInterval(() => poll(fetchTagged), POLL.tagged)
+	useInterval(() => poll(fetchMyPRs), POLL.myPRs)
+	useInterval(() => poll(fetchRepos), POLL.repos)
 
 	// ------------------------------------------------------------------
 	// Keyboard

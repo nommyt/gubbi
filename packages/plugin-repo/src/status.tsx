@@ -3,7 +3,17 @@
  */
 
 import type { GitStatusEntry } from "@gubbi/core"
-import { state, setState, setFocus, showToast, toggleFullscreen, setView, icons } from "@gubbi/core"
+import {
+	state,
+	setState,
+	setFocus,
+	showToast,
+	updateToast,
+	removeToast,
+	toggleFullscreen,
+	setView,
+	icons,
+} from "@gubbi/core"
 import {
 	stageFile,
 	unstageFile,
@@ -259,24 +269,26 @@ export function StatusView() {
 			await gitService.refreshStatus()
 		} else if (key.name === "P" && key.shift) {
 			key.preventDefault()
+			const toastId = showToast("info", `Pushing ${state.git.currentBranch}...`, 0)
 			try {
 				const existingPR = currentBranchPR()
 				if (existingPR) {
-					showToast("info", `Pushing ${state.git.currentBranch}...`)
 					const result = await pushAndCreatePR(state.git.currentBranch)
-					if (result.pushed) showToast("success", `Pushed ${state.git.currentBranch}`)
+					if (result.pushed) {
+						updateToast(toastId, "success", `Pushed ${state.git.currentBranch}`)
+					}
 				} else {
-					showToast("info", `Pushing ${state.git.currentBranch}...`)
 					const result = await pushAndCreatePR(state.git.currentBranch)
 					if (result.pr) {
+						updateToast(toastId, "info", "Updating PR list...", 0)
 						await githubService.refreshPRs()
-						showToast("success", `Pushed and created PR #${result.pr.number}`)
+						updateToast(toastId, "success", `Pushed and created PR #${result.pr.number}`)
 					} else if (result.pushed) {
-						showToast("success", `Pushed ${state.git.currentBranch}`)
+						updateToast(toastId, "success", `Pushed ${state.git.currentBranch}`)
 					}
 				}
 			} catch (err) {
-				showToast("error", String(err))
+				updateToast(toastId, "error", String(err))
 			}
 		} else if (key.name === "V" && key.shift) {
 			key.preventDefault()
@@ -519,16 +531,18 @@ export function StatusView() {
 					confirmLabel="Push"
 					onConfirm={async () => {
 						setShowPushPR(false)
+						const toastId = showToast("info", `Pushing ${state.git.currentBranch}...`, 0)
 						try {
 							const result = await pushAndCreatePR(state.git.currentBranch, pendingCommitMessage())
 							if (result.pr && !currentBranchPR()) {
+								updateToast(toastId, "info", "Updating PR list...", 0)
 								await githubService.refreshPRs()
-								showToast("success", `Pushed and created PR #${result.pr.number}`)
+								updateToast(toastId, "success", `Pushed and created PR #${result.pr.number}`)
 							} else if (result.pushed) {
-								showToast("success", `Pushed ${state.git.currentBranch}`)
+								updateToast(toastId, "success", `Pushed ${state.git.currentBranch}`)
 							}
 						} catch (err) {
-							showToast("error", String(err))
+							updateToast(toastId, "error", String(err))
 						}
 					}}
 					onCancel={() => setShowPushPR(false)}

@@ -76,7 +76,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 
 - [x] After commit, show confirm prompt: "Push and create PR?"
 - [x] Smart PR creation: if branch has no PR → create with commit message as title; if PR exists → just push
-- [ ] Show inline progress feedback during push and PR creation
+- [x] Show inline progress feedback during push and PR creation
 
 **New utility:** `packages/github/src/bridge.ts`
 - [x] `pushAndCreatePR()` — push branch, create PR if needed
@@ -100,7 +100,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
   - Status + on PR branch: `P: push & update PR | V: view PR #123`
   - Branches + branch with PR: `P: push | V: view PR | M: merge`
   - PR view + CI failing: `⚠ CI failing | C: checkout | r: review`
-- [ ] Show `↻ syncing...` when background polling is active
+- [x] Show `↻ syncing...` when background polling is active
 - [x] Show `updated Xs ago` for last GitHub refresh
 
 ---

@@ -3,6 +3,7 @@
  */
 
 import { state } from "@gubbi/core"
+import { icons } from "@gubbi/core"
 import { For, Show, Switch, Match, createSignal, onMount, onCleanup } from "solid-js"
 
 const C = {
@@ -232,6 +233,9 @@ export function StatusBar() {
 			<text fg={C.activeView}>{VIEWS_DISPLAY[state.ui.currentView]}</text>
 			<Show when={refreshedAgo()}>
 				<text fg={C.sep}> {refreshedAgo()}</text>
+			</Show>
+			<Show when={state.ui.syncing}>
+				<text fg={C.info}> {icons.sync} syncing</text>
 			</Show>
 		</box>
 	)

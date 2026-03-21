@@ -186,6 +186,7 @@ export interface ToastMessage {
 	id: string
 	type: ToastType
 	message: string
+	persistent?: boolean
 }
 
 export type ViewId = string
@@ -207,6 +208,7 @@ export interface UIState {
 	loading: LoadingState
 	toasts: ToastMessage[]
 	helpVisible: boolean
+	syncing: boolean
 }
 
 // ---------------------------------------------------------------------------
