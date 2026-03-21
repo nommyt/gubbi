@@ -2,7 +2,7 @@
  * issues.tsx — GitHub issues: list, detail, create, comment
  */
 
-import { state, showToast, icons } from "@gubbi/core"
+import { state, showToast, icons, getPersistedValue, setPersistedValue } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	listIssues,
@@ -41,8 +41,12 @@ export function IssuesView() {
 	const [showClose, setShowClose] = createSignal(false)
 	const [showFilter, setShowFilter] = createSignal(false)
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
-	const [filterState, setFilterState] = createSignal<"open" | "closed" | "all">("open")
-	const [filterAuthor, setFilterAuthor] = createSignal("")
+	const [filterState, setFilterState] = createSignal<"open" | "closed" | "all">(
+		getPersistedValue<"open" | "closed" | "all">("issues.filterState", "open"),
+	)
+	const [filterAuthor, setFilterAuthor] = createSignal(
+		getPersistedValue<string>("issues.filterAuthor", ""),
+	)
 
 	const selectedIssue = () => issues()[selectedIdx()]
 
@@ -115,6 +119,7 @@ export function IssuesView() {
 			const current = states.indexOf(filterState())
 			const next = states[(current + 1) % states.length]!
 			setFilterState(next)
+			setPersistedValue("issues.filterState", next)
 			showToast("info", `Filter: ${next}`)
 			await loadIssues()
 		} else if (key.name === "/" || key.name === "slash") {
@@ -310,7 +315,9 @@ export function IssuesView() {
 					initialValue={filterAuthor()}
 					onSubmit={async (author) => {
 						setShowFilter(false)
-						setFilterAuthor(author.trim())
+						const trimmed = author.trim()
+						setFilterAuthor(trimmed)
+						setPersistedValue("issues.filterAuthor", trimmed)
 						await loadIssues()
 					}}
 					onCancel={() => setShowFilter(false)}

@@ -219,7 +219,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 - [x] `/` → open filter dialog (author filter via InputDialog)
 - [x] `f` → cycle state: open → closed → all
 - [x] Show active filters in view header
-- [ ] Persist filters between sessions
+- [x] Persist filters between sessions
 
 ### 6.4 Create PR/Issue Dialog
 **File:** `packages/plugin-github/src/pull-requests.tsx`

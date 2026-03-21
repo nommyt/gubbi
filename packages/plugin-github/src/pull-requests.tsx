@@ -2,7 +2,7 @@
  * pull-requests.tsx — GitHub PRs: list, detail, create, review, merge, diff
  */
 
-import { state, showToast, setView, icons } from "@gubbi/core"
+import { state, showToast, setView, icons, getPersistedValue, setPersistedValue } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	listPRs,
@@ -78,8 +78,12 @@ export function PullRequestsView() {
 	const [showRequestReviewers, setShowRequestReviewers] = createSignal(false)
 	const [createPRDefaultTitle, setCreatePRDefaultTitle] = createSignal("")
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
-	const [filterState, setFilterState] = createSignal<"open" | "closed" | "all">("open")
-	const [filterAuthor, setFilterAuthor] = createSignal("")
+	const [filterState, setFilterState] = createSignal<"open" | "closed" | "all">(
+		getPersistedValue<"open" | "closed" | "all">("prs.filterState", "open"),
+	)
+	const [filterAuthor, setFilterAuthor] = createSignal(
+		getPersistedValue<string>("prs.filterAuthor", ""),
+	)
 
 	const selectedPR = () => prs()[selectedIdx()]
 
@@ -196,6 +200,7 @@ export function PullRequestsView() {
 			const current = states.indexOf(filterState())
 			const next = states[(current + 1) % states.length]!
 			setFilterState(next)
+			setPersistedValue("prs.filterState", next)
 			showToast("info", `Filter: ${next}`)
 			await loadPRs()
 		} else if (key.name === "n") {
@@ -439,7 +444,9 @@ export function PullRequestsView() {
 					initialValue={filterAuthor()}
 					onSubmit={async (author) => {
 						setShowFilter(false)
-						setFilterAuthor(author.trim())
+						const trimmed = author.trim()
+						setFilterAuthor(trimmed)
+						setPersistedValue("prs.filterAuthor", trimmed)
 						await loadPRs()
 					}}
 					onCancel={() => setShowFilter(false)}
