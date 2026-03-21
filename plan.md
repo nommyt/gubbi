@@ -147,7 +147,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 - [x] `m` → merge PR (block with warning if checks fail)
 - [x] `c` → checkout PR branch
 - [x] `o` → open in browser
-- [ ] `r` → open review mode
+- [x] `r` → open review mode
 - [x] Show repo name only when it changes between PRs (not on every row)
 - [x] Sort by urgency: CI failing → review requested → approved → draft
 

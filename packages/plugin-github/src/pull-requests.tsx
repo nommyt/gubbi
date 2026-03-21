@@ -86,10 +86,23 @@ export function PullRequestsView() {
 	async function loadPRs() {
 		setLoading(true)
 		try {
-			const state = filterState()
+			const filterSt = filterState()
 			const author = filterAuthor() || undefined
-			const list = await listPRs({ state, limit: 50, author })
+			const list = await listPRs({ state: filterSt, limit: 50, author })
 			setPRs(list)
+
+			// Check for pending PR number (set by dashboard review mode)
+			const pending = state.github.pendingPRNumber
+			if (pending != null) {
+				state.github.pendingPRNumber = null
+				const idx = list.findIndex((p) => p.number === pending)
+				if (idx >= 0) {
+					setSelectedIdx(idx)
+					await loadDiff(list[idx]!)
+					return
+				}
+			}
+
 			setSelectedIdx(0)
 			const first = list[0]
 			if (first) await loadDiff(first)

@@ -62,6 +62,7 @@ const initialGitHubState: GitHubState = {
 	selectedRun: null,
 	unreadNotificationCount: 0,
 	lastRefreshTime: 0,
+	pendingPRNumber: null,
 }
 
 const initialUIState: UIState = {

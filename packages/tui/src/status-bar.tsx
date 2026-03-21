@@ -32,6 +32,14 @@ const GLOBAL_HINTS: KeyHint[] = [
 ]
 
 const BASE_VIEW_HINTS: Record<string, KeyHint[]> = {
+	dashboard: [
+		{ key: "h/l", label: "col" },
+		{ key: "j/k", label: "nav" },
+		{ key: "r", label: "review" },
+		{ key: "m", label: "merge" },
+		{ key: "c", label: "checkout" },
+		{ key: "o", label: "open" },
+	],
 	smartlog: [
 		{ key: "j/k", label: "nav" },
 		{ key: "Enter", label: "view" },

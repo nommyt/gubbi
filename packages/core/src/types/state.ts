@@ -174,6 +174,9 @@ export interface GitHubState {
 
 	// Refresh tracking
 	lastRefreshTime: number
+
+	// Navigation: PR number to focus when entering PRs view (set by dashboard `r`)
+	pendingPRNumber: number | null
 }
 
 // ---------------------------------------------------------------------------

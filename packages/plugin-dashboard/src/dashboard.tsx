@@ -10,7 +10,7 @@
  * Polling intervals — adjust POLL below to tune refresh cadence.
  */
 
-import { state, showToast, setSyncing, useInterval, icons } from "@gubbi/core"
+import { state, showToast, setSyncing, setView, useInterval, icons } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	searchMyOpenPRs,
@@ -288,9 +288,20 @@ export function DashboardView() {
 	useKeyboard((key) => {
 		if (showMerge()) return
 
-		if (key.name === "r" && !key.ctrl) {
+		if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			void refresh()
+			return
+		}
+		if (key.name === "r" && !key.ctrl) {
+			key.preventDefault()
+			const pr = getSelectedPR()
+			if (pr) {
+				state.github.pendingPRNumber = pr.number
+				setView("prs")
+			} else {
+				showToast("info", "Select a PR first")
+			}
 			return
 		}
 		if (key.name === "h" || key.name === "left") {
