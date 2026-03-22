@@ -185,6 +185,19 @@ export function StacksView() {
 			} catch (err) {
 				showToast("error", String(err))
 			}
+		} else if (key.name === "t" && stack && stack.branches.length > 0) {
+			// Jump to top of stack (last branch)
+			key.preventDefault()
+			const last = stack.branches.length - 1
+			setSelectedBranch(last)
+			const b = stack.branches[last]
+			if (b) await loadBranchDiff(stack, b)
+		} else if (key.name === "b" && stack && stack.branches.length > 0) {
+			// Jump to bottom of stack (first branch)
+			key.preventDefault()
+			setSelectedBranch(0)
+			const b = stack.branches[0]
+			if (b) await loadBranchDiff(stack, b)
 		} else if (key.name === "s" && stack) {
 			key.preventDefault()
 			setShowSync(true)
@@ -358,6 +371,7 @@ export function StacksView() {
 					<text fg={C.dim}>
 						<span style={{ fg: "#58a6ff" }}>n</span> new ·{" "}
 						<span style={{ fg: "#58a6ff" }}>u/d</span> navigate ·{" "}
+						<span style={{ fg: "#58a6ff" }}>t/b</span> top/bottom ·{" "}
 						<span style={{ fg: "#58a6ff" }}>s</span> sync · <span style={{ fg: "#58a6ff" }}>p</span>{" "}
 						submit · <span style={{ fg: "#58a6ff" }}>a</span> absorb ·{" "}
 						<span style={{ fg: "#58a6ff" }}>F</span> fold

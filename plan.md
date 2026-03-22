@@ -269,15 +269,9 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 7.5 Enhanced Stack Features
 **File:** `packages/plugin-stacks/src/stacks.tsx`
 
-- [ ] Visual stack tree with PR status per branch:
-  ```
-  ┌─ main (merged)
-  ├─ feat/auth         PR #123 ✓ approved
-  ├─ feat/auth-ui      PR #124 ○ in review
-  └─ feat/auth-tests   PR #125 ◌ draft
-  ```
-- [ ] `u` / `d` → navigate up/down in stack (checkout)
-- [ ] `t` / `b` → jump to top/bottom of stack
+- [x] Visual stack tree with PR status per branch:
+- [x] `u` / `d` → navigate up/down in stack (checkout)
+- [x] `t` / `b` → jump to top/bottom of stack
 - [ ] Auto-rebase dependents when a stack branch is updated
 
 ---
