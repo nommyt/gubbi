@@ -2,11 +2,11 @@
  * actions.tsx — GitHub Actions workflow runs: list, status, logs, re-run
  */
 
-import { state, showToast, icons } from "@gubbi/core"
+import { state, showToast, icons, useInterval } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import { listRuns, getRunLogs, rerunRun, type WorkflowRun } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
-import { createSignal, For, Show, onMount } from "solid-js"
+import { createSignal, For, Show, onMount, onCleanup } from "solid-js"
 
 const C = {
 	border: "#30363d",
@@ -60,6 +60,8 @@ export function ActionsView() {
 	const [loading, setLoading] = createSignal(true)
 	const [loadingLogs, setLoadingLogs] = createSignal(false)
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
+	const [watchingRunId, setWatchingRunId] = createSignal<number | null>(null)
+	const [autoRefresh, setAutoRefresh] = createSignal(false)
 
 	const selectedRun = () => runs()[selectedIdx()]
 
@@ -88,6 +90,36 @@ export function ActionsView() {
 	}
 
 	onMount(() => void loadRuns())
+
+	// Watch: poll every 5s until the watched run completes
+	let watchInterval: ReturnType<typeof setInterval> | null = null
+
+	function startWatching(runId: number) {
+		setWatchingRunId(runId)
+		watchInterval = setInterval(async () => {
+			await loadRuns()
+			const run = runs().find((r) => r.id === runId)
+			if (!run || run.status !== "in_progress") {
+				stopWatching()
+				if (run) showToast("success", `${run.workflowName}: ${run.conclusion ?? run.status}`)
+			}
+		}, 5000)
+	}
+
+	function stopWatching() {
+		if (watchInterval) {
+			clearInterval(watchInterval)
+			watchInterval = null
+		}
+		setWatchingRunId(null)
+	}
+
+	onCleanup(() => stopWatching())
+
+	// Auto-refresh: poll every 15s
+	useInterval(async () => {
+		if (autoRefresh()) await loadRuns()
+	}, 15000)
 
 	useKeyboard(async (key) => {
 		if (key.name === "tab") {
@@ -120,6 +152,19 @@ export function ActionsView() {
 		} else if (key.name === "o" && run) {
 			key.preventDefault()
 			await openURL(run.url)
+		} else if (key.name === "w" && run) {
+			key.preventDefault()
+			if (watchingRunId() === run.id) {
+				stopWatching()
+				showToast("info", "Stopped watching")
+			} else {
+				startWatching(run.id)
+				showToast("info", `Watching ${run.workflowName}...`)
+			}
+		} else if (key.ctrl && key.name === "l") {
+			key.preventDefault()
+			setAutoRefresh((v) => !v)
+			showToast("info", autoRefresh() ? "Auto-refresh on (15s)" : "Auto-refresh off")
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadRuns()
@@ -172,6 +217,9 @@ export function ActionsView() {
 											<box flexDirection="row" gap={1}>
 												<text fg={statusColor(run)}>{statusIcon(run)}</text>
 												<text fg={isSelected() ? "#e6edf3" : C.text}>{run.workflowName}</text>
+												<Show when={watchingRunId() === run.id}>
+													<text fg={C.running}> {icons.circleFilled} watching</text>
+												</Show>
 												<box flexGrow={1} />
 												<text fg={C.dim}>{formatDate(run.updatedAt)}</text>
 											</box>
@@ -200,8 +248,13 @@ export function ActionsView() {
 					<text fg={C.dim}>
 						<span style={{ fg: "#58a6ff" }}>Enter</span> logs ·{" "}
 						<span style={{ fg: "#58a6ff" }}>r</span> re-run ·{" "}
+						<span style={{ fg: "#58a6ff" }}>w</span> watch ·{" "}
+						<span style={{ fg: "#58a6ff" }}>^l</span> auto-refresh ·{" "}
 						<span style={{ fg: "#58a6ff" }}>o</span> open
 					</text>
+					<Show when={autoRefresh()}>
+						<text fg={C.running}> {icons.sync} auto</text>
+					</Show>
 				</box>
 			</box>
 

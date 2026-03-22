@@ -238,9 +238,9 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 **File:** `packages/plugin-github/src/actions.tsx`
 
 - [ ] `t` → trigger workflow with input dialog
-- [ ] `w` → watch selected run (live polling every 5s until complete)
-- [ ] `Ctrl+L` → toggle auto-refresh
-- [ ] Show `● watching` indicator on watched run
+- [x] `w` → watch selected run (live polling every 5s until complete)
+- [x] `Ctrl+L` → toggle auto-refresh
+- [x] Show `● watching` indicator on watched run
 
 ### 7.2 Worktree Management
 **New files:** `packages/plugin-repo/src/worktrees-view.tsx`, `packages/git/src/worktree.ts`
