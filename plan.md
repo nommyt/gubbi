@@ -201,11 +201,11 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 6.1 Inline PR Review
 **Files:** `packages/plugin-github/src/pull-requests.tsx`, new `packages/tui/src/review-dialog.tsx`
 
-- [ ] `r` → enter review mode (shows PR diff)
-- [ ] `c` → add inline comment at current line
-- [ ] `a` → approve PR
-- [ ] `Shift+R` → request changes
-- [ ] Submit review with body
+- [x] `r` → enter review mode (shows PR diff)
+- [x] `c` → add inline comment at current line
+- [x] `a` → approve PR
+- [x] `Shift+R` → request changes
+- [x] Submit review with body
 
 ### 6.2 Request Reviewers
 **File:** `packages/plugin-github/src/pull-requests.tsx`

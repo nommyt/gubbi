@@ -78,6 +78,7 @@ export function PullRequestsView() {
 	const [showRequestReviewers, setShowRequestReviewers] = createSignal(false)
 	const [createPRDefaultTitle, setCreatePRDefaultTitle] = createSignal("")
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
+	const [fullscreenDiff, setFullscreenDiff] = createSignal(false)
 	const [filterState, setFilterState] = createSignal<"open" | "closed" | "all">(
 		getPersistedValue<"open" | "closed" | "all">("prs.filterState", "open"),
 	)
@@ -217,6 +218,9 @@ export function PullRequestsView() {
 		} else if (key.name === "/" || key.name === "slash") {
 			key.preventDefault()
 			setShowFilter(true)
+		} else if (key.name === "r" && pr) {
+			key.preventDefault()
+			setFullscreenDiff((v) => !v)
 		} else if (key.name === "R" && key.shift && pr) {
 			key.preventDefault()
 			setShowRequestReviewers(true)
@@ -313,21 +317,33 @@ export function PullRequestsView() {
 				<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
 					<text fg={C.dim}>
 						<span style={{ fg: "#58a6ff" }}>m</span> merge ·{" "}
-						<span style={{ fg: "#58a6ff" }}>a</span> approve ·{" "}
-						<span style={{ fg: "#58a6ff" }}>R</span> reviewers ·{" "}
-						<span style={{ fg: "#58a6ff" }}>c</span> comment ·{" "}
+						<span style={{ fg: "#58a6ff" }}>a</span> review ·{" "}
+						<span style={{ fg: "#58a6ff" }}>r</span> diff · <span style={{ fg: "#58a6ff" }}>R</span>{" "}
+						reviewers · <span style={{ fg: "#58a6ff" }}>c</span> comment ·{" "}
 						<span style={{ fg: "#58a6ff" }}>C</span> checkout ·{" "}
-						<span style={{ fg: "#58a6ff" }}>/</span> filter ·{" "}
 						<span style={{ fg: "#58a6ff" }}>o</span> open
 					</text>
 				</box>
 			</box>
 
-			{/* PR diff */}
-			<DiffViewer
-				content={diffContent()}
-				title={selectedPR() ? `PR #${selectedPR()!.number}: ${selectedPR()!.title}` : "pr diff"}
-			/>
+			{/* PR diff — hidden when in fullscreen mode, shown in fullscreen section */}
+			<Show when={!fullscreenDiff()}>
+				<DiffViewer
+					content={diffContent()}
+					title={selectedPR() ? `PR #${selectedPR()!.number}: ${selectedPR()!.title}` : "pr diff"}
+					onToggleFullscreen={() => setFullscreenDiff(true)}
+				/>
+			</Show>
+
+			{/* Fullscreen diff */}
+			<Show when={fullscreenDiff()}>
+				<DiffViewer
+					content={diffContent()}
+					title={selectedPR() ? `PR #${selectedPR()!.number}: ${selectedPR()!.title}` : "pr diff"}
+					fullscreen
+					onToggleFullscreen={() => setFullscreenDiff(false)}
+				/>
+			</Show>
 
 			{/* Merge dialog */}
 			<Show when={showMerge() && selectedPR()}>
