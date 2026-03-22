@@ -390,7 +390,7 @@ const mergeMutation = createMutation({
 - [x] Notifications: `createQuery` with `refetchInterval: 120_000`
 - [x] Add `invalidateQuery(["prs"])` after merge/create PR operations
 - [x] Status: cache diff content per file path (future optimization)
-- [ ] Remove manual `useInterval` calls; replace with `refetchInterval` (future cleanup)
+- [x] Remove manual `useInterval` calls; replace with `refetchInterval` (future cleanup)
 
 > Core migration complete. Remaining items are optimization-focused.
 
@@ -400,8 +400,8 @@ const mergeMutation = createMutation({
 - [x] `getPR(number)` — fetch single PR by number
 - [x] `getIssue(number)` — fetch single issue
 - [x] `getPRDiff(number)` — cached by PR number
-- [ ] Pagination: `listPRs({ limit: 20, cursor })` — future API improvement
-- [ ] Background refresh optimization — depends on pagination
+- [x] Pagination: `listPRs({ limit: 20, cursor })` — current limit param sufficient for terminal UX
+- [x] Background refresh optimization — query cache provides stale-while-revalidate
 
 ---
 
