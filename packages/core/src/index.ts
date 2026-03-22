@@ -34,3 +34,6 @@ export * from "./config.ts"
 
 // Custom actions
 export * from "./custom-actions.ts"
+
+// Query cache
+export * from "./query.ts"

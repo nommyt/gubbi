@@ -2,7 +2,16 @@
  * pull-requests.tsx — GitHub PRs: list, detail, create, review, merge, diff
  */
 
-import { state, showToast, setView, icons, getPersistedValue, setPersistedValue } from "@gubbi/core"
+import {
+	state,
+	showToast,
+	setView,
+	icons,
+	getPersistedValue,
+	setPersistedValue,
+	createQuery,
+	invalidateQuery,
+} from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	listPRs,
@@ -69,7 +78,6 @@ export function PullRequestsView() {
 	const [prs, setPRs] = createSignal<PullRequest[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [diffContent, setDiffContent] = createSignal("")
-	const [loading, setLoading] = createSignal(true)
 	const [showMerge, setShowMerge] = createSignal(false)
 	const [showReview, setShowReview] = createSignal(false)
 	const [showComment, setShowComment] = createSignal(false)
@@ -86,36 +94,40 @@ export function PullRequestsView() {
 		getPersistedValue<string>("prs.filterAuthor", ""),
 	)
 
+	// Query for PRs with caching
+	const prsQuery = createQuery({
+		queryKey: () => ["prs", { state: filterState(), author: filterAuthor() }],
+		queryFn: () =>
+			listPRs({ state: filterState(), limit: 50, author: filterAuthor() || undefined }),
+		staleTime: 60_000,
+		refetchInterval: 120_000,
+	})
+
 	const selectedPR = () => prs()[selectedIdx()]
 
 	async function loadPRs() {
-		setLoading(true)
-		try {
-			const filterSt = filterState()
-			const author = filterAuthor() || undefined
-			const list = await listPRs({ state: filterSt, limit: 50, author })
-			setPRs(list)
+		const list = await listPRs({
+			state: filterState(),
+			limit: 50,
+			author: filterAuthor() || undefined,
+		})
+		setPRs(list)
 
-			// Check for pending PR number (set by dashboard review mode)
-			const pending = state.github.pendingPRNumber
-			if (pending != null) {
-				state.github.pendingPRNumber = null
-				const idx = list.findIndex((p) => p.number === pending)
-				if (idx >= 0) {
-					setSelectedIdx(idx)
-					await loadDiff(list[idx]!)
-					return
-				}
+		// Check for pending PR number (set by dashboard review mode)
+		const pending = state.github.pendingPRNumber
+		if (pending != null) {
+			state.github.pendingPRNumber = null
+			const idx = list.findIndex((p) => p.number === pending)
+			if (idx >= 0) {
+				setSelectedIdx(idx)
+				await loadDiff(list[idx]!)
+				return
 			}
-
-			setSelectedIdx(0)
-			const first = list[0]
-			if (first) await loadDiff(first)
-		} catch (err) {
-			showToast("error", `Failed to load PRs: ${err}`)
-		} finally {
-			setLoading(false)
 		}
+
+		setSelectedIdx(0)
+		const first = list[0]
+		if (first) await loadDiff(first)
 	}
 
 	async function loadDiff(pr: PullRequest) {
@@ -241,7 +253,7 @@ export function PullRequestsView() {
 				title={`pull requests (${filterState()}${filterAuthor() ? ` @${filterAuthor()}` : ""})`}
 			>
 				<Show
-					when={!loading()}
+					when={!prsQuery.isLoading()}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
 							<text fg={C.dim}>Loading PRs...</text>
@@ -304,7 +316,7 @@ export function PullRequestsView() {
 								}}
 							</For>
 
-							<Show when={prs().length === 0 && !loading()}>
+							<Show when={prs().length === 0 && !prsQuery.isLoading()}>
 								<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
 									<text fg={C.dim}>No open pull requests</text>
 								</box>
@@ -362,6 +374,7 @@ export function PullRequestsView() {
 							await mergePR(pr.number, method as "merge" | "squash" | "rebase", {
 								deleteAfterMerge: true,
 							})
+							invalidateQuery(["prs"])
 							await loadPRs()
 							showToast("success", `Merged PR #${pr.number}`)
 						} catch (err) {
@@ -438,6 +451,7 @@ export function PullRequestsView() {
 								base: state.git.defaultBranch,
 							})
 							if (pr) {
+								invalidateQuery(["prs"])
 								await githubService.refreshPRs()
 								await loadPRs()
 								showToast("success", `Created PR #${pr.number}`)

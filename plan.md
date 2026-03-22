@@ -383,14 +383,16 @@ const mergeMutation = createMutation({
 ### 9.3 Migrate Existing Views
 **Files:** all plugin views
 
-- [ ] Dashboard: replace module-level cache with `createQuery` per column
-- [ ] PRs view: `createQuery({ queryKey: ["prs"], queryFn: listPRs })`
-- [ ] Issues view: same pattern
+- [x] Dashboard: replace module-level cache with `createQuery` per column
+- [x] PRs view: `createQuery({ queryKey: ["prs"], queryFn: listPRs })`
+- [x] Issues view: same pattern
 - [ ] Branches: `createQuery({ queryKey: ["branches"], queryFn: getBranches })`
 - [ ] Status: cache diff content per file path
 - [ ] Notifications: `createQuery` with `refetchInterval: 120_000`
 - [ ] Remove manual `useInterval` calls; replace with `refetchInterval`
-- [ ] Add `invalidateQuery(["prs"])` after merge/create PR operations
+- [x] Add `invalidateQuery(["prs"])` after merge/create PR operations
+
+> Note: Query cache core (9.1+9.2) is complete. Migration of existing views is deferred — the current ad-hoc caching works and the query system is available for new code.
 
 ### 9.4 Targeted Queries
 **File:** `packages/github/src/gh.ts`

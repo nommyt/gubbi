@@ -2,7 +2,14 @@
  * issues.tsx — GitHub issues: list, detail, create, comment
  */
 
-import { state, showToast, icons, getPersistedValue, setPersistedValue } from "@gubbi/core"
+import {
+	state,
+	showToast,
+	icons,
+	getPersistedValue,
+	setPersistedValue,
+	createQuery,
+} from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	listIssues,
@@ -35,7 +42,6 @@ export function IssuesView() {
 	const [issues, setIssues] = createSignal<Issue[]>([])
 	const [comments, setComments] = createSignal<IssueComment[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
-	const [loading, setLoading] = createSignal(true)
 	const [showCreate, setShowCreate] = createSignal(false)
 	const [showComment, setShowComment] = createSignal(false)
 	const [showClose, setShowClose] = createSignal(false)
@@ -48,10 +54,18 @@ export function IssuesView() {
 		getPersistedValue<string>("issues.filterAuthor", ""),
 	)
 
+	// Query for issues with caching
+	const issuesQuery = createQuery({
+		queryKey: () => ["issues", { state: filterState(), author: filterAuthor() }],
+		queryFn: () =>
+			listIssues({ state: filterState(), limit: 50, author: filterAuthor() || undefined }),
+		staleTime: 60_000,
+		refetchInterval: 120_000,
+	})
+
 	const selectedIssue = () => issues()[selectedIdx()]
 
 	async function loadIssues() {
-		setLoading(true)
 		try {
 			const author = filterAuthor() || undefined
 			const list = await listIssues({ state: filterState(), limit: 50, author })
@@ -61,8 +75,6 @@ export function IssuesView() {
 			if (first) await loadComments(first)
 		} catch (err) {
 			showToast("error", `Failed to load issues: ${err}`)
-		} finally {
-			setLoading(false)
 		}
 	}
 
@@ -142,7 +154,7 @@ export function IssuesView() {
 				title={`issues (${filterState()}${filterAuthor() ? ` @${filterAuthor()}` : ""})`}
 			>
 				<Show
-					when={!loading()}
+					when={!issuesQuery.isLoading()}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
 							<text fg={C.dim}>Loading issues...</text>
@@ -196,7 +208,7 @@ export function IssuesView() {
 									)
 								}}
 							</For>
-							<Show when={issues().length === 0 && !loading()}>
+							<Show when={issues().length === 0 && !issuesQuery.isLoading()}>
 								<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
 									<text fg={C.dim}>No open issues</text>
 								</box>
