@@ -92,6 +92,16 @@ export function WorktreesView() {
 			} catch (err) {
 				showToast("error", String(err))
 			}
+		} else if (key.name === "o" && wt) {
+			key.preventDefault()
+			try {
+				// Open worktree in new terminal window
+				const { exec } = await import("@gubbi/git")
+				const cmd = process.platform === "darwin" ? "open" : "xdg-open"
+				await exec(cmd, ["-a", "Terminal", wt.path])
+			} catch {
+				showToast("info", `Path: ${wt.path}`)
+			}
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await refresh()
@@ -169,7 +179,8 @@ export function WorktreesView() {
 					<text fg={C.dim}>
 						<span style={{ fg: "#58a6ff" }}>n</span> new · <span style={{ fg: "#58a6ff" }}>d</span>{" "}
 						remove · <span style={{ fg: "#58a6ff" }}>p</span> prune ·{" "}
-						<span style={{ fg: "#58a6ff" }}>r</span> repair
+						<span style={{ fg: "#58a6ff" }}>r</span> repair ·{" "}
+						<span style={{ fg: "#58a6ff" }}>o</span> open
 					</text>
 				</box>
 			</box>

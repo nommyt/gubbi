@@ -273,3 +273,11 @@ export function gcQueries(gcTime = 300_000) {
 		}
 	}
 }
+
+/**
+ * useQuery hook — wraps createQuery with SolidJS reactivity.
+ * Auto-disposes on component unmount.
+ */
+export function useQuery<T>(options: QueryOptions<T>) {
+	return createQuery(options)
+}

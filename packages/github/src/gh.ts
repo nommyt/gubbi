@@ -560,6 +560,45 @@ export async function getRunLogs(id: number): Promise<string> {
 	return r.stdout
 }
 
+export interface Workflow {
+	id: number
+	name: string
+	path: string
+	state: string
+}
+
+/**
+ * List available workflows.
+ */
+export async function listWorkflows(): Promise<Workflow[]> {
+	const r = await exec(GH, ["workflow", "list", "--json", "id,name,path,state"])
+	if (r.exitCode !== 0) return []
+	try {
+		return JSON.parse(r.stdout) as Workflow[]
+	} catch {
+		return []
+	}
+}
+
+/**
+ * Trigger a workflow run by workflow file or name.
+ */
+export async function triggerWorkflow(
+	workflow: string,
+	branch?: string,
+	inputs?: Record<string, string>,
+): Promise<boolean> {
+	const args = ["workflow", "run", workflow]
+	if (branch) args.push("--ref", branch)
+	if (inputs) {
+		for (const [key, value] of Object.entries(inputs)) {
+			args.push("-f", `${key}=${value}`)
+		}
+	}
+	const r = await exec(GH, args)
+	return r.exitCode === 0
+}
+
 // ---------------------------------------------------------------------------
 // Notifications
 // ---------------------------------------------------------------------------

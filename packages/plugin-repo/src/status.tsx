@@ -465,7 +465,17 @@ export function StatusView() {
 
 				{/* Blame overlay */}
 				<Show when={showBlame() && selectedEntry()}>
-					<BlameView filePath={selectedEntry()!.path} onClose={() => setShowBlame(false)} />
+					<BlameView
+						filePath={selectedEntry()!.path}
+						onClose={() => setShowBlame(false)}
+						onJumpToCommit={(hash) => {
+							setShowBlame(false)
+							state.git.selectedLogEntry = null
+							setView("log")
+							// Store the hash to jump to in state for the log view to pick up
+							;(state as any)._pendingCommitHash = hash
+						}}
+					/>
 				</Show>
 			</box>
 

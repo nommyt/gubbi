@@ -4,7 +4,15 @@
 
 import { state, showToast, icons, useInterval } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
-import { listRuns, getRunLogs, rerunRun, type WorkflowRun } from "@gubbi/github"
+import {
+	listRuns,
+	getRunLogs,
+	rerunRun,
+	listWorkflows,
+	triggerWorkflow,
+	type WorkflowRun,
+} from "@gubbi/github"
+import { SelectDialog, InputDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount, onCleanup } from "solid-js"
 
@@ -62,6 +70,8 @@ export function ActionsView() {
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
 	const [watchingRunId, setWatchingRunId] = createSignal<number | null>(null)
 	const [autoRefresh, setAutoRefresh] = createSignal(false)
+	const [showTrigger, setShowTrigger] = createSignal(false)
+	const [workflows, setWorkflows] = createSignal<Array<{ label: string; value: string }>>([])
 
 	const selectedRun = () => runs()[selectedIdx()]
 
@@ -165,6 +175,19 @@ export function ActionsView() {
 			key.preventDefault()
 			setAutoRefresh((v) => !v)
 			showToast("info", autoRefresh() ? "Auto-refresh on (15s)" : "Auto-refresh off")
+		} else if (key.name === "t") {
+			key.preventDefault()
+			try {
+				const wfs = await listWorkflows()
+				if (wfs.length === 0) {
+					showToast("info", "No workflows found")
+					return
+				}
+				setWorkflows(wfs.map((w) => ({ label: w.name, value: w.path })))
+				setShowTrigger(true)
+			} catch (err) {
+				showToast("error", String(err))
+			}
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await loadRuns()
@@ -247,6 +270,7 @@ export function ActionsView() {
 				<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
 					<text fg={C.dim}>
 						<span style={{ fg: "#58a6ff" }}>Enter</span> logs ·{" "}
+						<span style={{ fg: "#58a6ff" }}>t</span> trigger ·{" "}
 						<span style={{ fg: "#58a6ff" }}>r</span> re-run ·{" "}
 						<span style={{ fg: "#58a6ff" }}>w</span> watch ·{" "}
 						<span style={{ fg: "#58a6ff" }}>^l</span> auto-refresh ·{" "}
@@ -295,6 +319,31 @@ export function ActionsView() {
 					</Show>
 				</Show>
 			</box>
+
+			{/* Trigger workflow dialog */}
+			<Show when={showTrigger()}>
+				<SelectDialog
+					title="Trigger workflow"
+					options={workflows()}
+					onSelect={async (wfPath: string) => {
+						setShowTrigger(false)
+						const branch = state.git.currentBranch
+						try {
+							showToast("info", "Triggering workflow...")
+							const ok = await triggerWorkflow(wfPath, branch)
+							if (ok) {
+								showToast("success", "Workflow triggered")
+								await loadRuns()
+							} else {
+								showToast("error", "Failed to trigger workflow")
+							}
+						} catch (err) {
+							showToast("error", String(err))
+						}
+					}}
+					onCancel={() => setShowTrigger(false)}
+				/>
+			</Show>
 		</box>
 	)
 }

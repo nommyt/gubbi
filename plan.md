@@ -237,7 +237,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 7.1 GitHub Actions: Trigger + Watch
 **File:** `packages/plugin-github/src/actions.tsx`
 
-- [ ] `t` → trigger workflow with input dialog
+- [x] `t` → trigger workflow with input dialog
 - [x] `w` → watch selected run (live polling every 5s until complete)
 - [x] `Ctrl+L` → toggle auto-refresh
 - [x] Show `● watching` indicator on watched run
@@ -248,7 +248,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 - [x] List worktrees with status (locked, prunable, head, path)
 - [x] `a` → create worktree (with post-create hook: copy .env, npm install)
 - [x] `d` → remove worktree
-- [ ] `o` → open in new tmux window / zellij tab / terminal
+- [x] `o` → open in new tmux window / zellij tab / terminal
 - [x] `r` → repair worktree
 - [x] Register as new view in plugin
 
@@ -257,7 +257,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 
 - [x] `b` → toggle blame overlay on selected file
 - [x] Show: commit hash, author (truncated), relative time, line content
-- [ ] `Enter` on blame line → jump to commit in Log view
+- [x] `Enter` on blame line → jump to commit in Log view
 
 ### 7.4 Operation Log & Undo
 **New file:** `packages/core/src/history/operation-log.ts`
@@ -356,7 +356,7 @@ prsQuery.refetch()  // manual refresh
 - [x] Stale-while-revalidate: show cached data, refetch in background
 - [x] `invalidateQuery(key)` — mark query stale, triggers refetch
 - [x] Garbage collection: evict queries unused for `gcTime` (default 5min)
-- [ ] `useQuery()` hook — wraps `createQuery` with SolidJS reactivity (auto-dispose on unmount)
+- [x] `useQuery()` hook — wraps `createQuery` with SolidJS reactivity (auto-dispose on unmount)
 
 ### 9.2 Mutation Layer
 **File:** `packages/core/src/query.ts`
@@ -397,9 +397,9 @@ const mergeMutation = createMutation({
 
 Current queries fetch full lists every time. Targeted queries fetch only what changed:
 
-- [ ] `getPR(number)` — fetch single PR by number (for detail view)
-- [ ] `getIssue(number)` — fetch single issue
-- [ ] `getPRDiff(number)` — already exists, ensure cached by PR number
+- [x] `getPR(number)` — fetch single PR by number (for detail view)
+- [x] `getIssue(number)` — fetch single issue
+- [x] `getPRDiff(number)` — already exists, ensure cached by PR number
 - [ ] Pagination: `listPRs({ limit: 20, cursor })` — fetch pages on demand
 - [ ] Background refresh only fetches pages already viewed
 
