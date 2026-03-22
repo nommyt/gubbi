@@ -194,15 +194,12 @@ State is persisted at `~/.gubbi/state.json` (filter preferences, operation histo
 gubbi/
 ├── app/
 │   └── cli/                  # Entry point (bun + @opentui/solid renderer)
+│       └── src/views/        # All application views
 └── packages/
-    ├── core/                 # State, plugin API, query cache, config, operation log
+    ├── core/                 # State, query cache, config, operation log, icons
     ├── git/                  # git CLI wrappers + parser + hunk staging
     ├── github/               # gh CLI wrappers (PRs, issues, notifications, repos, actions)
-    ├── tui/                  # Shared components (Header, StatusBar, DiffViewer, BlameView, dialogs)
-    ├── plugin-dashboard/     # Dashboard + Smartlog views
-    ├── plugin-repo/          # Status, Log, Branches, Stash, Worktrees views
-    ├── plugin-github/        # PRs, Issues, Actions, Notifications views
-    └── plugin-stacks/        # Stacked diff workflow view
+    └── tui/                  # Shared components (Header, StatusBar, DiffViewer, BlameView, dialogs)
 ```
 
 **Stack:**

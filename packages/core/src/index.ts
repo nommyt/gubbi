@@ -8,14 +8,8 @@ export * from "./types/index.ts"
 // State
 export * from "./state/index.ts"
 
-// Registry
-export * from "./registry/index.ts"
-
-// Context
+// Context (service interfaces)
 export * from "./context/index.ts"
-
-// Hotkeys
-export * from "./hotkeys.ts"
 
 // Icons
 export { icons } from "./icons.ts"

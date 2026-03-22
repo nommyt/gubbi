@@ -1,14 +1,12 @@
 /**
- * app.tsx — Root application component with plugin loader
+ * app.tsx — Root application component
  */
 
-import { createPluginContext } from "@gubbi/core"
 import {
 	state,
 	setState,
 	setView,
 	setFocus,
-	viewRegistry,
 	showToast,
 	markLastUndone,
 	loadConfig,
@@ -20,10 +18,56 @@ import { createGitHubService } from "@gubbi/github"
 import { Header, StatusBar, HelpOverlay, OperationsOverlay } from "@gubbi/tui"
 import type { ParsedKey } from "@opentui/core"
 import { useRenderer, useKeyboard } from "@opentui/solid"
-import { Switch, Match, Show, onMount, createSignal } from "solid-js"
+import { Switch, Match, Show, onMount, createSignal, type JSX } from "solid-js"
 
-// Import all plugins
-import plugins from "./plugins/index.ts"
+// Import all views directly
+import {
+	DashboardView,
+	SmartlogView,
+	StatusView,
+	LogView,
+	BranchesView,
+	StashView,
+	RemotesView,
+	WorktreesView,
+	PullRequestsView,
+	IssuesView,
+	ActionsView,
+	NotificationsView,
+	StacksView,
+} from "./views/index.ts"
+
+// View definitions — id, component, shortcut, condition
+const VIEWS_MAP: Record<
+	string,
+	{
+		component: () => JSX.Element
+		shortcut: string
+		condition?: () => boolean
+	}
+> = {
+	dashboard: { component: DashboardView, shortcut: "d" },
+	smartlog: { component: SmartlogView, shortcut: "1", condition: () => state.git.isRepo },
+	status: { component: StatusView, shortcut: "2", condition: () => state.git.isRepo },
+	log: { component: LogView, shortcut: "3", condition: () => state.git.isRepo },
+	branches: { component: BranchesView, shortcut: "4", condition: () => state.git.isRepo },
+	stacks: { component: StacksView, shortcut: "5", condition: () => state.git.isRepo },
+	stash: { component: StashView, shortcut: "6", condition: () => state.git.isRepo },
+	worktrees: { component: WorktreesView, shortcut: "w", condition: () => state.git.isRepo },
+	remotes: { component: RemotesView, shortcut: "0", condition: () => state.git.isRepo },
+	prs: {
+		component: PullRequestsView,
+		shortcut: "7",
+		condition: () => state.github.isAuthenticated,
+	},
+	issues: { component: IssuesView, shortcut: "8", condition: () => state.github.isAuthenticated },
+	actions: { component: ActionsView, shortcut: "9", condition: () => state.github.isAuthenticated },
+	notifications: {
+		component: NotificationsView,
+		shortcut: "n",
+		condition: () => state.github.isAuthenticated,
+	},
+}
 
 export function App() {
 	const renderer = useRenderer()
@@ -35,7 +79,6 @@ export function App() {
 
 	// Initialize git repo detection and GitHub auth at startup
 	onMount(() => {
-		// Load config
 		const config = loadConfig()
 		if (config.theme) {
 			// Theme support can be added later
@@ -44,18 +87,16 @@ export function App() {
 		void githubService.checkAuth()
 	})
 
-	// Activate plugins — must happen before useKeyboard so viewRegistry is populated
-	for (const plugin of plugins) {
-		try {
-			const ctx = createPluginContext(plugin, { git: gitService, github: githubService })
-			plugin.activate(ctx)
-		} catch (err) {
-			console.error(`Failed to activate plugin ${plugin.id}:`, err)
-		}
+	// Get visible views based on conditions
+	function getVisibleViews() {
+		return VIEWS.filter((v) => {
+			const viewDef = VIEWS_MAP[v.id]
+			if (!viewDef) return false
+			return !viewDef.condition || viewDef.condition()
+		})
 	}
 
 	// Single keyboard handler for all global hotkeys
-	// useKeyboard hooks into @opentui/core's stdin parser — works in terminal
 	useKeyboard((key: ParsedKey) => {
 		// Ctrl+C — quit
 		if (key.ctrl && key.name === "c") {
@@ -108,23 +149,25 @@ export function App() {
 			return
 		}
 
-		// View switching — search ALL registered views (not just visible ones)
-		// so keys work even if condition-gated views haven't been revealed yet
-		const match = viewRegistry.getAll().find((v) => v.shortcut === key.name)
-		if (match) {
-			setView(match.id)
-			setFocus("primary")
+		// View switching — check shortcuts from VIEWS_MAP
+		const viewEntry = Object.entries(VIEWS_MAP).find(([, v]) => v.shortcut === key.name)
+		if (viewEntry) {
+			const [id, viewDef] = viewEntry
+			if (!viewDef.condition || viewDef.condition()) {
+				setView(id)
+				setFocus("primary")
+			}
 			return
 		}
 
 		// Ctrl+Tab / Ctrl+Shift+Tab — cycle views
 		if (key.ctrl && key.name === "tab") {
-			const views = VIEWS
-			const currentIdx = views.findIndex((v) => v.id === state.ui.currentView)
+			const visibleViews = getVisibleViews()
+			const currentIdx = visibleViews.findIndex((v) => v.id === state.ui.currentView)
 			const nextIdx = key.shift
-				? (currentIdx - 1 + views.length) % views.length
-				: (currentIdx + 1) % views.length
-			const nextView = views[nextIdx]
+				? (currentIdx - 1 + visibleViews.length) % visibleViews.length
+				: (currentIdx + 1) % visibleViews.length
+			const nextView = visibleViews[nextIdx]
 			if (nextView) {
 				setView(nextView.id)
 				setFocus("primary")
@@ -135,13 +178,13 @@ export function App() {
 
 		// Ctrl+H / Ctrl+L — previous/next view
 		if (key.ctrl && (key.name === "h" || key.name === "l")) {
-			const views = VIEWS
-			const currentIdx = views.findIndex((v) => v.id === state.ui.currentView)
+			const visibleViews = getVisibleViews()
+			const currentIdx = visibleViews.findIndex((v) => v.id === state.ui.currentView)
 			const nextIdx =
 				key.name === "h"
-					? (currentIdx - 1 + views.length) % views.length
-					: (currentIdx + 1) % views.length
-			const nextView = views[nextIdx]
+					? (currentIdx - 1 + visibleViews.length) % visibleViews.length
+					: (currentIdx + 1) % visibleViews.length
+			const nextView = visibleViews[nextIdx]
 			if (nextView) {
 				setView(nextView.id)
 				setFocus("primary")
@@ -160,12 +203,46 @@ export function App() {
 			<box flexGrow={1} flexDirection="row">
 				{/* Active view */}
 				<box flexGrow={1}>
-					<Switch fallback={<text>Loading views...</text>}>
-						{viewRegistry.getVisible().map((view) => (
-							<Match when={state.ui.currentView === view.id}>
-								<view.component />
-							</Match>
-						))}
+					<Switch fallback={<text>Select a view...</text>}>
+						<Match when={state.ui.currentView === "dashboard"}>
+							<DashboardView />
+						</Match>
+						<Match when={state.ui.currentView === "smartlog" && state.git.isRepo}>
+							<SmartlogView />
+						</Match>
+						<Match when={state.ui.currentView === "status" && state.git.isRepo}>
+							<StatusView />
+						</Match>
+						<Match when={state.ui.currentView === "log" && state.git.isRepo}>
+							<LogView />
+						</Match>
+						<Match when={state.ui.currentView === "branches" && state.git.isRepo}>
+							<BranchesView />
+						</Match>
+						<Match when={state.ui.currentView === "stacks" && state.git.isRepo}>
+							<StacksView />
+						</Match>
+						<Match when={state.ui.currentView === "stash" && state.git.isRepo}>
+							<StashView />
+						</Match>
+						<Match when={state.ui.currentView === "worktrees" && state.git.isRepo}>
+							<WorktreesView />
+						</Match>
+						<Match when={state.ui.currentView === "remotes" && state.git.isRepo}>
+							<RemotesView />
+						</Match>
+						<Match when={state.ui.currentView === "prs" && state.github.isAuthenticated}>
+							<PullRequestsView />
+						</Match>
+						<Match when={state.ui.currentView === "issues" && state.github.isAuthenticated}>
+							<IssuesView />
+						</Match>
+						<Match when={state.ui.currentView === "actions" && state.github.isAuthenticated}>
+							<ActionsView />
+						</Match>
+						<Match when={state.ui.currentView === "notifications" && state.github.isAuthenticated}>
+							<NotificationsView />
+						</Match>
 					</Switch>
 				</box>
 			</box>

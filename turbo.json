@@ -39,22 +39,6 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
-    "@gubbi/plugin-dashboard#build": {
-      "dependsOn": ["^build"],
-      "outputs": []
-    },
-    "@gubbi/plugin-github#build": {
-      "dependsOn": ["^build"],
-      "outputs": []
-    },
-    "@gubbi/plugin-repo#build": {
-      "dependsOn": ["^build"],
-      "outputs": []
-    },
-    "@gubbi/plugin-stacks#build": {
-      "dependsOn": ["^build"],
-      "outputs": []
-    },
     "@gubbi/web#build": {
       "dependsOn": ["^build"],
       "outputs": []
