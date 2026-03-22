@@ -35,6 +35,7 @@ import {
 	ActionsView,
 	NotificationsView,
 	StacksView,
+	ExploreView,
 } from "./views/index.ts"
 
 // View definitions — id, component, shortcut, condition
@@ -65,6 +66,11 @@ const VIEWS_MAP: Record<
 	notifications: {
 		component: NotificationsView,
 		shortcut: "n",
+		condition: () => state.github.isAuthenticated,
+	},
+	explore: {
+		component: ExploreView,
+		shortcut: "e",
 		condition: () => state.github.isAuthenticated,
 	},
 }
@@ -98,11 +104,14 @@ export function App() {
 
 	// Single keyboard handler for all global hotkeys
 	useKeyboard((key: ParsedKey) => {
-		// Ctrl+C — quit
+		// Ctrl+C — quit (always active, even in inputs)
 		if (key.ctrl && key.name === "c") {
 			renderer.destroy()
 			return
 		}
+
+		// Skip all global hotkeys when an input/dialog is active
+		if (state.ui.inputActive) return
 
 		// Ctrl+Z — undo last operation
 		if (key.ctrl && key.name === "z") {
@@ -242,6 +251,9 @@ export function App() {
 						</Match>
 						<Match when={state.ui.currentView === "notifications" && state.github.isAuthenticated}>
 							<NotificationsView />
+						</Match>
+						<Match when={state.ui.currentView === "explore" && state.github.isAuthenticated}>
+							<ExploreView />
 						</Match>
 					</Switch>
 				</box>

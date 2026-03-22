@@ -28,7 +28,7 @@ const C = {
 const TAB_GROUPS = [
 	{ views: ["dashboard"], label: "" },
 	{ views: ["smartlog", "status", "log", "branches", "stacks", "stash"], label: "git" },
-	{ views: ["prs", "issues", "actions", "notifications"], label: "github" },
+	{ views: ["prs", "issues", "actions", "notifications", "explore"], label: "github" },
 ]
 
 export function Header() {

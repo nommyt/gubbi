@@ -2,8 +2,9 @@
  * dialog.tsx — Modal dialogs (confirm, input, select)
  */
 
+import { setInputActive } from "@gubbi/core"
 import { useKeyboard } from "@opentui/solid"
-import { Show, For } from "solid-js"
+import { Show, For, onMount, onCleanup } from "solid-js"
 
 const C = {
 	overlay: "#0d1117",
@@ -86,6 +87,9 @@ interface InputDialogProps {
 }
 
 export function InputDialog(props: InputDialogProps) {
+	onMount(() => setInputActive(true))
+	onCleanup(() => setInputActive(false))
+
 	useKeyboard((key) => {
 		if (key.name === "escape") {
 			key.preventDefault()

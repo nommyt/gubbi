@@ -113,6 +113,43 @@ export function createGitService(): GitService {
 		}
 	}
 
+	async function initializeWithRoot(repoRoot: string): Promise<void> {
+		try {
+			const isRepo = await isGitRepo(repoRoot)
+			if (!isRepo) return
+
+			const root = await getRepoRoot(repoRoot)
+			const name = basename(root) || root
+			const branch = await getCurrentBranch(root)
+			const remoteUrl = await getRemoteUrl("origin", root)
+			const { ahead, behind } = await getUpstreamStatus(root)
+			const defaultBranch = await getDefaultBranch(root)
+
+			// Reset selection state
+			setState("git", {
+				isRepo: true,
+				repoRoot: root,
+				repoName: name,
+				currentBranch: branch,
+				defaultBranch,
+				remoteUrl,
+				ahead,
+				behind,
+				status: [],
+				log: [],
+				branches: [],
+				stash: [],
+				selectedStatusFile: null,
+				selectedLogEntry: null,
+				selectedBranch: null,
+				diffContent: "",
+				commitMessage: "",
+			})
+		} catch (err) {
+			showToast("error", `Failed to switch repo: ${err}`)
+		}
+	}
+
 	async function refreshStatus(): Promise<void> {
 		if (!state.git.isRepo) return
 		try {
@@ -160,6 +197,7 @@ export function createGitService(): GitService {
 
 	return {
 		initialize,
+		initializeWithRoot,
 		refreshStatus,
 		refreshLog,
 		refreshBranches,

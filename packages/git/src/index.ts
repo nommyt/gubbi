@@ -17,6 +17,17 @@ export type { DiffHunk, ParsedDiff } from "./hunk-parser.ts"
 // Stack management
 export * from "./stack.ts"
 
+// Repo scanning
+export {
+	scanRepos,
+	findLocalClone,
+	getOrScanRepoMap,
+	saveRepoMap,
+	loadRepoMap,
+	normalizeRemoteToFullName,
+} from "./repo-scan.ts"
+export type { RepoMap } from "./repo-scan.ts"
+
 // Services
 export { createGitService, gitService } from "./service.ts"
 export type { GitService } from "./service.ts"

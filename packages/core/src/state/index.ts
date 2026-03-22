@@ -81,6 +81,7 @@ const initialUIState: UIState = {
 	toasts: [],
 	helpVisible: false,
 	syncing: false,
+	inputActive: false,
 }
 
 const initialState: AppState = {
@@ -137,6 +138,10 @@ export function removeToast(id: string) {
 
 export function setSyncing(value: boolean) {
 	setState("ui", "syncing", value)
+}
+
+export function setInputActive(value: boolean) {
+	setState("ui", "inputActive", value)
 }
 
 export function setLoading(key: keyof UIState["loading"], value: boolean) {
@@ -243,4 +248,5 @@ export const VIEWS = [
 	{ id: "issues", label: "Issues", key: "8" },
 	{ id: "actions", label: "Actions", key: "9" },
 	{ id: "notifications", label: "Notifs", key: "0" },
+	{ id: "explore", label: "Explore", key: "e" },
 ] as const

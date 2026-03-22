@@ -212,6 +212,7 @@ export interface UIState {
 	toasts: ToastMessage[]
 	helpVisible: boolean
 	syncing: boolean
+	inputActive: boolean
 }
 
 // ---------------------------------------------------------------------------

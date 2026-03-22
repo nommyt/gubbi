@@ -45,6 +45,10 @@ export interface GubbiConfig {
 		command?: string
 		commands?: string[]
 	}>
+	repoScan?: {
+		paths?: string[]
+		maxDepth?: number
+	}
 }
 
 let cachedConfig: GubbiConfig | null = null

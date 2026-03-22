@@ -831,6 +831,146 @@ export interface RepoInfo {
 	url: string
 }
 
+// ---------------------------------------------------------------------------
+// Repo search & trending
+// ---------------------------------------------------------------------------
+
+export interface ExploreRepo {
+	fullName: string // "owner/repo"
+	name: string
+	owner: string
+	description: string
+	language: string
+	stars: number
+	forks: number
+	url: string
+	updatedAt: string
+	isPrivate: boolean
+}
+
+const SEARCH_REPO_FIELDS = [
+	"name",
+	"fullName",
+	"owner",
+	"description",
+	"language",
+	"stargazersCount",
+	"forksCount",
+	"url",
+	"updatedAt",
+	"isPrivate",
+].join(",")
+
+function mapExploreRepo(raw: Record<string, unknown>): ExploreRepo {
+	const lang = String(raw.language ?? "")
+	const owner =
+		typeof raw.owner === "object" && raw.owner !== null
+			? String((raw.owner as Record<string, unknown>).login ?? "")
+			: ""
+
+	return {
+		fullName: String(raw.fullName ?? raw.nameWithOwner ?? ""),
+		name: String(raw.name ?? ""),
+		owner,
+		description: String(raw.description ?? ""),
+		language: lang,
+		stars: Number(raw.stargazersCount ?? 0),
+		forks: Number(raw.forksCount ?? 0),
+		url: String(raw.url ?? ""),
+		updatedAt: String(raw.updatedAt ?? ""),
+		isPrivate: Boolean(raw.isPrivate),
+	}
+}
+
+export async function searchRepos(
+	query: string,
+	opts: {
+		sort?: "stars" | "updated" | "forks" | "best-match"
+		limit?: number
+		language?: string
+		stars?: string
+	} = {},
+): Promise<ExploreRepo[]> {
+	const args = [
+		"search",
+		"repos",
+		query,
+		"--json",
+		SEARCH_REPO_FIELDS,
+		"--limit",
+		String(opts.limit ?? 30),
+	]
+	if (opts.sort) args.push("--sort", opts.sort)
+	if (opts.language) args.push("--language", opts.language)
+	if (opts.stars) args.push("--stars", opts.stars)
+
+	const r = await exec(GH, args)
+	if (r.exitCode !== 0) return []
+	try {
+		const data = JSON.parse(r.stdout) as unknown[]
+		return (data as Record<string, unknown>[]).map(mapExploreRepo)
+	} catch {
+		return []
+	}
+}
+
+export async function fetchTrendingRepos(
+	opts: {
+		since?: "daily" | "weekly" | "monthly"
+		limit?: number
+		language?: string
+	} = {},
+): Promise<ExploreRepo[]> {
+	const since = opts.since ?? "weekly"
+	const now = new Date()
+
+	let daysBack: number
+	switch (since) {
+		case "daily":
+			daysBack = 1
+			break
+		case "weekly":
+			daysBack = 7
+			break
+		case "monthly":
+			daysBack = 30
+			break
+	}
+
+	const sinceDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000)
+	const dateStr = sinceDate.toISOString().split("T")[0]
+
+	const args = [
+		"search",
+		"repos",
+		"",
+		"--json",
+		SEARCH_REPO_FIELDS,
+		"--sort",
+		"stars",
+		"--limit",
+		String(opts.limit ?? 30),
+		"--stars",
+		">100",
+		"--updated",
+		`>${dateStr}`,
+	]
+	if (opts.language) args.push("--language", opts.language)
+
+	const r = await exec(GH, args)
+	if (r.exitCode !== 0) return []
+	try {
+		const data = JSON.parse(r.stdout) as unknown[]
+		return (data as Record<string, unknown>[]).map(mapExploreRepo)
+	} catch {
+		return []
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Repo info
+// ---------------------------------------------------------------------------
+
 export async function getRepoInfo(): Promise<RepoInfo | null> {
 	const r = await exec(GH, [
 		"repo",

@@ -7,6 +7,7 @@
  */
 export interface GitService {
 	initialize: () => Promise<void>
+	initializeWithRoot: (repoRoot: string) => Promise<void>
 	refreshStatus: () => Promise<void>
 	refreshLog: () => Promise<void>
 	refreshBranches: () => Promise<void>

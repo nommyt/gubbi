@@ -336,8 +336,12 @@ export function DashboardView() {
 		}
 		if (key.name === "enter") {
 			key.preventDefault()
-			const url = getSelectedUrl()
-			if (url) openURL(url)
+			if (selectedColumn() === "repos") {
+				setView("explore")
+			} else {
+				const url = getSelectedUrl()
+				if (url) openURL(url)
+			}
 			return
 		}
 

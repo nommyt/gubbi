@@ -39,122 +39,139 @@ alias gubbi="bun run /path/to/gubbi/app/cli/src/index.tsx"
 
 ## Views
 
-| Key | View         | Description                                                          |
-| --- | ------------ | -------------------------------------------------------------------- |
-| `d` | **dash**     | Live GitHub dashboard — your PRs, tagged items, repos, notifications |
-| `1` | **smartlog** | Sapling-inspired commit graph with ASCII visualization               |
-| `2` | **status**   | Git staging area with diff preview and blame overlay                 |
-| `3` | **log**      | Commit log with interactive rebase and cherry-pick                   |
-| `4` | **branches** | Branch list — checkout, create, delete, merge, rebase, push          |
-| `5` | **stacks**   | Stacked diff workflow (Graphite-equivalent)                          |
-| `6` | **stash**    | Stash list with preview                                              |
-| `7` | **PRs**      | Pull requests — view, review, merge, comment, fullscreen diff        |
-| `8` | **issues**   | Issues — browse, filter, create                                      |
-| `9` | **actions**  | GitHub Actions workflow runs with watch and auto-refresh             |
-| `0` | **notifs**   | Notifications — triage, mark read, batch ops                         |
-| `w` | **worktrees**| Git worktree management — create, remove, prune, repair              |
+| Key | View          | Description                                                          |
+| --- | ------------- | -------------------------------------------------------------------- |
+| `d` | **dash**      | Live GitHub dashboard — your PRs, tagged items, repos, notifications |
+| `1` | **smartlog**  | Sapling-inspired commit graph with ASCII visualization               |
+| `2` | **status**    | Git staging area with diff preview and blame overlay                 |
+| `3` | **log**       | Commit log with interactive rebase and cherry-pick                   |
+| `4` | **branches**  | Branch list — checkout, create, delete, merge, rebase, push          |
+| `5` | **stacks**    | Stacked diff workflow (Graphite-equivalent)                          |
+| `6` | **stash**     | Stash list with preview                                              |
+| `7` | **PRs**       | Pull requests — view, review, merge, comment, fullscreen diff        |
+| `8` | **issues**    | Issues — browse, filter, create                                      |
+| `9` | **actions**   | GitHub Actions workflow runs with watch and auto-refresh             |
+| `0` | **notifs**    | Notifications — triage, mark read, batch ops                         |
+| `e` | **explore**   | Browse repos — My Repos, Trending, Search, local clone navigation    |
+| `w` | **worktrees** | Git worktree management — create, remove, prune, repair              |
 
 ## Keybindings
 
 ### Global
 
-| Key            | Action                            |
-| -------------- | --------------------------------- |
-| `d`, `1`–`0`, `w` | Switch view                  |
-| `Ctrl+Tab` / `Ctrl+Shift+Tab` | Cycle views         |
-| `Ctrl+H` / `Ctrl+L` | Previous / next view        |
-| `Ctrl+Z`       | Undo last git operation           |
-| `Ctrl+O`       | Operations timeline overlay       |
-| `Ctrl+R`       | Refresh current view              |
-| `?`            | Help overlay                      |
-| `Ctrl+c`       | Quit                              |
+| Key                           | Action                      |
+| ----------------------------- | --------------------------- |
+| `d`, `1`–`0`, `e`, `w`  | Switch view                 |
+| `Ctrl+Tab` / `Ctrl+Shift+Tab` | Cycle views                 |
+| `Ctrl+H` / `Ctrl+L`           | Previous / next view        |
+| `Ctrl+Z`                      | Undo last git operation     |
+| `Ctrl+O`                      | Operations timeline overlay |
+| `Ctrl+R`                      | Refresh current view        |
+| `?`                           | Help overlay                |
+| `Ctrl+c`                      | Quit                        |
 
 ### Status View
 
-| Key            | Action                            |
-| -------------- | --------------------------------- |
-| `Space`        | Stage / unstage file              |
-| `s`            | Stage selected hunk               |
-| `S`            | Stage selected line               |
-| `u`            | Unstage selected hunk             |
-| `[` / `]`      | Navigate hunks                    |
-| `c`            | Commit                            |
-| `P`            | Push and create PR                |
-| `b`            | Toggle blame overlay              |
-| `V`            | Jump to PR for current branch     |
+| Key       | Action                        |
+| --------- | ----------------------------- |
+| `Space`   | Stage / unstage file          |
+| `s`       | Stage selected hunk           |
+| `S`       | Stage selected line           |
+| `u`       | Unstage selected hunk         |
+| `[` / `]` | Navigate hunks                |
+| `c`       | Commit                        |
+| `P`       | Push and create PR            |
+| `b`       | Toggle blame overlay          |
+| `V`       | Jump to PR for current branch |
 
 ### Log View
 
-| Key            | Action                            |
-| -------------- | --------------------------------- |
-| `i`            | Enter interactive rebase mode     |
-| `s`            | Squash (in rebase mode)           |
-| `f`            | Fixup (in rebase mode)            |
-| `d`            | Drop (in rebase mode)             |
-| `e`            | Edit (in rebase mode)             |
-| `r`            | Reword (in rebase mode)           |
-| `Enter`        | Execute rebase                    |
-| `Esc`          | Cancel rebase                     |
-| `C`            | Copy commit to clipboard          |
-| `V`            | Cherry-pick copied commits        |
-| `/`            | Filter commits                    |
-| `v`            | Open containing PR in browser     |
+| Key     | Action                        |
+| ------- | ----------------------------- |
+| `i`     | Enter interactive rebase mode |
+| `s`     | Squash (in rebase mode)       |
+| `f`     | Fixup (in rebase mode)        |
+| `d`     | Drop (in rebase mode)         |
+| `e`     | Edit (in rebase mode)         |
+| `r`     | Reword (in rebase mode)       |
+| `Enter` | Execute rebase                |
+| `Esc`   | Cancel rebase                 |
+| `C`     | Copy commit to clipboard      |
+| `V`     | Cherry-pick copied commits    |
+| `/`     | Filter commits                |
+| `v`     | Open containing PR in browser |
 
 ### Pull Requests View
 
-| Key            | Action                            |
-| -------------- | --------------------------------- |
-| `r`            | Toggle fullscreen diff            |
-| `m`            | Merge selected PR                 |
-| `a`            | Review (approve/request changes)  |
-| `c`            | Add comment                       |
-| `R`            | Request reviewers                 |
-| `C`            | Checkout PR branch                |
-| `n`            | Create new PR                     |
-| `f`            | Cycle filter (open/closed/all)    |
-| `/`            | Filter by author                  |
+| Key | Action                           |
+| --- | -------------------------------- |
+| `r` | Toggle fullscreen diff           |
+| `m` | Merge selected PR                |
+| `a` | Review (approve/request changes) |
+| `c` | Add comment                      |
+| `R` | Request reviewers                |
+| `C` | Checkout PR branch               |
+| `n` | Create new PR                    |
+| `f` | Cycle filter (open/closed/all)   |
+| `/` | Filter by author                 |
 
 ### Dashboard View
 
-| Key            | Action                            |
-| -------------- | --------------------------------- |
-| `h/l`          | Navigate columns                  |
-| `m`            | Merge selected PR                 |
-| `c`            | Checkout PR branch                |
-| `o`            | Open in browser                   |
-| `r`            | Jump to PRs view (review mode)    |
-| `Ctrl+R`       | Refresh dashboard                 |
-| `d`            | Mark notification as done         |
+| Key      | Action                         |
+| -------- | ------------------------------ |
+| `h/l`    | Navigate columns               |
+| `m`      | Merge selected PR              |
+| `c`      | Checkout PR branch             |
+| `o`      | Open in browser                |
+| `Enter`  | Open repo in Explore (repos col), open in browser (other cols) |
+| `r`      | Jump to PRs view (review mode) |
+| `Ctrl+R` | Refresh dashboard              |
+| `d`      | Mark notification as done      |
+
+### Explore View
+
+| Key      | Action                              |
+| -------- | ----------------------------------- |
+| `m`      | Switch to My Repos tab              |
+| `t`      | Switch to Trending tab              |
+| `/`      | Search repos (focus input)          |
+| `j/k`    | Navigate repo list                  |
+| `o/Enter`| Open repo URL in browser            |
+| `c`      | Clone or switch to local clone      |
+| `f`      | Filter by language                  |
+| `d/w/m`  | Trending: daily / weekly / monthly  |
+| `Tab`    | Switch focus between list & detail  |
+| `Ctrl+R` | Refresh current tab                 |
 
 ### Actions View
 
-| Key            | Action                            |
-| -------------- | --------------------------------- |
-| `t`            | Trigger workflow                  |
-| `w`            | Toggle watch on selected run      |
-| `Ctrl+L`       | Toggle auto-refresh               |
-| `r`            | Re-run workflow                   |
+| Key      | Action                       |
+| -------- | ---------------------------- |
+| `t`      | Trigger workflow             |
+| `w`      | Toggle watch on selected run |
+| `Ctrl+L` | Toggle auto-refresh          |
+| `r`      | Re-run workflow              |
 
 ### Stacks View
 
-| Key            | Action                            |
-| -------------- | --------------------------------- |
-| `u/d`          | Navigate up/down in stack         |
-| `t/b`          | Jump to top/bottom of stack       |
-| `R`            | Rebase all dependents             |
-| `s`            | Sync stack                        |
-| `p`            | Submit stack as PRs               |
-| `a`            | Absorb staged changes             |
+| Key   | Action                      |
+| ----- | --------------------------- |
+| `u/d` | Navigate up/down in stack   |
+| `t/b` | Jump to top/bottom of stack |
+| `R`   | Rebase all dependents       |
+| `s`   | Sync stack                  |
+| `p`   | Submit stack as PRs         |
+| `a`   | Absorb staged changes       |
 
 ### Worktrees View
 
-| Key            | Action                            |
-| -------------- | --------------------------------- |
-| `n`            | Create new worktree               |
-| `d`            | Remove worktree                   |
-| `p`            | Prune stale worktrees             |
-| `r`            | Repair worktree                   |
-| `o`            | Open in terminal                  |
+| Key | Action                |
+| --- | --------------------- |
+| `n` | Create new worktree   |
+| `d` | Remove worktree       |
+| `p` | Prune stale worktrees |
+| `r` | Repair worktree       |
+| `o` | Open in terminal      |
 
 ## Configuration
 
@@ -184,6 +201,13 @@ actions:
     commands:
       - "gh pr review $PR_NUMBER --approve"
       - "gh pr merge $PR_NUMBER --auto --squash"
+
+# Scan directories for local repo clones (used by Explore view's 'c' key)
+repoScan:
+  paths:
+    - ~/code
+    - ~/work
+  maxDepth: 3
 ```
 
 State is persisted at `~/.gubbi/state.json` (filter preferences, operation history).
@@ -213,33 +237,39 @@ gubbi/
 ## Features
 
 ### Git + GitHub Integration
+
 - PR context shown in every git view (status, branches, log)
 - One-key workflow: Stage → Commit → Push → PR → Merge
 - Multi-step progress toasts during push and PR creation
 - Syncing indicator during background polling
 
 ### Interactive Rebase
+
 - Enter rebase mode with `i` on any commit
 - Squash, fixup, drop, edit, reword with single keys
 - Execute with `Enter`, cancel with `Esc`
 
 ### Git Blame
+
 - Toggle blame overlay with `b` in status view
 - Shows commit hash, author, date for each line
 
 ### Operation Log & Undo
+
 - `Ctrl+Z` undoes last git operation (commit, push, etc.)
 - `Ctrl+O` shows operations timeline
 
-### Query Cache
-- TanStack Query-style caching for all data fetching
-- Stale-while-revalidate pattern
-- Background polling with `refetchInterval`
-- Targeted invalidation after mutations
-
 ### Worktree Management
+
 - List, create, remove, prune, repair worktrees
 - Open worktree in new terminal window
+
+### Explore & Local Clone Navigation
+
+- Browse your repos, trending repos, and search GitHub repos
+- `c` key clones a repo or switches to an existing local clone
+- Configurable scan paths detect local clones (`repoScan` in config)
+- Dashboard `Enter` on repos column opens Explore view
 
 ## Inspirations
 
