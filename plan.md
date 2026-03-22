@@ -351,11 +351,11 @@ prsQuery.isStale    // true when staleTime expired
 prsQuery.refetch()  // manual refresh
 ```
 
-- [ ] `createQuery()` — keyed fetcher with `staleTime`, `refetchInterval`, `gcTime`
-- [ ] Query key serialization + deduplication (same key = single in-flight request)
-- [ ] Stale-while-revalidate: show cached data, refetch in background
-- [ ] `invalidateQuery(key)` — mark query stale, triggers refetch
-- [ ] Garbage collection: evict queries unused for `gcTime` (default 5min)
+- [x] `createQuery()` — keyed fetcher with `staleTime`, `refetchInterval`, `gcTime`
+- [x] Query key serialization + deduplication (same key = single in-flight request)
+- [x] Stale-while-revalidate: show cached data, refetch in background
+- [x] `invalidateQuery(key)` — mark query stale, triggers refetch
+- [x] Garbage collection: evict queries unused for `gcTime` (default 5min)
 - [ ] `useQuery()` hook — wraps `createQuery` with SolidJS reactivity (auto-dispose on unmount)
 
 ### 9.2 Mutation Layer
@@ -376,9 +376,9 @@ const mergeMutation = createMutation({
 })
 ```
 
-- [ ] `createMutation()` — `mutationFn`, `onMutate`, `onSuccess`, `onError`
-- [ ] `setQueryData(key, updater)` — direct cache write for optimistic updates
-- [ ] `getQueryData(key)` — read cached value without triggering fetch
+- [x] `createMutation()` — `mutationFn`, `onMutate`, `onSuccess`, `onError`
+- [x] `setQueryData(key, updater)` — direct cache write for optimistic updates
+- [x] `getQueryData(key)` — read cached value without triggering fetch
 
 ### 9.3 Migrate Existing Views
 **Files:** all plugin views
