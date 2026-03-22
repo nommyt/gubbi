@@ -66,7 +66,7 @@ const initialGitHubState: GitHubState = {
 }
 
 const initialUIState: UIState = {
-	currentView: "dashboard",
+	currentView: "explore",
 	focusedPanel: "primary",
 	fullscreenPanel: null,
 	loading: {
@@ -236,7 +236,7 @@ export const selectFullscreenPanel = () => state.ui.fullscreenPanel
 // ---------------------------------------------------------------------------
 
 export const VIEWS = [
-	{ id: "dashboard", label: "Dashboard", key: "d" },
+	{ id: "explore", label: "Explore", key: "e" },
 	{ id: "smartlog", label: "Smartlog", key: "1" },
 	{ id: "status", label: "Status", key: "2" },
 	{ id: "log", label: "Log", key: "3" },
@@ -248,5 +248,4 @@ export const VIEWS = [
 	{ id: "issues", label: "Issues", key: "8" },
 	{ id: "actions", label: "Actions", key: "9" },
 	{ id: "notifications", label: "Notifs", key: "0" },
-	{ id: "explore", label: "Explore", key: "e" },
 ] as const

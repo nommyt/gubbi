@@ -33,10 +33,6 @@
         "@gubbi/core": "workspace:*",
         "@gubbi/git": "workspace:*",
         "@gubbi/github": "workspace:*",
-        "@gubbi/plugin-dashboard": "workspace:*",
-        "@gubbi/plugin-github": "workspace:*",
-        "@gubbi/plugin-repo": "workspace:*",
-        "@gubbi/plugin-stacks": "workspace:*",
         "@gubbi/tui": "workspace:*",
         "@opentui/core": "^0.1.88",
         "@opentui/solid": "^0.1.88",
@@ -95,81 +91,6 @@
       "dependencies": {
         "@gubbi/core": "workspace:*",
         "@gubbi/git": "workspace:*",
-      },
-      "devDependencies": {
-        "@gubbi/config": "workspace:*",
-        "@types/bun": "latest",
-        "oxlint": "^1.56.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/plugin-dashboard": {
-      "name": "@gubbi/plugin-dashboard",
-      "version": "0.0.1",
-      "dependencies": {
-        "@gubbi/core": "workspace:*",
-        "@gubbi/git": "workspace:*",
-        "@gubbi/github": "workspace:*",
-        "@gubbi/tui": "workspace:*",
-        "@opentui/core": "^0.1.88",
-        "@opentui/solid": "^0.1.88",
-        "solid-js": "^1.9.11",
-      },
-      "devDependencies": {
-        "@gubbi/config": "workspace:*",
-        "@types/bun": "latest",
-        "oxlint": "^1.56.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/plugin-github": {
-      "name": "@gubbi/plugin-github",
-      "version": "0.0.1",
-      "dependencies": {
-        "@gubbi/core": "workspace:*",
-        "@gubbi/git": "workspace:*",
-        "@gubbi/github": "workspace:*",
-        "@gubbi/tui": "workspace:*",
-        "@opentui/core": "^0.1.88",
-        "@opentui/solid": "^0.1.88",
-        "solid-js": "^1.9.11",
-      },
-      "devDependencies": {
-        "@gubbi/config": "workspace:*",
-        "@types/bun": "latest",
-        "oxlint": "^1.56.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/plugin-repo": {
-      "name": "@gubbi/plugin-repo",
-      "version": "0.0.1",
-      "dependencies": {
-        "@gubbi/core": "workspace:*",
-        "@gubbi/git": "workspace:*",
-        "@gubbi/github": "workspace:*",
-        "@gubbi/tui": "workspace:*",
-        "@opentui/core": "^0.1.88",
-        "@opentui/solid": "^0.1.88",
-        "solid-js": "^1.9.11",
-      },
-      "devDependencies": {
-        "@gubbi/config": "workspace:*",
-        "@types/bun": "latest",
-        "oxlint": "^1.56.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/plugin-stacks": {
-      "name": "@gubbi/plugin-stacks",
-      "version": "0.0.1",
-      "dependencies": {
-        "@gubbi/core": "workspace:*",
-        "@gubbi/git": "workspace:*",
-        "@gubbi/tui": "workspace:*",
-        "@opentui/core": "^0.1.88",
-        "@opentui/solid": "^0.1.88",
-        "solid-js": "^1.9.11",
       },
       "devDependencies": {
         "@gubbi/config": "workspace:*",
@@ -303,14 +224,6 @@
     "@gubbi/git": ["@gubbi/git@workspace:packages/git"],
 
     "@gubbi/github": ["@gubbi/github@workspace:packages/github"],
-
-    "@gubbi/plugin-dashboard": ["@gubbi/plugin-dashboard@workspace:packages/plugin-dashboard"],
-
-    "@gubbi/plugin-github": ["@gubbi/plugin-github@workspace:packages/plugin-github"],
-
-    "@gubbi/plugin-repo": ["@gubbi/plugin-repo@workspace:packages/plugin-repo"],
-
-    "@gubbi/plugin-stacks": ["@gubbi/plugin-stacks@workspace:packages/plugin-stacks"],
 
     "@gubbi/tui": ["@gubbi/tui@workspace:packages/tui"],
 
@@ -884,14 +797,6 @@
 
     "@gubbi/github/@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
 
-    "@gubbi/plugin-dashboard/@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
-
-    "@gubbi/plugin-github/@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
-
-    "@gubbi/plugin-repo/@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
-
-    "@gubbi/plugin-stacks/@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
-
     "@gubbi/tui/@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
 
     "@manypkg/find-root/@types/node": ["@types/node@12.20.55", "", {}, "sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ=="],
@@ -923,14 +828,6 @@
     "@gubbi/git/@types/bun/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
 
     "@gubbi/github/@types/bun/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
-
-    "@gubbi/plugin-dashboard/@types/bun/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
-
-    "@gubbi/plugin-github/@types/bun/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
-
-    "@gubbi/plugin-repo/@types/bun/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
-
-    "@gubbi/plugin-stacks/@types/bun/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
 
     "@gubbi/tui/@types/bun/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
 

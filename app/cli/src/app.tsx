@@ -22,7 +22,6 @@ import { Switch, Match, Show, onMount, createSignal, type JSX } from "solid-js"
 
 // Import all views directly
 import {
-	DashboardView,
 	SmartlogView,
 	StatusView,
 	LogView,
@@ -47,7 +46,7 @@ const VIEWS_MAP: Record<
 		condition?: () => boolean
 	}
 > = {
-	dashboard: { component: DashboardView, shortcut: "d" },
+	explore: { component: ExploreView, shortcut: "e" },
 	smartlog: { component: SmartlogView, shortcut: "1", condition: () => state.git.isRepo },
 	status: { component: StatusView, shortcut: "2", condition: () => state.git.isRepo },
 	log: { component: LogView, shortcut: "3", condition: () => state.git.isRepo },
@@ -66,11 +65,6 @@ const VIEWS_MAP: Record<
 	notifications: {
 		component: NotificationsView,
 		shortcut: "n",
-		condition: () => state.github.isAuthenticated,
-	},
-	explore: {
-		component: ExploreView,
-		shortcut: "e",
 		condition: () => state.github.isAuthenticated,
 	},
 }
@@ -213,8 +207,8 @@ export function App() {
 				{/* Active view */}
 				<box flexGrow={1}>
 					<Switch fallback={<text>Select a view...</text>}>
-						<Match when={state.ui.currentView === "dashboard"}>
-							<DashboardView />
+						<Match when={state.ui.currentView === "explore"}>
+							<ExploreView />
 						</Match>
 						<Match when={state.ui.currentView === "smartlog" && state.git.isRepo}>
 							<SmartlogView />
@@ -251,9 +245,6 @@ export function App() {
 						</Match>
 						<Match when={state.ui.currentView === "notifications" && state.github.isAuthenticated}>
 							<NotificationsView />
-						</Match>
-						<Match when={state.ui.currentView === "explore" && state.github.isAuthenticated}>
-							<ExploreView />
 						</Match>
 					</Switch>
 				</box>

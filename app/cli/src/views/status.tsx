@@ -33,7 +33,7 @@ import {
 import { getCurrentBranchPR, pushAndCreatePR, githubService } from "@gubbi/github"
 import { ConfirmDialog, InputDialog, DiffViewer, BlameView } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
-import { createSignal, Show, For, onMount } from "solid-js"
+import { createSignal, Show, For, onMount, onCleanup } from "solid-js"
 
 const C = {
 	border: "#30363d",
@@ -153,6 +153,11 @@ export function StatusView() {
 		if (state.github.isAuthenticated) void githubService.refreshPRs()
 		const first = entries()[0]
 		if (first) await loadDiff(first)
+
+		const timer = setInterval(async () => {
+			await gitService.refreshStatus()
+		}, 2000)
+		onCleanup(() => clearInterval(timer))
 	})
 
 	useKeyboard(async (key) => {

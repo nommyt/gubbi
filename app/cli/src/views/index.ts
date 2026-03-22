@@ -2,7 +2,6 @@
  * views/index.ts — All application views
  */
 
-export { DashboardView } from "./dashboard.tsx"
 export { SmartlogView } from "./smartlog.tsx"
 export { StatusView } from "./status.tsx"
 export { LogView } from "./log.tsx"

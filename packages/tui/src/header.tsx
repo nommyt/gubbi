@@ -2,8 +2,8 @@
  * header.tsx — Top bar: repo/branch info and tab navigation
  */
 
-import { state, setView, VIEWS, icons } from "@gubbi/core"
-import { Show, For } from "solid-js"
+import { state, icons } from "@gubbi/core"
+import { Show } from "solid-js"
 
 const C = {
 	bg: "#0d1117",
@@ -19,17 +19,7 @@ const C = {
 	branding: "#58a6ff",
 	dim: "#8b949e",
 	text: "#e6edf3",
-	tabActive: "#1c2128",
-	tabInactive: "#0d1117",
-	sep: "#484f58",
 }
-
-// Tab groups separated by dividers
-const TAB_GROUPS = [
-	{ views: ["dashboard"], label: "" },
-	{ views: ["smartlog", "status", "log", "branches", "stacks", "stash"], label: "git" },
-	{ views: ["prs", "issues", "actions", "notifications", "explore"], label: "github" },
-]
 
 export function Header() {
 	const stagedCount = () => state.git.status?.filter((e) => e.staged).length ?? 0
@@ -40,8 +30,7 @@ export function Header() {
 	const currentPR = () => state.github.prs?.find((pr) => pr.headRefName === state.git.currentBranch)
 
 	return (
-		<box flexDirection="column" border={["bottom"]} borderColor={C.border} backgroundColor={C.bg}>
-			{/* Slim info row */}
+		<box flexDirection="row" border={["bottom"]} borderColor={C.border} backgroundColor={C.bg}>
 			<box
 				flexDirection="row"
 				alignItems="center"
@@ -108,52 +97,6 @@ export function Header() {
 						</span>
 					</text>
 				</Show>
-			</box>
-
-			{/* Tab row with group separators */}
-			<box flexDirection="row" height={1} paddingLeft={0} gap={0}>
-				<For each={TAB_GROUPS}>
-					{(group, gi) => (
-						<>
-							<Show when={gi() > 0}>
-								<text fg={C.sep}> │ </text>
-							</Show>
-							<For each={VIEWS.filter((v) => group.views.includes(v.id))}>
-								{(view) => {
-									const isActive = () => state.ui.currentView === view.id
-									const badge = () => {
-										if (view.id === "notifications")
-											return state.github.unreadNotificationCount > 0
-												? state.github.unreadNotificationCount
-												: 0
-										if (view.id === "status") return state.git.status.length
-										if (view.id === "prs")
-											return state.github.prs.filter((p) => p.state === "OPEN").length
-										return 0
-									}
-
-									return (
-										<box
-											flexDirection="row"
-											alignItems="center"
-											paddingLeft={1}
-											paddingRight={1}
-											gap={0}
-											onMouseDown={() => setView(view.id)}
-											backgroundColor={isActive() ? C.tabActive : C.tabInactive}
-										>
-											<text fg={isActive() ? C.text : C.dim}>{view.key}</text>
-											<text fg={isActive() ? C.branding : C.dim}> {view.label}</text>
-											<Show when={badge() > 0}>
-												<text fg={C.modified}> {badge()}</text>
-											</Show>
-										</box>
-									)
-								}}
-							</For>
-						</>
-					)}
-				</For>
 			</box>
 		</box>
 	)
