@@ -2,7 +2,7 @@
  * explore.tsx — Explore view: My Repos, Trending, Search
  */
 
-import { state, setView, showToast, setInputActive, icons } from "@gubbi/core"
+import { setView, showToast, setInputActive } from "@gubbi/core"
 import { openURL, findLocalClone, getOrScanRepoMap, saveRepoMap, gitService } from "@gubbi/git"
 import { exec } from "@gubbi/git"
 import {
