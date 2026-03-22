@@ -17,16 +17,17 @@ import {
 } from "@gubbi/core"
 import { createGitService, getHeadHash, resetHard } from "@gubbi/git"
 import { createGitHubService } from "@gubbi/github"
-import { Header, StatusBar, HelpOverlay } from "@gubbi/tui"
+import { Header, StatusBar, HelpOverlay, OperationsOverlay } from "@gubbi/tui"
 import type { ParsedKey } from "@opentui/core"
 import { useRenderer, useKeyboard } from "@opentui/solid"
-import { Switch, Match, Show, onMount } from "solid-js"
+import { Switch, Match, Show, onMount, createSignal } from "solid-js"
 
 // Import all plugins
 import plugins from "./plugins/index.ts"
 
 export function App() {
 	const renderer = useRenderer()
+	const [showOperations, setShowOperations] = createSignal(false)
 
 	// Initialize services
 	const gitService = createGitService()
@@ -78,6 +79,12 @@ export function App() {
 			} else {
 				showToast("info", "Nothing to undo")
 			}
+			return
+		}
+
+		// Ctrl+O — toggle operations overlay
+		if (key.ctrl && key.name === "o") {
+			setShowOperations((v) => !v)
 			return
 		}
 
@@ -168,6 +175,10 @@ export function App() {
 
 			<Show when={state.ui.helpVisible}>
 				<HelpOverlay onClose={() => setState("ui", "helpVisible", false)} />
+			</Show>
+
+			<Show when={showOperations()}>
+				<OperationsOverlay onClose={() => setShowOperations(false)} />
 			</Show>
 		</box>
 	)

@@ -264,7 +264,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 
 - [x] Record every git operation (commit, rebase, merge, checkout, push) with before/after state
 - [x] `Ctrl+Z` → undo last operation via git reflog
-- [ ] New view (or overlay) showing recent operations timeline
+- [x] New view (or overlay) showing recent operations timeline
 
 ### 7.5 Enhanced Stack Features
 **File:** `packages/plugin-stacks/src/stacks.tsx`
@@ -272,7 +272,7 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 - [x] Visual stack tree with PR status per branch:
 - [x] `u` / `d` → navigate up/down in stack (checkout)
 - [x] `t` / `b` → jump to top/bottom of stack
-- [ ] Auto-rebase dependents when a stack branch is updated
+- [x] Auto-rebase dependents when a stack branch is updated
 
 ---
 

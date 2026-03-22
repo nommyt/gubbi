@@ -201,6 +201,27 @@ export function StacksView() {
 		} else if (key.name === "s" && stack) {
 			key.preventDefault()
 			setShowSync(true)
+		} else if (key.name === "R" && key.shift && stack && branch) {
+			// Auto-rebase dependents of current branch
+			key.preventDefault()
+			const branchIdx = stack.branches.findIndex((b) => b.name === branch.name)
+			const dependents = stack.branches.slice(branchIdx + 1)
+			if (dependents.length === 0) {
+				showToast("info", "No dependents to rebase")
+				return
+			}
+			try {
+				const { exec } = await import("@gubbi/git")
+				for (const dep of dependents) {
+					await exec("git", ["checkout", dep.name], { cwd: state.git.repoRoot })
+					await exec("git", ["rebase", branch.name], { cwd: state.git.repoRoot })
+				}
+				await exec("git", ["checkout", branch.name], { cwd: state.git.repoRoot })
+				await loadStacks()
+				showToast("success", `Rebased ${dependents.length} dependent(s)`)
+			} catch (err) {
+				showToast("error", String(err))
+			}
 		} else if (key.name === "p" && stack) {
 			key.preventDefault()
 			setShowSubmit(true)
