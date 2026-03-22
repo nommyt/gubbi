@@ -13,6 +13,7 @@ bun changeset
 ```
 
 This will:
+
 - Prompt you to select which packages are affected (usually select all gubbi packages since they're linked)
 - Ask for the type of change (major, minor, or patch)
 - Prompt you to describe the change (this goes in the CHANGELOG)
@@ -28,6 +29,7 @@ bun changeset version
 ```
 
 This will:
+
 - Consume all changesets in `.changeset/`
 - Update all package versions (respecting the linked packages configuration)
 - Update CHANGELOGs
@@ -51,6 +53,7 @@ git push origin v0.1.0
 ```
 
 The GitHub Actions workflow will:
+
 - Build all platform binaries
 - Create a GitHub Release
 - Publish all packages to npm
@@ -58,6 +61,7 @@ The GitHub Actions workflow will:
 ## Package Linking
 
 All gubbi packages are **linked**, meaning they always get the same version number:
+
 - `gubbi`
 - `gubbi-darwin-arm64`
 - `gubbi-darwin-x64`

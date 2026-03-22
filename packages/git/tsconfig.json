@@ -3,8 +3,8 @@
 	"compilerOptions": {
 		"paths": {
 			"@gubbi/git": ["./src/index.ts"],
-			"@gubbi/git/*": ["./src/*.ts"],
-		},
+			"@gubbi/git/*": ["./src/*.ts"]
+		}
 	},
-	"include": ["src/**/*"],
+	"include": ["src/**/*"]
 }

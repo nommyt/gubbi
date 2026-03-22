@@ -1,11 +1,11 @@
 {
-  "extends": "@gubbi/config/tsconfig",
-  "compilerOptions": {
-    "jsx": "preserve",
-    "jsxImportSource": "@opentui/solid",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  },
-  "include": ["src/**/*"]
+	"extends": "@gubbi/config/tsconfig",
+	"compilerOptions": {
+		"jsx": "preserve",
+		"jsxImportSource": "@opentui/solid",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["src/**/*"]
 }

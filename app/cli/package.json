@@ -1,38 +1,38 @@
 {
-  "name": "@gubbi/cli",
-  "version": "0.0.1",
-  "private": true,
-  "description": "Gubbi CLI — Terminal-native Git + GitHub client",
-  "type": "module",
-  "bin": {
-    "gubbi": "./src/index.tsx"
-  },
-  "exports": {
-    ".": "./src/index.tsx"
-  },
-  "scripts": {
-    "dev": "bun --hot src/index.tsx",
-    "start": "bun src/index.tsx",
-    "build": "bun run build.ts && bun run symlink",
-    "build:npm": "bun run build-npm.ts",
-    "symlink": "bun run scripts/symlink.ts",
-    "lint": "oxlint ./**/*",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
-  },
-  "dependencies": {
-    "@gubbi/core": "workspace:*",
-    "@gubbi/git": "workspace:*",
-    "@gubbi/github": "workspace:*",
-    "@gubbi/tui": "workspace:*",
-    "solid-js": "^1.9.11",
-    "@opentui/core": "^0.1.88",
-    "@opentui/solid": "^0.1.88"
-  },
-  "devDependencies": {
-    "@gubbi/config": "workspace:*",
-    "@types/bun": "latest",
-    "oxlint": "^1.56.0",
-    "typescript": "^5.9.3"
-  }
+	"name": "@gubbi/cli",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Gubbi CLI — Terminal-native Git + GitHub client",
+	"bin": {
+		"gubbi": "./src/index.tsx"
+	},
+	"type": "module",
+	"exports": {
+		".": "./src/index.tsx"
+	},
+	"scripts": {
+		"build": "bun run build.ts && bun run symlink",
+		"build:npm": "bun run build-npm.ts",
+		"clean": "rm -rf dist",
+		"dev": "bun --hot src/index.tsx",
+		"lint": "oxlint ./**/*",
+		"start": "bun src/index.tsx",
+		"symlink": "bun run scripts/symlink.ts",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@gubbi/core": "workspace:*",
+		"@gubbi/git": "workspace:*",
+		"@gubbi/github": "workspace:*",
+		"@gubbi/tui": "workspace:*",
+		"@opentui/core": "^0.1.88",
+		"@opentui/solid": "^0.1.88",
+		"solid-js": "^1.9.11"
+	},
+	"devDependencies": {
+		"@gubbi/config": "workspace:*",
+		"@types/bun": "latest",
+		"oxlint": "^1.56.0",
+		"typescript": "^5.9.3"
+	}
 }

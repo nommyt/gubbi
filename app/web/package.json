@@ -1,11 +1,11 @@
 {
-  "name": "@gubbi/web",
-  "version": "0.0.1",
-  "private": true,
-  "description": "Gubbi Web — Web interface for Gubbi (Vite + TanStack Start)",
-  "type": "module",
-  "devDependencies": {
-    "@gubbi/config": "workspace:*",
-    "typescript": "^5.9.3"
-  }
+	"name": "@gubbi/web",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Gubbi Web — Web interface for Gubbi (Vite + TanStack Start)",
+	"type": "module",
+	"devDependencies": {
+		"@gubbi/config": "workspace:*",
+		"typescript": "^5.9.3"
+	}
 }

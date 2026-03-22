@@ -20,9 +20,9 @@ jobs:
       matrix:
         include:
           - target: darwin-arm64
-            os: macos-14        # Apple Silicon runner
+            os: macos-14 # Apple Silicon runner
           - target: darwin-x64
-            os: macos-13        # Intel runner
+            os: macos-13 # Intel runner
           - target: linux-arm64
             os: ubuntu-24.04-arm
           - target: linux-x64
@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     permissions:
-      contents: write  # required to create releases and upload assets
+      contents: write # required to create releases and upload assets
 
     steps:
       - name: Download darwin-arm64 binary
@@ -139,7 +139,7 @@ jobs:
 
     permissions:
       contents: read
-      id-token: write  # for npm provenance
+      id-token: write # for npm provenance
 
     steps:
       - uses: actions/checkout@v4

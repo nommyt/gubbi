@@ -64,7 +64,7 @@ bun run dev:cli
 
 | Key                           | Action                      |
 | ----------------------------- | --------------------------- |
-| `1`–`0`, `e`, `w`, `n`  | Switch view                 |
+| `1`–`0`, `e`, `w`, `n`        | Switch view                 |
 | `Ctrl+Tab` / `Ctrl+Shift+Tab` | Cycle views                 |
 | `Ctrl+H` / `Ctrl+L`           | Previous / next view        |
 | `Ctrl+Z`                      | Undo last git operation     |
@@ -120,18 +120,18 @@ bun run dev:cli
 
 ### Explore View
 
-| Key      | Action                              |
-| -------- | ----------------------------------- |
-| `m`      | Switch to My Repos tab              |
-| `t`      | Switch to Trending tab              |
-| `/`      | Search repos (focus input)          |
-| `j/k`    | Navigate repo list                  |
-| `o/Enter`| Open repo URL in browser            |
-| `c`      | Clone or switch to local clone      |
-| `f`      | Filter by language                  |
-| `d/w/m`  | Trending: daily / weekly / monthly  |
-| `Tab`    | Switch focus between list & detail  |
-| `Ctrl+R` | Refresh current tab                 |
+| Key       | Action                             |
+| --------- | ---------------------------------- |
+| `m`       | Switch to My Repos tab             |
+| `t`       | Switch to Trending tab             |
+| `/`       | Search repos (focus input)         |
+| `j/k`     | Navigate repo list                 |
+| `o/Enter` | Open repo URL in browser           |
+| `c`       | Clone or switch to local clone     |
+| `f`       | Filter by language                 |
+| `d/w/m`   | Trending: daily / weekly / monthly |
+| `Tab`     | Switch focus between list & detail |
+| `Ctrl+R`  | Refresh current tab                |
 
 ### Actions View
 

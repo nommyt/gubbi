@@ -1,10 +1,12 @@
 {
-  "name": "@gubbi/config",
-  "version": "0.0.1",
-  "private": true,
-  "description": "Shared configuration for Gubbi packages",
-  "exports": {
-    "./tsconfig": "./tsconfig.json"
-  },
-  "files": ["*.json"]
+	"name": "@gubbi/config",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Shared configuration for Gubbi packages",
+	"files": [
+		"*.json"
+	],
+	"exports": {
+		"./tsconfig": "./tsconfig.json"
+	}
 }

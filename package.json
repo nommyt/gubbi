@@ -1,47 +1,50 @@
 {
-  "name": "@gubbi/monorepo",
-  "version": "0.0.1",
-  "private": true,
-  "description": "Gubbi — Terminal-native Git + GitHub client monorepo",
-  "packageManager": "bun@1.3.10",
-  "workspaces": ["packages/*", "app/*"],
-  "scripts": {
-    "dev": "turbo run dev",
-    "dev:cli": "turbo run dev --filter @gubbi/cli",
-    "dev:web": "turbo run dev --filter @gubbi/web",
-    "build": "turbo run build",
-    "build:cli": "turbo run build --filter @gubbi/cli",
-    "build:web": "turbo run build --filter @gubbi/web",
-    "build:npm": "bun run app/cli/build-npm.ts",
-    "version:npm": "bun run scripts/version.ts",
-    "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "changeset:status": "changeset status",
-    "pre-publish": "bun run scripts/pre-publish.ts",
-    "release": "bun run scripts/release.ts",
-    "release:preview": "bun run scripts/release.ts --dry-run",
-    "lint": "turbo run lint",
-    "format": "oxfmt .",
-    "test": "turbo run test",
-    "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean && rm -rf node_modules"
-  },
-  "devDependencies": {
-    "@changesets/cli": "^2.30.0",
-    "@types/bun": "latest",
-    "lefthook": "^2.1.4",
-    "oxfmt": "^0.41.0",
-    "oxlint": "^1.56.0",
-    "turbo": "^2.8.17",
-    "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@opentui/core": "^0.1.88"
-  },
-  "optionalDependencies": {
-    "@opentui/core-darwin-arm64": "^0.1.88",
-    "@opentui/core-darwin-x64": "^0.1.88",
-    "@opentui/core-linux-arm64": "^0.1.88",
-    "@opentui/core-linux-x64": "^0.1.88"
-  }
+	"name": "@gubbi/monorepo",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Gubbi — Terminal-native Git + GitHub client monorepo",
+	"workspaces": [
+		"packages/*",
+		"app/*"
+	],
+	"scripts": {
+		"build": "turbo run build",
+		"build:cli": "turbo run build --filter @gubbi/cli",
+		"build:npm": "bun run app/cli/build-npm.ts",
+		"build:web": "turbo run build --filter @gubbi/web",
+		"changeset": "changeset",
+		"changeset:status": "changeset status",
+		"changeset:version": "changeset version",
+		"clean": "turbo run clean && rm -rf node_modules",
+		"dev": "turbo run dev",
+		"dev:cli": "turbo run dev --filter @gubbi/cli",
+		"dev:web": "turbo run dev --filter @gubbi/web",
+		"format": "oxfmt .",
+		"lint": "turbo run lint",
+		"pre-publish": "bun run scripts/pre-publish.ts",
+		"release": "bun run scripts/release.ts",
+		"release:preview": "bun run scripts/release.ts --dry-run",
+		"test": "turbo run test",
+		"typecheck": "turbo run typecheck",
+		"version:npm": "bun run scripts/version.ts"
+	},
+	"dependencies": {
+		"@opentui/core": "^0.1.88"
+	},
+	"devDependencies": {
+		"@changesets/cli": "^2.30.0",
+		"@types/bun": "latest",
+		"lefthook": "^2.1.4",
+		"oxfmt": "^0.41.0",
+		"oxlint": "^1.56.0",
+		"turbo": "^2.8.17",
+		"typescript": "^5.9.3"
+	},
+	"optionalDependencies": {
+		"@opentui/core-darwin-arm64": "^0.1.88",
+		"@opentui/core-darwin-x64": "^0.1.88",
+		"@opentui/core-linux-arm64": "^0.1.88",
+		"@opentui/core-linux-x64": "^0.1.88"
+	},
+	"packageManager": "bun@1.3.10"
 }

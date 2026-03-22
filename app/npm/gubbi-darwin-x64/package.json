@@ -1,20 +1,24 @@
 {
-  "name": "gubbi-darwin-x64",
-  "version": "0.0.1",
-  "description": "macOS x64 binary for gubbi — terminal-native Git + GitHub client",
-  "os": ["darwin"],
-  "cpu": ["x64"],
-  "main": "bin/gubbi",
-  "bin": {
-    "gubbi": "bin/gubbi"
-  },
-  "files": [
-    "bin/gubbi"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nommyt/gubbi.git",
-    "directory": "app/npm/gubbi-darwin-x64"
-  },
-  "license": "MIT"
+	"name": "gubbi-darwin-x64",
+	"version": "0.0.1",
+	"description": "macOS x64 binary for gubbi — terminal-native Git + GitHub client",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nommyt/gubbi.git",
+		"directory": "app/npm/gubbi-darwin-x64"
+	},
+	"bin": {
+		"gubbi": "bin/gubbi"
+	},
+	"files": [
+		"bin/gubbi"
+	],
+	"os": [
+		"darwin"
+	],
+	"cpu": [
+		"x64"
+	],
+	"main": "bin/gubbi"
 }

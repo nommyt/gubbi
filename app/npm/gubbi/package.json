@@ -1,38 +1,38 @@
 {
-  "name": "gubbi",
-  "version": "0.0.1",
-  "description": "Terminal-native Git + GitHub client — full keyboard-navigated TUI for git and GitHub",
-  "keywords": [
-    "git",
-    "github",
-    "tui",
-    "terminal",
-    "cli",
-    "gh"
-  ],
-  "homepage": "https://github.com/nommyt/gubbi",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nommyt/gubbi.git"
-  },
-  "license": "MIT",
-  "bin": {
-    "gubbi": "bin/gubbi"
-  },
-  "files": [
-    "bin/gubbi",
-    "install.js"
-  ],
-  "scripts": {
-    "postinstall": "node install.js"
-  },
-  "optionalDependencies": {
-    "gubbi-darwin-arm64": "0.0.1",
-    "gubbi-darwin-x64": "0.0.1",
-    "gubbi-linux-arm64": "0.0.1",
-    "gubbi-linux-x64": "0.0.1"
-  },
-  "engines": {
-    "node": ">=18"
-  }
+	"name": "gubbi",
+	"version": "0.0.1",
+	"description": "Terminal-native Git + GitHub client — full keyboard-navigated TUI for git and GitHub",
+	"keywords": [
+		"cli",
+		"gh",
+		"git",
+		"github",
+		"terminal",
+		"tui"
+	],
+	"homepage": "https://github.com/nommyt/gubbi",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nommyt/gubbi.git"
+	},
+	"bin": {
+		"gubbi": "bin/gubbi"
+	},
+	"files": [
+		"bin/gubbi",
+		"install.js"
+	],
+	"scripts": {
+		"postinstall": "node install.js"
+	},
+	"optionalDependencies": {
+		"gubbi-darwin-arm64": "0.0.1",
+		"gubbi-darwin-x64": "0.0.1",
+		"gubbi-linux-arm64": "0.0.1",
+		"gubbi-linux-x64": "0.0.1"
+	},
+	"engines": {
+		"node": ">=18"
+	}
 }

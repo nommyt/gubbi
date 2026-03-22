@@ -1,25 +1,25 @@
 {
-  "name": "@gubbi/github",
-  "version": "0.0.1",
-  "private": true,
-  "description": "GitHub CLI operations for Gubbi",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "scripts": {
-    "lint": "oxlint ./**/*",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
-  },
-  "dependencies": {
-    "@gubbi/core": "workspace:*",
-    "@gubbi/git": "workspace:*"
-  },
-  "devDependencies": {
-    "@gubbi/config": "workspace:*",
-    "@types/bun": "latest",
-    "oxlint": "^1.56.0",
-    "typescript": "^5.9.3"
-  }
+	"name": "@gubbi/github",
+	"version": "0.0.1",
+	"private": true,
+	"description": "GitHub CLI operations for Gubbi",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"clean": "rm -rf dist",
+		"lint": "oxlint ./**/*",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@gubbi/core": "workspace:*",
+		"@gubbi/git": "workspace:*"
+	},
+	"devDependencies": {
+		"@gubbi/config": "workspace:*",
+		"@types/bun": "latest",
+		"oxlint": "^1.56.0",
+		"typescript": "^5.9.3"
+	}
 }

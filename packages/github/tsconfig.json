@@ -2,8 +2,8 @@
 	"extends": "@gubbi/config/tsconfig",
 	"compilerOptions": {
 		"paths": {
-			"@gubbi/github": ["./src/index.ts"],
-		},
+			"@gubbi/github": ["./src/index.ts"]
+		}
 	},
-	"include": ["src/**/*"],
+	"include": ["src/**/*"]
 }

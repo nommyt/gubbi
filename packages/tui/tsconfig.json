@@ -4,8 +4,8 @@
 		"jsx": "preserve",
 		"jsxImportSource": "@opentui/solid",
 		"paths": {
-			"@gubbi/tui": ["./src/index.ts"],
-		},
+			"@gubbi/tui": ["./src/index.ts"]
+		}
 	},
-	"include": ["src/**/*"],
+	"include": ["src/**/*"]
 }

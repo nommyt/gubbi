@@ -1,20 +1,24 @@
 {
-  "name": "gubbi-linux-arm64",
-  "version": "0.0.1",
-  "description": "Linux arm64 binary for gubbi — terminal-native Git + GitHub client",
-  "os": ["linux"],
-  "cpu": ["arm64"],
-  "main": "bin/gubbi",
-  "bin": {
-    "gubbi": "bin/gubbi"
-  },
-  "files": [
-    "bin/gubbi"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nommyt/gubbi.git",
-    "directory": "app/npm/gubbi-linux-arm64"
-  },
-  "license": "MIT"
+	"name": "gubbi-linux-arm64",
+	"version": "0.0.1",
+	"description": "Linux arm64 binary for gubbi — terminal-native Git + GitHub client",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nommyt/gubbi.git",
+		"directory": "app/npm/gubbi-linux-arm64"
+	},
+	"bin": {
+		"gubbi": "bin/gubbi"
+	},
+	"files": [
+		"bin/gubbi"
+	],
+	"os": [
+		"linux"
+	],
+	"cpu": [
+		"arm64"
+	],
+	"main": "bin/gubbi"
 }
