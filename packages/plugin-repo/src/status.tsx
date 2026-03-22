@@ -13,6 +13,7 @@ import {
 	toggleFullscreen,
 	setView,
 	icons,
+	recordOperation,
 } from "@gubbi/core"
 import {
 	stageFile,
@@ -27,6 +28,7 @@ import {
 	hunkToPatch,
 	lineToPatch,
 	gitService,
+	getHeadHash,
 } from "@gubbi/git"
 import { getCurrentBranchPR, pushAndCreatePR, githubService } from "@gubbi/github"
 import { ConfirmDialog, InputDialog, DiffViewer, BlameView } from "@gubbi/tui"
@@ -497,8 +499,11 @@ export function StatusView() {
 					onSubmit={async (message) => {
 						setShowCommit(false)
 						try {
+							const beforeHash = await getHeadHash(state.git.repoRoot)
 							const { commit } = await import("@gubbi/git")
 							await commit(message, {}, state.git.repoRoot)
+							const afterHash = await getHeadHash(state.git.repoRoot)
+							recordOperation("commit", `commit: ${message.slice(0, 50)}`, beforeHash, afterHash)
 							await gitService.refreshStatus()
 							showToast("success", "Committed successfully")
 							if (state.github.isAuthenticated) {

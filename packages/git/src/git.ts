@@ -406,6 +406,33 @@ export async function interactiveRebase(
 }
 
 // ---------------------------------------------------------------------------
+// Undo
+// ---------------------------------------------------------------------------
+
+/**
+ * Get the current HEAD hash.
+ */
+export async function getHeadHash(cwd?: string): Promise<string> {
+	const r = await exec(GIT, ["rev-parse", "HEAD"], { cwd })
+	return r.stdout.trim()
+}
+
+/**
+ * Reset to a specific ref (hard reset).
+ */
+export async function resetHard(ref: string, cwd?: string): Promise<void> {
+	await execOrThrow(GIT, ["reset", "--hard", ref], { cwd })
+}
+
+/**
+ * Get recent reflog entries.
+ */
+export async function getReflog(count = 20, cwd?: string): Promise<string> {
+	const r = await exec(GIT, ["reflog", `--max-count=${count}`, "--format=%h %gd %gs"], { cwd })
+	return r.stdout.trim()
+}
+
+// ---------------------------------------------------------------------------
 // Stash
 // ---------------------------------------------------------------------------
 

@@ -10,10 +10,11 @@ import {
 	setFocus,
 	viewRegistry,
 	showToast,
+	markLastUndone,
 	VIEWS,
 	icons,
 } from "@gubbi/core"
-import { createGitService } from "@gubbi/git"
+import { createGitService, getHeadHash, resetHard } from "@gubbi/git"
 import { createGitHubService } from "@gubbi/github"
 import { Header, StatusBar, HelpOverlay } from "@gubbi/tui"
 import type { ParsedKey } from "@opentui/core"
@@ -52,6 +53,25 @@ export function App() {
 		// Ctrl+C — quit
 		if (key.ctrl && key.name === "c") {
 			renderer.destroy()
+			return
+		}
+
+		// Ctrl+Z — undo last operation
+		if (key.ctrl && key.name === "z") {
+			const op = markLastUndone()
+			if (op) {
+				void (async () => {
+					try {
+						await resetHard(op.beforeHash, state.git.repoRoot)
+						await gitService.refreshStatus()
+						showToast("success", `Undid: ${op.description}`)
+					} catch (err) {
+						showToast("error", `Undo failed: ${err}`)
+					}
+				})()
+			} else {
+				showToast("info", "Nothing to undo")
+			}
 			return
 		}
 

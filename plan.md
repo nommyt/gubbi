@@ -262,8 +262,8 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 7.4 Operation Log & Undo
 **New file:** `packages/core/src/history/operation-log.ts`
 
-- [ ] Record every git operation (commit, rebase, merge, checkout, push) with before/after state
-- [ ] `Ctrl+Z` → undo last operation via git reflog
+- [x] Record every git operation (commit, rebase, merge, checkout, push) with before/after state
+- [x] `Ctrl+Z` → undo last operation via git reflog
 - [ ] New view (or overlay) showing recent operations timeline
 
 ### 7.5 Enhanced Stack Features
