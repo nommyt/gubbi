@@ -1,8 +1,0 @@
-{
-	"extends": "@gubbi/config/tsconfig",
-	"compilerOptions": {
-		"jsx": "preserve",
-		"jsxImportSource": "@opentui/solid",
-	},
-	"include": ["src/**/*"],
-}

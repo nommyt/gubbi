@@ -40,8 +40,11 @@ export interface GitBranch {
 	name: string
 	current: boolean
 	remote?: string
+	upstream?: string
 	ahead: number
 	behind: number
+	lastCommitDate: string
+	lastCommitSubject: string
 }
 
 export interface GitStash {
@@ -111,6 +114,11 @@ export interface GitHubPR {
 	url: string
 	mergeable: string
 	mergeStateStatus: string
+	checks: Array<{
+		name: string
+		status: string
+		conclusion: string | null
+	}>
 }
 
 export interface GitHubIssue {
@@ -163,6 +171,12 @@ export interface GitHubState {
 
 	// Badge counts
 	unreadNotificationCount: number
+
+	// Refresh tracking
+	lastRefreshTime: number
+
+	// Navigation: PR number to focus when entering PRs view (set by dashboard `r`)
+	pendingPRNumber: number | null
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +189,7 @@ export interface ToastMessage {
 	id: string
 	type: ToastType
 	message: string
+	persistent?: boolean
 }
 
 export type ViewId = string
@@ -196,6 +211,8 @@ export interface UIState {
 	loading: LoadingState
 	toasts: ToastMessage[]
 	helpVisible: boolean
+	syncing: boolean
+	inputActive: boolean
 }
 
 // ---------------------------------------------------------------------------

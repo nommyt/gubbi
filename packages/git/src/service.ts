@@ -2,6 +2,8 @@
  * service.ts — GitService implementation for the plugin system
  */
 
+import { basename } from "node:path"
+
 import type { GitService as GitServiceInterface } from "@gubbi/core/context"
 import {
 	state,
@@ -19,6 +21,7 @@ import {
 	getCurrentBranch,
 	getUpstreamStatus,
 	getRemoteUrl,
+	getDefaultBranch,
 	getStatus,
 	getLog,
 	getBranches,
@@ -73,12 +76,80 @@ function toGitBranch(e: BranchEntry): GitBranch {
 		current: e.current,
 		// BranchEntry.remote is boolean; GitBranch.remote is the remote name string
 		remote: e.remote ? e.remoteName : undefined,
+		upstream: e.upstream,
 		ahead: e.ahead,
 		behind: e.behind,
+		lastCommitDate: e.lastCommitDate,
+		lastCommitSubject: e.lastCommitSubject,
 	}
 }
 
 export function createGitService(): GitService {
+	async function initialize(): Promise<void> {
+		try {
+			const cwd = process.cwd()
+			const isRepo = await isGitRepo(cwd)
+			if (!isRepo) return
+
+			const root = await getRepoRoot(cwd)
+			const name = basename(root) || root
+			const branch = await getCurrentBranch(root)
+			const remoteUrl = await getRemoteUrl("origin", root)
+			const { ahead, behind } = await getUpstreamStatus(root)
+			const defaultBranch = await getDefaultBranch(root)
+
+			setState("git", {
+				isRepo: true,
+				repoRoot: root,
+				repoName: name,
+				currentBranch: branch,
+				defaultBranch,
+				remoteUrl,
+				ahead,
+				behind,
+			})
+		} catch (err) {
+			showToast("error", `Failed to detect git repo: ${err}`)
+		}
+	}
+
+	async function initializeWithRoot(repoRoot: string): Promise<void> {
+		try {
+			const isRepo = await isGitRepo(repoRoot)
+			if (!isRepo) return
+
+			const root = await getRepoRoot(repoRoot)
+			const name = basename(root) || root
+			const branch = await getCurrentBranch(root)
+			const remoteUrl = await getRemoteUrl("origin", root)
+			const { ahead, behind } = await getUpstreamStatus(root)
+			const defaultBranch = await getDefaultBranch(root)
+
+			// Reset selection state
+			setState("git", {
+				isRepo: true,
+				repoRoot: root,
+				repoName: name,
+				currentBranch: branch,
+				defaultBranch,
+				remoteUrl,
+				ahead,
+				behind,
+				status: [],
+				log: [],
+				branches: [],
+				stash: [],
+				selectedStatusFile: null,
+				selectedLogEntry: null,
+				selectedBranch: null,
+				diffContent: "",
+				commitMessage: "",
+			})
+		} catch (err) {
+			showToast("error", `Failed to switch repo: ${err}`)
+		}
+	}
+
 	async function refreshStatus(): Promise<void> {
 		if (!state.git.isRepo) return
 		try {
@@ -125,6 +196,8 @@ export function createGitService(): GitService {
 	}
 
 	return {
+		initialize,
+		initializeWithRoot,
 		refreshStatus,
 		refreshLog,
 		refreshBranches,

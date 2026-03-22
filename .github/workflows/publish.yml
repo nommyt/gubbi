@@ -44,11 +44,27 @@ jobs:
         run: bun run build:npm -- ${{ matrix.target }}
         working-directory: app/cli
 
+      - name: Verify binary
+        run: |
+          BINARY="app/npm/gubbi-${{ matrix.target }}/bin/gubbi"
+          if [ ! -f "$BINARY" ]; then
+            echo "Error: Binary not found at $BINARY"
+            exit 1
+          fi
+          if [ ! -x "$BINARY" ]; then
+            echo "Error: Binary is not executable"
+            exit 1
+          fi
+          echo "Binary verification successful"
+          ls -lh "$BINARY"
+
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: gubbi-${{ matrix.target }}
-          path: app/npm/gubbi-${{ matrix.target }}/bin/gubbi
+          path: |
+            app/npm/gubbi-${{ matrix.target }}/bin/gubbi
+            app/npm/gubbi-${{ matrix.target }}/bin/gubbi.sha256
           if-no-files-found: error
 
   # ---------------------------------------------------------------------------
@@ -61,9 +77,6 @@ jobs:
 
     permissions:
       contents: write  # required to create releases and upload assets
-
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
 
     steps:
       - name: Download darwin-arm64 binary
@@ -98,56 +111,23 @@ jobs:
           chmod +x artifacts/linux-x64/gubbi
 
       - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           generate_release_notes: true
           draft: false
           prerelease: false
-
-      - name: Upload darwin-arm64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/darwin-arm64/gubbi
-          asset_name: gubbi-darwin-arm64
-          asset_content_type: application/octet-stream
-
-      - name: Upload darwin-x64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/darwin-x64/gubbi
-          asset_name: gubbi-darwin-x64
-          asset_content_type: application/octet-stream
-
-      - name: Upload linux-arm64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/linux-arm64/gubbi
-          asset_name: gubbi-linux-arm64
-          asset_content_type: application/octet-stream
-
-      - name: Upload linux-x64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/linux-x64/gubbi
-          asset_name: gubbi-linux-x64
-          asset_content_type: application/octet-stream
+          files: |
+            artifacts/darwin-arm64/gubbi
+            artifacts/darwin-arm64/gubbi.sha256
+            artifacts/darwin-x64/gubbi
+            artifacts/darwin-x64/gubbi.sha256
+            artifacts/linux-arm64/gubbi
+            artifacts/linux-arm64/gubbi.sha256
+            artifacts/linux-x64/gubbi
+            artifacts/linux-x64/gubbi.sha256
+          fail_on_unmatched_files: true
 
   # ---------------------------------------------------------------------------
   # Publish all packages to npm
@@ -181,6 +161,10 @@ jobs:
       # Sync all package.json versions to match the git tag
       - name: Sync package versions
         run: bun run scripts/version.ts ${{ steps.version.outputs.version }}
+
+      # Run pre-publish validation (skip tests as they should run in a separate job)
+      - name: Pre-publish validation
+        run: bun run pre-publish -- --skip-tests
 
       # Download all platform binaries built in the previous job
       - name: Download darwin-arm64 binary

@@ -103,3 +103,10 @@ export async function execInteractive(
 
 	return proc.exited
 }
+
+/** Open a URL in the default browser, cross-platform */
+export async function openURL(url: string): Promise<void> {
+	const cmd =
+		process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open"
+	await exec(cmd, [url])
+}

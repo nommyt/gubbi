@@ -59,6 +59,21 @@ export async function getRemoteUrl(remote = "origin", cwd?: string): Promise<str
 	return r.exitCode === 0 ? r.stdout.trim() : ""
 }
 
+export async function getDefaultBranch(cwd?: string): Promise<string> {
+	// Try to read from origin/HEAD symbolic ref
+	const r = await exec(GIT, ["symbolic-ref", "refs/remotes/origin/HEAD"], { cwd })
+	if (r.exitCode === 0) {
+		const ref = r.stdout.trim() // e.g. "refs/remotes/origin/main"
+		return ref.replace("refs/remotes/origin/", "")
+	}
+	// Fallback: check for common branch names
+	for (const name of ["main", "master"]) {
+		const check = await exec(GIT, ["rev-parse", "--verify", `refs/remotes/origin/${name}`], { cwd })
+		if (check.exitCode === 0) return name
+	}
+	return "main"
+}
+
 export async function getRemotes(cwd?: string): Promise<RemoteEntry[]> {
 	const r = await exec(GIT, ["remote", "-v"], { cwd })
 	return parseRemotes(r.stdout)
@@ -141,6 +156,45 @@ export async function getGraphLog(
 	return r.stdout
 }
 
+export interface GraphEntry {
+	graph: string
+	hash: string
+	refs: string[]
+	subject: string
+}
+
+/**
+ * Parse git log --graph output into structured entries.
+ * Each line has a graph prefix (e.g. "* ", "| \\ ", "| / ") and commit info.
+ */
+export function parseGraphLog(raw: string): GraphEntry[] {
+	const lines = raw.split("\n").filter((l) => l.trim())
+	const entries: GraphEntry[] = []
+
+	for (const line of lines) {
+		// Graph characters are everything before the first 7-char hash
+		const hashMatch = line.match(/([*|\\/\\ _\-]+)\s*([a-f0-9]{7,})\s*(.*)/)
+		if (!hashMatch) continue
+
+		const graph = hashMatch[1] ?? ""
+		const hash = hashMatch[2] ?? ""
+		const rest = hashMatch[3] ?? ""
+
+		// Parse refs and subject from "(HEAD -> main, origin/main) subject"
+		const refMatch = rest.match(/^\(([^)]+)\)\s*(.*)$/)
+		let refs: string[] = []
+		let subject = rest
+		if (refMatch) {
+			refs = refMatch[1]!.split(", ").map((r) => r.trim())
+			subject = refMatch[2] ?? ""
+		}
+
+		entries.push({ graph, hash, refs, subject })
+	}
+
+	return entries
+}
+
 export async function getFileLog(
 	path: string,
 	opts: { count?: number; follow?: boolean } = {},
@@ -184,6 +238,10 @@ export async function discardAll(cwd?: string): Promise<void> {
 
 export async function stageHunk(patch: string, cwd?: string): Promise<void> {
 	await execOrThrow(GIT, ["apply", "--cached", "--recount"], { cwd, input: patch })
+}
+
+export async function unstageHunk(patch: string, cwd?: string): Promise<void> {
+	await execOrThrow(GIT, ["apply", "--cached", "--reverse", "--recount"], { cwd, input: patch })
 }
 
 // ---------------------------------------------------------------------------
@@ -318,6 +376,60 @@ export async function abortRebase(cwd?: string): Promise<void> {
 
 export async function continueRebase(cwd?: string): Promise<void> {
 	await execOrThrow(GIT, ["rebase", "--continue"], { cwd })
+}
+
+export type RebaseAction = "pick" | "squash" | "fixup" | "drop" | "edit" | "reword"
+
+export interface RebaseTodo {
+	hash: string
+	action: RebaseAction
+	subject: string
+}
+
+/**
+ * Execute an interactive rebase using GIT_SEQUENCE_EDITOR to set the todo list.
+ * @param onto - The commit to rebase onto (e.g. "abc123^" to rebase from parent of abc123)
+ * @param todos - The rebase todo list (ordered oldest-first)
+ * @param cwd - Repository root
+ */
+export async function interactiveRebase(
+	onto: string,
+	todos: RebaseTodo[],
+	cwd?: string,
+): Promise<void> {
+	const todoContent = todos.map((t) => `${t.action} ${t.hash} ${t.subject}`).join("\n") + "\n"
+	const editor = `echo '${todoContent.replace(/'/g, "'\\''")}' > "$1"`
+	await execOrThrow(GIT, ["rebase", "-i", "--autosquash", onto], {
+		cwd,
+		env: { GIT_SEQUENCE_EDITOR: editor },
+	})
+}
+
+// ---------------------------------------------------------------------------
+// Undo
+// ---------------------------------------------------------------------------
+
+/**
+ * Get the current HEAD hash.
+ */
+export async function getHeadHash(cwd?: string): Promise<string> {
+	const r = await exec(GIT, ["rev-parse", "HEAD"], { cwd })
+	return r.stdout.trim()
+}
+
+/**
+ * Reset to a specific ref (hard reset).
+ */
+export async function resetHard(ref: string, cwd?: string): Promise<void> {
+	await execOrThrow(GIT, ["reset", "--hard", ref], { cwd })
+}
+
+/**
+ * Get recent reflog entries.
+ */
+export async function getReflog(count = 20, cwd?: string): Promise<string> {
+	const r = await exec(GIT, ["reflog", `--max-count=${count}`, "--format=%h %gd %gs"], { cwd })
+	return r.stdout.trim()
 }
 
 // ---------------------------------------------------------------------------
@@ -462,6 +574,8 @@ export interface WorktreeEntry {
 	hash: string
 	bare: boolean
 	locked: boolean
+	prunable: boolean
+	isMain: boolean
 }
 
 export async function getWorktrees(cwd?: string): Promise<WorktreeEntry[]> {
@@ -478,6 +592,7 @@ export async function getWorktrees(cwd?: string): Promise<WorktreeEntry[]> {
 		let hash = ""
 		let bare = false
 		let locked = false
+		let prunable = false
 
 		for (const line of lines) {
 			if (line.startsWith("worktree ")) path = line.slice(9)
@@ -485,10 +600,14 @@ export async function getWorktrees(cwd?: string): Promise<WorktreeEntry[]> {
 			else if (line.startsWith("branch ")) branch = line.slice(7).replace("refs/heads/", "")
 			else if (line === "bare") bare = true
 			else if (line.startsWith("locked")) locked = true
+			else if (line === "prunable") prunable = true
 		}
 
-		if (path) entries.push({ path, branch, hash, bare, locked })
+		if (path) entries.push({ path, branch, hash, bare, locked, prunable, isMain: false })
 	}
+
+	// First entry is the main worktree
+	if (entries.length > 0) entries[0]!.isMain = true
 
 	return entries
 }
@@ -502,6 +621,14 @@ export async function removeWorktree(path: string, force = false, cwd?: string):
 	if (force) args.push("--force")
 	args.push(path)
 	await execOrThrow(GIT, args, { cwd })
+}
+
+export async function pruneWorktrees(cwd?: string): Promise<void> {
+	await execOrThrow(GIT, ["worktree", "prune"], { cwd })
+}
+
+export async function repairWorktree(path: string, cwd?: string): Promise<void> {
+	await execOrThrow(GIT, ["worktree", "repair", path], { cwd })
 }
 
 // ---------------------------------------------------------------------------

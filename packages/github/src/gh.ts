@@ -156,10 +156,19 @@ function mapPR(raw: Record<string, unknown>): PullRequest {
 }
 
 export async function listPRs(
-	opts: { state?: "open" | "closed" | "merged" | "all"; limit?: number } = {},
+	opts: {
+		state?: "open" | "closed" | "merged" | "all"
+		limit?: number
+		author?: string
+		label?: string
+		search?: string
+	} = {},
 ): Promise<PullRequest[]> {
 	const args = ["pr", "list", "--json", PR_FIELDS, "--limit", String(opts.limit ?? 50)]
 	if (opts.state && opts.state !== "all") args.push("--state", opts.state)
+	if (opts.author) args.push("--author", opts.author)
+	if (opts.label) args.push("--label", opts.label)
+	if (opts.search) args.push("--search", opts.search)
 
 	const r = await exec(GH, args)
 	if (r.exitCode !== 0) return []
@@ -254,6 +263,13 @@ export async function reopenPR(number: number): Promise<boolean> {
 	return r.exitCode === 0
 }
 
+export async function requestReviewers(number: number, reviewers: string[]): Promise<boolean> {
+	if (reviewers.length === 0) return true
+	const args = ["pr", "edit", String(number), ...reviewers.flatMap((r) => ["--add-reviewer", r])]
+	const result = await exec(GH, args)
+	return result.exitCode === 0
+}
+
 // ---------------------------------------------------------------------------
 // Issues
 // ---------------------------------------------------------------------------
@@ -336,12 +352,14 @@ export async function listIssues(
 		limit?: number
 		labels?: string[]
 		mention?: string
+		author?: string
 	} = {},
 ): Promise<Issue[]> {
 	const args = ["issue", "list", "--json", ISSUE_FIELDS, "--limit", String(opts.limit ?? 50)]
 	if (opts.state && opts.state !== "all") args.push("--state", opts.state)
 	if (opts.labels?.length) args.push("--label", opts.labels.join(","))
 	if (opts.mention) args.push("--mention", opts.mention)
+	if (opts.author) args.push("--author", opts.author)
 
 	const r = await exec(GH, args)
 	if (r.exitCode !== 0) return []
@@ -542,6 +560,45 @@ export async function getRunLogs(id: number): Promise<string> {
 	return r.stdout
 }
 
+export interface Workflow {
+	id: number
+	name: string
+	path: string
+	state: string
+}
+
+/**
+ * List available workflows.
+ */
+export async function listWorkflows(): Promise<Workflow[]> {
+	const r = await exec(GH, ["workflow", "list", "--json", "id,name,path,state"])
+	if (r.exitCode !== 0) return []
+	try {
+		return JSON.parse(r.stdout) as Workflow[]
+	} catch {
+		return []
+	}
+}
+
+/**
+ * Trigger a workflow run by workflow file or name.
+ */
+export async function triggerWorkflow(
+	workflow: string,
+	branch?: string,
+	inputs?: Record<string, string>,
+): Promise<boolean> {
+	const args = ["workflow", "run", workflow]
+	if (branch) args.push("--ref", branch)
+	if (inputs) {
+		for (const [key, value] of Object.entries(inputs)) {
+			args.push("-f", `${key}=${value}`)
+		}
+	}
+	const r = await exec(GH, args)
+	return r.exitCode === 0
+}
+
 // ---------------------------------------------------------------------------
 // Notifications
 // ---------------------------------------------------------------------------
@@ -596,6 +653,13 @@ export async function markNotificationRead(id: string): Promise<boolean> {
 
 export async function markAllNotificationsRead(): Promise<boolean> {
 	const r = await exec(GH, ["api", "--method", "PUT", "notifications"])
+	return r.exitCode === 0
+}
+
+export async function muteNotificationThread(id: string): Promise<boolean> {
+	const r = await exec(GH, ["api", "--method", "PUT", `notifications/threads/${id}/subscription`], {
+		input: JSON.stringify({ ignored: true }),
+	})
 	return r.exitCode === 0
 }
 
@@ -766,6 +830,146 @@ export interface RepoInfo {
 	forkCount: number
 	url: string
 }
+
+// ---------------------------------------------------------------------------
+// Repo search & trending
+// ---------------------------------------------------------------------------
+
+export interface ExploreRepo {
+	fullName: string // "owner/repo"
+	name: string
+	owner: string
+	description: string
+	language: string
+	stars: number
+	forks: number
+	url: string
+	updatedAt: string
+	isPrivate: boolean
+}
+
+const SEARCH_REPO_FIELDS = [
+	"name",
+	"fullName",
+	"owner",
+	"description",
+	"language",
+	"stargazersCount",
+	"forksCount",
+	"url",
+	"updatedAt",
+	"isPrivate",
+].join(",")
+
+function mapExploreRepo(raw: Record<string, unknown>): ExploreRepo {
+	const lang = String(raw.language ?? "")
+	const owner =
+		typeof raw.owner === "object" && raw.owner !== null
+			? String((raw.owner as Record<string, unknown>).login ?? "")
+			: ""
+
+	return {
+		fullName: String(raw.fullName ?? raw.nameWithOwner ?? ""),
+		name: String(raw.name ?? ""),
+		owner,
+		description: String(raw.description ?? ""),
+		language: lang,
+		stars: Number(raw.stargazersCount ?? 0),
+		forks: Number(raw.forksCount ?? 0),
+		url: String(raw.url ?? ""),
+		updatedAt: String(raw.updatedAt ?? ""),
+		isPrivate: Boolean(raw.isPrivate),
+	}
+}
+
+export async function searchRepos(
+	query: string,
+	opts: {
+		sort?: "stars" | "updated" | "forks" | "best-match"
+		limit?: number
+		language?: string
+		stars?: string
+	} = {},
+): Promise<ExploreRepo[]> {
+	const args = [
+		"search",
+		"repos",
+		query,
+		"--json",
+		SEARCH_REPO_FIELDS,
+		"--limit",
+		String(opts.limit ?? 30),
+	]
+	if (opts.sort) args.push("--sort", opts.sort)
+	if (opts.language) args.push("--language", opts.language)
+	if (opts.stars) args.push("--stars", opts.stars)
+
+	const r = await exec(GH, args)
+	if (r.exitCode !== 0) return []
+	try {
+		const data = JSON.parse(r.stdout) as unknown[]
+		return (data as Record<string, unknown>[]).map(mapExploreRepo)
+	} catch {
+		return []
+	}
+}
+
+export async function fetchTrendingRepos(
+	opts: {
+		since?: "daily" | "weekly" | "monthly"
+		limit?: number
+		language?: string
+	} = {},
+): Promise<ExploreRepo[]> {
+	const since = opts.since ?? "weekly"
+	const now = new Date()
+
+	let daysBack: number
+	switch (since) {
+		case "daily":
+			daysBack = 1
+			break
+		case "weekly":
+			daysBack = 7
+			break
+		case "monthly":
+			daysBack = 30
+			break
+	}
+
+	const sinceDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000)
+	const dateStr = sinceDate.toISOString().split("T")[0]
+
+	const args = [
+		"search",
+		"repos",
+		"",
+		"--json",
+		SEARCH_REPO_FIELDS,
+		"--sort",
+		"stars",
+		"--limit",
+		String(opts.limit ?? 30),
+		"--stars",
+		">100",
+		"--updated",
+		`>${dateStr}`,
+	]
+	if (opts.language) args.push("--language", opts.language)
+
+	const r = await exec(GH, args)
+	if (r.exitCode !== 0) return []
+	try {
+		const data = JSON.parse(r.stdout) as unknown[]
+		return (data as Record<string, unknown>[]).map(mapExploreRepo)
+	} catch {
+		return []
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Repo info
+// ---------------------------------------------------------------------------
 
 export async function getRepoInfo(): Promise<RepoInfo | null> {
 	const r = await exec(GH, [

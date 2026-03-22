@@ -3,7 +3,8 @@
  */
 
 import { state } from "@gubbi/core"
-import { For, Show, Switch, Match } from "solid-js"
+import { icons } from "@gubbi/core"
+import { For, Show, Switch, Match, createSignal, onMount, onCleanup } from "solid-js"
 
 const C = {
 	bg: "#0d1117",
@@ -30,7 +31,15 @@ const GLOBAL_HINTS: KeyHint[] = [
 	{ key: "^c", label: "quit" },
 ]
 
-const VIEW_HINTS: Record<string, KeyHint[]> = {
+const BASE_VIEW_HINTS: Record<string, KeyHint[]> = {
+	dashboard: [
+		{ key: "h/l", label: "col" },
+		{ key: "j/k", label: "nav" },
+		{ key: "r", label: "review" },
+		{ key: "m", label: "merge" },
+		{ key: "c", label: "checkout" },
+		{ key: "o", label: "open" },
+	],
 	smartlog: [
 		{ key: "j/k", label: "nav" },
 		{ key: "Enter", label: "view" },
@@ -45,7 +54,6 @@ const VIEW_HINTS: Record<string, KeyHint[]> = {
 		{ key: "c", label: "commit" },
 		{ key: "s", label: "stash" },
 		{ key: "f", label: "fullscreen" },
-		{ key: "S", label: "side-by-side" },
 	],
 	log: [
 		{ key: "j/k", label: "nav" },
@@ -113,11 +121,60 @@ const VIEW_HINTS: Record<string, KeyHint[]> = {
 		{ key: "n", label: "add remote" },
 		{ key: "D", label: "remove" },
 	],
+	worktrees: [
+		{ key: "j/k", label: "nav" },
+		{ key: "n", label: "new" },
+		{ key: "d", label: "remove" },
+		{ key: "p", label: "prune" },
+		{ key: "r", label: "repair" },
+	],
+}
+
+function currentBranchPR() {
+	return (
+		state.github.prs.find(
+			(pr) => pr.headRefName === state.git.currentBranch && pr.state === "OPEN",
+		) ?? null
+	)
+}
+
+function getContextHints(): KeyHint[] {
+	const view = state.ui.currentView
+	const base = BASE_VIEW_HINTS[view] ?? []
+	const pr = currentBranchPR()
+
+	if (view === "status" && pr) {
+		return [...base, { key: "P", label: `push·PR` }, { key: "V", label: `PR #${pr.number}` }]
+	}
+	if (view === "status") {
+		return [...base, { key: "P", label: "push·PR" }]
+	}
+	if (view === "branches" && pr) {
+		return [...base, { key: "P", label: "push·PR" }, { key: "V", label: "view PR" }]
+	}
+	return base
 }
 
 export function StatusBar() {
-	const hints = () => VIEW_HINTS[state.ui.currentView] ?? []
+	const hints = () => getContextHints()
 	const latestToast = () => state.ui.toasts.at(-1)
+
+	// Tick every 10s to update relative time display
+	const [now, setNow] = createSignal(Date.now())
+	onMount(() => {
+		const id = setInterval(() => setNow(Date.now()), 10_000)
+		onCleanup(() => clearInterval(id))
+	})
+
+	const refreshedAgo = () => {
+		const t = state.github.lastRefreshTime
+		if (!t) return ""
+		const s = Math.floor((now() - t) / 1000)
+		if (s < 60) return `${s}s ago`
+		const m = Math.floor(s / 60)
+		if (m < 60) return `${m}m ago`
+		return `${Math.floor(m / 60)}h ago`
+	}
 
 	return (
 		<box
@@ -189,6 +246,12 @@ export function StatusBar() {
 
 			{/* Current view name */}
 			<text fg={C.activeView}>{VIEWS_DISPLAY[state.ui.currentView]}</text>
+			<Show when={refreshedAgo()}>
+				<text fg={C.sep}> {refreshedAgo()}</text>
+			</Show>
+			<Show when={state.ui.syncing}>
+				<text fg={C.info}> {icons.sync} syncing</text>
+			</Show>
 		</box>
 	)
 }

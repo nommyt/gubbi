@@ -61,10 +61,12 @@ const initialGitHubState: GitHubState = {
 	selectedIssue: null,
 	selectedRun: null,
 	unreadNotificationCount: 0,
+	lastRefreshTime: 0,
+	pendingPRNumber: null,
 }
 
 const initialUIState: UIState = {
-	currentView: "dashboard",
+	currentView: "explore",
 	focusedPanel: "primary",
 	fullscreenPanel: null,
 	loading: {
@@ -78,6 +80,8 @@ const initialUIState: UIState = {
 	},
 	toasts: [],
 	helpVisible: false,
+	syncing: false,
+	inputActive: false,
 }
 
 const initialState: AppState = {
@@ -111,9 +115,33 @@ export function toggleFullscreen(panel: "primary" | "detail") {
 export function showToast(type: ToastType, message: string, durationMs = 3000) {
 	const id = `${Date.now()}-${Math.random()}`
 	setState("ui", "toasts", (prev) => [...prev, { id, type, message }])
-	setTimeout(() => {
-		setState("ui", "toasts", (prev) => prev.filter((t) => t.id !== id))
-	}, durationMs)
+	if (durationMs > 0) {
+		setTimeout(() => {
+			setState("ui", "toasts", (prev) => prev.filter((t) => t.id !== id))
+		}, durationMs)
+	}
+	return id
+}
+
+export function updateToast(id: string, type: ToastType, message: string, durationMs = 3000) {
+	setState("ui", "toasts", (prev) => prev.map((t) => (t.id === id ? { ...t, type, message } : t)))
+	if (durationMs > 0) {
+		setTimeout(() => {
+			setState("ui", "toasts", (prev) => prev.filter((t) => t.id !== id))
+		}, durationMs)
+	}
+}
+
+export function removeToast(id: string) {
+	setState("ui", "toasts", (prev) => prev.filter((t) => t.id !== id))
+}
+
+export function setSyncing(value: boolean) {
+	setState("ui", "syncing", value)
+}
+
+export function setInputActive(value: boolean) {
+	setState("ui", "inputActive", value)
 }
 
 export function setLoading(key: keyof UIState["loading"], value: boolean) {
@@ -208,13 +236,14 @@ export const selectFullscreenPanel = () => state.ui.fullscreenPanel
 // ---------------------------------------------------------------------------
 
 export const VIEWS = [
-	{ id: "dashboard", label: "Dashboard", key: "d" },
+	{ id: "explore", label: "Explore", key: "e" },
 	{ id: "smartlog", label: "Smartlog", key: "1" },
 	{ id: "status", label: "Status", key: "2" },
 	{ id: "log", label: "Log", key: "3" },
 	{ id: "branches", label: "Branches", key: "4" },
 	{ id: "stacks", label: "Stacks", key: "5" },
 	{ id: "stash", label: "Stash", key: "6" },
+	{ id: "worktrees", label: "Trees", key: "w" },
 	{ id: "prs", label: "Pull Requests", key: "7" },
 	{ id: "issues", label: "Issues", key: "8" },
 	{ id: "actions", label: "Actions", key: "9" },
