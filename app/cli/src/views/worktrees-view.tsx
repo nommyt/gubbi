@@ -55,7 +55,7 @@ export function WorktreesView() {
 			const list = await getWorktrees(state.git.repoRoot)
 			setWorktrees(list)
 		} catch (err) {
-			showToast("error", `Failed to load worktrees: ${err}`)
+			showToast("error", `Failed to load worktrees: ${String(err)}`)
 		} finally {
 			setLoading(false)
 		}

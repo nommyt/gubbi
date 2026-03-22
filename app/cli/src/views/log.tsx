@@ -151,7 +151,7 @@ export function LogView() {
 			await loadEntries(searchQuery() || undefined)
 			showToast("success", "Rebase complete")
 		} catch (err) {
-			updateToast(toastId, "error", `Rebase failed: ${err}`)
+			updateToast(toastId, "error", `Rebase failed: ${String(err)}`)
 		}
 	}
 
@@ -163,7 +163,7 @@ export function LogView() {
 			const first = all[0]
 			if (first) await loadDiff(first)
 		} catch (err) {
-			showToast("error", `Failed to load log: ${err}`)
+			showToast("error", `Failed to load log: ${String(err)}`)
 		} finally {
 			setLoading(false)
 		}

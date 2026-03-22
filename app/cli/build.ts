@@ -31,8 +31,8 @@ const result = await build({
 
 console.log("Build result:", result)
 
-if (result.success && result.outputs.length > 0) {
-	const buildOutput = result.outputs[0]!
+const buildOutput = result.outputs[0]
+if (result.success && buildOutput) {
 	const actualOutputPath = buildOutput.path
 	console.log(`Executable built at: ${actualOutputPath}`)
 

@@ -98,7 +98,7 @@ export function NotificationsView() {
 			const list = await listNotifications({ all: showAll(), limit: 50 })
 			setNotifications(list)
 		} catch (err) {
-			showToast("error", `Failed to load notifications: ${err}`)
+			showToast("error", `Failed to load notifications: ${String(err)}`)
 		}
 	}
 

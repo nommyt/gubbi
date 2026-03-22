@@ -73,7 +73,7 @@ export function IssuesView() {
 			const first = list[0]
 			if (first) await loadComments(first)
 		} catch (err) {
-			showToast("error", `Failed to load issues: ${err}`)
+			showToast("error", `Failed to load issues: ${String(err)}`)
 		}
 	}
 

@@ -119,39 +119,43 @@ function mapPR(raw: Record<string, unknown>): PullRequest {
 	if (Array.isArray(raw.statusCheckRollup)) {
 		for (const c of raw.statusCheckRollup as Array<Record<string, unknown>>) {
 			checks.push({
-				name: String(c.name ?? c.context ?? ""),
-				status: String(c.status ?? "COMPLETED") as PRCheck["status"],
+				name:
+					(c.name as string | null | undefined) ?? (c.context as string | null | undefined) ?? "",
+				status: ((c.status as string | null | undefined) ?? "COMPLETED") as PRCheck["status"],
 				conclusion: (c.conclusion ?? c.state ?? null) as PRCheck["conclusion"],
-				detailsUrl: String(c.detailsUrl ?? c.targetUrl ?? ""),
+				detailsUrl:
+					(c.detailsUrl as string | null | undefined) ??
+					(c.targetUrl as string | null | undefined) ??
+					"",
 			})
 		}
 	}
 
 	const author =
 		typeof raw.author === "object" && raw.author !== null
-			? String((raw.author as Record<string, unknown>).login ?? "")
-			: String(raw.author ?? "")
+			? (((raw.author as Record<string, unknown>).login as string | null | undefined) ?? "")
+			: ((raw.author as string | null | undefined) ?? "")
 
 	return {
 		number: Number(raw.number),
-		title: String(raw.title ?? ""),
-		state: String(raw.state ?? "OPEN") as PullRequest["state"],
+		title: (raw.title as string | null | undefined) ?? "",
+		state: ((raw.state as string | null | undefined) ?? "OPEN") as PullRequest["state"],
 		isDraft: Boolean(raw.isDraft),
 		author,
-		headRefName: String(raw.headRefName ?? ""),
-		baseRefName: String(raw.baseRefName ?? ""),
-		body: String(raw.body ?? ""),
+		headRefName: (raw.headRefName as string | null | undefined) ?? "",
+		baseRefName: (raw.baseRefName as string | null | undefined) ?? "",
+		body: (raw.body as string | null | undefined) ?? "",
 		labels,
 		reviewers,
 		checks,
 		additions: Number(raw.additions ?? 0),
 		deletions: Number(raw.deletions ?? 0),
 		changedFiles: Number(raw.changedFiles ?? 0),
-		createdAt: String(raw.createdAt ?? ""),
-		updatedAt: String(raw.updatedAt ?? ""),
-		url: String(raw.url ?? ""),
-		mergeable: String(raw.mergeable ?? "UNKNOWN"),
-		mergeStateStatus: String(raw.mergeStateStatus ?? ""),
+		createdAt: (raw.createdAt as string | null | undefined) ?? "",
+		updatedAt: (raw.updatedAt as string | null | undefined) ?? "",
+		url: (raw.url as string | null | undefined) ?? "",
+		mergeable: (raw.mergeable as string | null | undefined) ?? "UNKNOWN",
+		mergeStateStatus: (raw.mergeStateStatus as string | null | undefined) ?? "",
 	}
 }
 
@@ -321,8 +325,8 @@ function mapIssue(raw: Record<string, unknown>): Issue {
 		: []
 	const author =
 		typeof raw.author === "object" && raw.author !== null
-			? String((raw.author as Record<string, unknown>).login ?? "")
-			: String(raw.author ?? "")
+			? (((raw.author as Record<string, unknown>).login as string | null | undefined) ?? "")
+			: ((raw.author as string | null | undefined) ?? "")
 	const comments =
 		typeof raw.comments === "number"
 			? raw.comments
@@ -332,17 +336,17 @@ function mapIssue(raw: Record<string, unknown>): Issue {
 
 	return {
 		number: Number(raw.number),
-		title: String(raw.title ?? ""),
-		state: String(raw.state ?? "OPEN") as Issue["state"],
+		title: (raw.title as string | null | undefined) ?? "",
+		state: ((raw.state as string | null | undefined) ?? "OPEN") as Issue["state"],
 		author,
-		body: String(raw.body ?? ""),
+		body: (raw.body as string | null | undefined) ?? "",
 		labels,
 		assignees,
 		comments,
 		reactions: (raw.reactions as Record<string, number>) ?? {},
-		createdAt: String(raw.createdAt ?? ""),
-		updatedAt: String(raw.updatedAt ?? ""),
-		url: String(raw.url ?? ""),
+		createdAt: (raw.createdAt as string | null | undefined) ?? "",
+		updatedAt: (raw.updatedAt as string | null | undefined) ?? "",
+		url: (raw.url as string | null | undefined) ?? "",
 	}
 }
 
@@ -428,14 +432,14 @@ export async function getIssueComments(number: number): Promise<IssueComment[]> 
 				const c = JSON.parse(line) as Record<string, unknown>
 				const author =
 					typeof c.author === "object" && c.author !== null
-						? String((c.author as Record<string, unknown>).login ?? "")
-						: String(c.author ?? "")
+						? (((c.author as Record<string, unknown>).login as string | null | undefined) ?? "")
+						: ((c.author as string | null | undefined) ?? "")
 				return {
-					id: String(c.id ?? ""),
+					id: (c.id as string | null | undefined) ?? "",
 					author,
-					body: String(c.body ?? ""),
-					createdAt: String(c.createdAt ?? ""),
-					url: String(c.url ?? ""),
+					body: (c.body as string | null | undefined) ?? "",
+					createdAt: (c.createdAt as string | null | undefined) ?? "",
+					url: (c.url as string | null | undefined) ?? "",
 				}
 			})
 	} catch {
@@ -507,16 +511,16 @@ const RUN_FIELDS = [
 function mapRun(raw: Record<string, unknown>): WorkflowRun {
 	return {
 		id: Number(raw.databaseId ?? raw.id),
-		name: String(raw.name ?? ""),
-		workflowName: String(raw.workflowName ?? ""),
-		status: String(raw.status ?? "completed") as WorkflowRun["status"],
+		name: (raw.name as string | null | undefined) ?? "",
+		workflowName: (raw.workflowName as string | null | undefined) ?? "",
+		status: ((raw.status as string | null | undefined) ?? "completed") as WorkflowRun["status"],
 		conclusion: (raw.conclusion ?? null) as WorkflowRun["conclusion"],
-		branch: String(raw.headBranch ?? ""),
-		event: String(raw.event ?? ""),
-		headSha: String(raw.headSha ?? ""),
-		createdAt: String(raw.createdAt ?? ""),
-		updatedAt: String(raw.updatedAt ?? ""),
-		url: String(raw.url ?? ""),
+		branch: (raw.headBranch as string | null | undefined) ?? "",
+		event: (raw.event as string | null | undefined) ?? "",
+		headSha: (raw.headSha as string | null | undefined) ?? "",
+		createdAt: (raw.createdAt as string | null | undefined) ?? "",
+		updatedAt: (raw.updatedAt as string | null | undefined) ?? "",
+		url: (raw.url as string | null | undefined) ?? "",
 		attempt: Number(raw.attempt ?? 1),
 	}
 }
@@ -630,16 +634,17 @@ export async function listNotifications(
 	try {
 		const data = JSON.parse(r.stdout) as unknown[]
 		return (data as Record<string, unknown>[]).map((raw) => ({
-			id: String(raw.id ?? ""),
+			id: (raw.id as string | null | undefined) ?? "",
 			subject: {
-				title: String((raw.subject as Record<string, unknown>)?.title ?? ""),
-				type: String((raw.subject as Record<string, unknown>)?.type ?? ""),
-				url: String((raw.subject as Record<string, unknown>)?.url ?? ""),
+				title: ((raw.subject as Record<string, unknown>)?.title as string | null | undefined) ?? "",
+				type: ((raw.subject as Record<string, unknown>)?.type as string | null | undefined) ?? "",
+				url: ((raw.subject as Record<string, unknown>)?.url as string | null | undefined) ?? "",
 			},
-			repository: String((raw.repository as Record<string, unknown>)?.full_name ?? ""),
-			reason: String(raw.reason ?? ""),
+			repository:
+				((raw.repository as Record<string, unknown>)?.full_name as string | null | undefined) ?? "",
+			reason: (raw.reason as string | null | undefined) ?? "",
 			unread: Boolean(raw.unread),
-			updatedAt: String(raw.updated_at ?? ""),
+			updatedAt: (raw.updated_at as string | null | undefined) ?? "",
 		}))
 	} catch {
 		return []
@@ -792,21 +797,30 @@ export async function searchMyOpenPRs(opts: { limit?: number } = {}): Promise<Se
 			if (Array.isArray(raw.statusCheckRollup)) {
 				for (const c of raw.statusCheckRollup as Array<Record<string, unknown>>) {
 					checks.push({
-						name: String(c.name ?? c.context ?? ""),
-						status: String(c.status ?? "COMPLETED") as PRCheck["status"],
+						name:
+							(c.name as string | null | undefined) ??
+							(c.context as string | null | undefined) ??
+							"",
+						status: ((c.status as string | null | undefined) ?? "COMPLETED") as PRCheck["status"],
 						conclusion: (c.conclusion ?? c.state ?? null) as PRCheck["conclusion"],
-						detailsUrl: String(c.detailsUrl ?? c.targetUrl ?? ""),
+						detailsUrl:
+							(c.detailsUrl as string | null | undefined) ??
+							(c.targetUrl as string | null | undefined) ??
+							"",
 					})
 				}
 			}
 			return {
 				number: Number(raw.number ?? 0),
-				title: String(raw.title ?? ""),
-				state: String(raw.state ?? "open") as SearchPR["state"],
+				title: (raw.title as string | null | undefined) ?? "",
+				state: ((raw.state as string | null | undefined) ?? "open") as SearchPR["state"],
 				isDraft: Boolean(raw.isDraft),
-				repository: String(repo?.nameWithOwner ?? repo?.name ?? ""),
-				url: String(raw.url ?? ""),
-				updatedAt: String(raw.updatedAt ?? ""),
+				repository:
+					(repo?.nameWithOwner as string | null | undefined) ??
+					(repo?.name as string | null | undefined) ??
+					"",
+				url: (raw.url as string | null | undefined) ?? "",
+				updatedAt: (raw.updatedAt as string | null | undefined) ?? "",
 				checks,
 			}
 		})
@@ -862,22 +876,25 @@ const SEARCH_REPO_FIELDS = [
 ].join(",")
 
 function mapExploreRepo(raw: Record<string, unknown>): ExploreRepo {
-	const lang = String(raw.language ?? "")
+	const lang = (raw.language as string | null | undefined) ?? ""
 	const owner =
 		typeof raw.owner === "object" && raw.owner !== null
-			? String((raw.owner as Record<string, unknown>).login ?? "")
+			? (((raw.owner as Record<string, unknown>).login as string | null | undefined) ?? "")
 			: ""
 
 	return {
-		fullName: String(raw.fullName ?? raw.nameWithOwner ?? ""),
-		name: String(raw.name ?? ""),
+		fullName:
+			(raw.fullName as string | null | undefined) ??
+			(raw.nameWithOwner as string | null | undefined) ??
+			"",
+		name: (raw.name as string | null | undefined) ?? "",
 		owner,
-		description: String(raw.description ?? ""),
+		description: (raw.description as string | null | undefined) ?? "",
 		language: lang,
 		stars: Number(raw.stargazersCount ?? 0),
 		forks: Number(raw.forksCount ?? 0),
-		url: String(raw.url ?? ""),
-		updatedAt: String(raw.updatedAt ?? ""),
+		url: (raw.url as string | null | undefined) ?? "",
+		updatedAt: (raw.updatedAt as string | null | undefined) ?? "",
 		isPrivate: Boolean(raw.isPrivate),
 	}
 }
@@ -982,15 +999,17 @@ export async function getRepoInfo(): Promise<RepoInfo | null> {
 	try {
 		const raw = JSON.parse(r.stdout) as Record<string, unknown>
 		return {
-			name: String(raw.name ?? ""),
-			owner: String((raw.owner as Record<string, unknown>)?.login ?? ""),
-			fullName: String(raw.nameWithOwner ?? ""),
-			description: String(raw.description ?? ""),
-			defaultBranch: String((raw.defaultBranchRef as Record<string, unknown>)?.name ?? "main"),
+			name: (raw.name as string | null | undefined) ?? "",
+			owner: ((raw.owner as Record<string, unknown>)?.login as string | null | undefined) ?? "",
+			fullName: (raw.nameWithOwner as string | null | undefined) ?? "",
+			description: (raw.description as string | null | undefined) ?? "",
+			defaultBranch:
+				((raw.defaultBranchRef as Record<string, unknown>)?.name as string | null | undefined) ??
+				"main",
 			isPrivate: Boolean(raw.isPrivate),
 			stargazerCount: Number(raw.stargazerCount ?? 0),
 			forkCount: Number(raw.forkCount ?? 0),
-			url: String(raw.url ?? ""),
+			url: (raw.url as string | null | undefined) ?? "",
 		}
 	} catch {
 		return null

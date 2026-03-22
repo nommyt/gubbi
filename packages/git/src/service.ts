@@ -109,7 +109,7 @@ export function createGitService(): GitService {
 				behind,
 			})
 		} catch (err) {
-			showToast("error", `Failed to detect git repo: ${err}`)
+			showToast("error", `Failed to detect git repo: ${String(err)}`)
 		}
 	}
 
@@ -146,7 +146,7 @@ export function createGitService(): GitService {
 				commitMessage: "",
 			})
 		} catch (err) {
-			showToast("error", `Failed to switch repo: ${err}`)
+			showToast("error", `Failed to switch repo: ${String(err)}`)
 		}
 	}
 
@@ -161,7 +161,7 @@ export function createGitService(): GitService {
 			const { ahead, behind } = await getUpstreamStatus(root)
 			setState("git", { ahead, behind })
 		} catch (err) {
-			showToast("error", `Failed to refresh status: ${err}`)
+			showToast("error", `Failed to refresh status: ${String(err)}`)
 		}
 	}
 
@@ -171,7 +171,7 @@ export function createGitService(): GitService {
 			const entries = await getLog({ count: 200, all: true }, state.git.repoRoot)
 			updateGitLog(entries.map(toGitLogEntry))
 		} catch (err) {
-			showToast("error", `Failed to refresh log: ${err}`)
+			showToast("error", `Failed to refresh log: ${String(err)}`)
 		}
 	}
 
@@ -181,7 +181,7 @@ export function createGitService(): GitService {
 			const branches = await getBranches(state.git.repoRoot)
 			updateGitBranches(branches.map(toGitBranch))
 		} catch (err) {
-			showToast("error", `Failed to refresh branches: ${err}`)
+			showToast("error", `Failed to refresh branches: ${String(err)}`)
 		}
 	}
 

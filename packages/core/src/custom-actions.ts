@@ -60,7 +60,7 @@ export async function executeAction(
 				return false
 			}
 		} catch (err) {
-			showToast("error", `Action "${action.name}" failed: ${err}`)
+			showToast("error", `Action "${action.name}" failed: ${String(err)}`)
 			return false
 		}
 	}

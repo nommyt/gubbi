@@ -117,7 +117,7 @@ export function App() {
 						await gitService.refreshStatus()
 						showToast("success", `Undid: ${op.description}`)
 					} catch (err) {
-						showToast("error", `Undo failed: ${err}`)
+						showToast("error", `Undo failed: ${String(err)}`)
 					}
 				})()
 			} else {

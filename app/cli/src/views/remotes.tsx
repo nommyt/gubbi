@@ -47,7 +47,7 @@ export function RemotesView() {
 			setRemotes(r)
 			setWorktrees(w)
 		} catch (err) {
-			showToast("error", `Failed to load remotes: ${err}`)
+			showToast("error", `Failed to load remotes: ${String(err)}`)
 		} finally {
 			setLoading(false)
 		}

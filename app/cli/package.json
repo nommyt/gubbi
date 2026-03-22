@@ -15,7 +15,6 @@
 		"build:npm": "bun run build-npm.ts",
 		"clean": "rm -rf dist",
 		"dev": "bun --hot src/index.tsx",
-		"lint": "oxlint ./**/*",
 		"start": "bun src/index.tsx",
 		"symlink": "bun run scripts/symlink.ts",
 		"typecheck": "tsc --noEmit"

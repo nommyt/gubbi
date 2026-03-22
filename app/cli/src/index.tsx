@@ -44,6 +44,6 @@ if (!gitInstalled || !ghInstalled) {
 // ---------------------------------------------------------------------------
 await githubService.checkAuth()
 
-render(() => <App />, {
+void render(() => <App />, {
 	exitOnCtrlC: false,
 })

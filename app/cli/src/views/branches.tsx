@@ -169,7 +169,7 @@ export function BranchesView() {
 			else showToast("info", "No open PR for this branch")
 		} else if (key.name === "/" || key.name === "f") {
 			key.preventDefault()
-			setShowAction(true)
+			_setShowAction(true)
 		} else if (key.ctrl && key.name === "r") {
 			key.preventDefault()
 			await refreshBranches()

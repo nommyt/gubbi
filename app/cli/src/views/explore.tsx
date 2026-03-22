@@ -159,7 +159,7 @@ export function ExploreView() {
 			exploreCache["my-repos"] = flat
 			setRepos(flat)
 		} catch (err) {
-			showToast("error", `Failed to load repos: ${err}`)
+			showToast("error", `Failed to load repos: ${String(err)}`)
 		} finally {
 			setLoading(false)
 		}
@@ -177,7 +177,7 @@ export function ExploreView() {
 			trendingCache[since] = flat
 			setRepos(flat)
 		} catch (err) {
-			showToast("error", `Failed to load trending: ${err}`)
+			showToast("error", `Failed to load trending: ${String(err)}`)
 		} finally {
 			setLoading(false)
 		}
@@ -192,7 +192,7 @@ export function ExploreView() {
 			exploreCache.search = flat
 			setRepos(flat)
 		} catch (err) {
-			showToast("error", `Search failed: ${err}`)
+			showToast("error", `Search failed: ${String(err)}`)
 		} finally {
 			setLoading(false)
 		}
@@ -285,7 +285,7 @@ export function ExploreView() {
 			setView("status")
 			showToast("success", `Cloned and switched to ${fullName}`)
 		} catch (err) {
-			showToast("error", `Clone failed: ${err}`)
+			showToast("error", `Clone failed: ${String(err)}`)
 		}
 	}
 
@@ -344,7 +344,7 @@ export function ExploreView() {
 		if (key.name === "o" || key.name === "return") {
 			key.preventDefault()
 			const repo = selectedRepo()
-			if (repo) openURL(repo.url)
+			if (repo) void openURL(repo.url)
 			return
 		}
 		if (key.name === "f") {
@@ -561,7 +561,7 @@ export function ExploreView() {
 						<box flexDirection="row" gap={2} paddingTop={1}>
 							<text>
 								<span style={{ fg: C.star }}>★ </span>
-								<span style={{ fg: C.text }}>{formatStars(selectedRepo()?.stars)}</span>
+								<span style={{ fg: C.text }}>{formatStars(selectedRepo()?.stars ?? 0)}</span>
 							</text>
 							<Show when={selectedRepo()?.language}>
 								<text>
@@ -570,7 +570,7 @@ export function ExploreView() {
 							</Show>
 							<text>
 								<span style={{ fg: C.dim }}>updated </span>
-								<span style={{ fg: C.text }}>{relativeTime(selectedRepo()?.updatedAt)}</span>
+								<span style={{ fg: C.text }}>{relativeTime(selectedRepo()?.updatedAt ?? "")}</span>
 							</text>
 						</box>
 

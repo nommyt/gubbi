@@ -106,7 +106,7 @@ for (const { target, pkg } of targets) {
 	// Generate SHA256 checksum
 	const binaryData = readFileSync(outBin)
 	const hash = createHash("sha256")
-	hash.update(binaryData)
+	hash.update(binaryData as unknown as Uint8Array)
 	const checksum = hash.digest("hex")
 	const checksumPath = `${outBin}.sha256`
 	writeFileSync(checksumPath, `${checksum}  gubbi\n`)

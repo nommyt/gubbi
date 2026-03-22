@@ -494,7 +494,7 @@ export function StatusView() {
 				{/* Blame overlay */}
 				<Show when={showBlame() && selectedEntry()}>
 					<BlameView
-						filePath={selectedEntry()?.path}
+						filePath={selectedEntry()?.path ?? ""}
 						onClose={() => setShowBlame(false)}
 						onJumpToCommit={(hash) => {
 							setShowBlame(false)

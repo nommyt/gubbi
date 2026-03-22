@@ -84,7 +84,8 @@ const currentBranch = Bun.spawnSync(["git", "branch", "--show-current"], {
 
 if (currentBranch !== "main") {
 	warning(`You're on branch '${currentBranch}' instead of 'main'`)
-	const readline = require("readline").createInterface({
+	const { createInterface } = await import("readline")
+	const readline = createInterface({
 		input: process.stdin,
 		output: process.stdout,
 	})
@@ -196,7 +197,7 @@ for (const platform of PLATFORMS) {
 	const binaryData = readFileSync(binaryPath)
 	const { createHash } = await import("node:crypto")
 	const hash = createHash("sha256")
-	hash.update(binaryData)
+	hash.update(binaryData as unknown as Uint8Array)
 	const actualChecksum = hash.digest("hex")
 
 	if (expectedChecksum !== actualChecksum) {

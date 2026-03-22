@@ -110,7 +110,7 @@ export function SmartlogView() {
 			const first = all[0]
 			if (first) await loadDiff(first)
 		} catch (err) {
-			showToast("error", `Failed to load log: ${err}`)
+			showToast("error", `Failed to load log: ${String(err)}`)
 		} finally {
 			setLoading(false)
 		}

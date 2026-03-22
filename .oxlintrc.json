@@ -1,6 +1,7 @@
 {
 	"$schema": "./node_modules/oxlint/configuration_schema.json",
 	"env": {
+		"builtin": true,
 		"es2024": true,
 		"node": true,
 		"bun": true,
@@ -23,5 +24,9 @@
 		"@typescript-eslint/no-explicit-any": "error",
 		"@typescript-eslint/no-non-null-assertion": "error",
 	},
-	"ignorePatterns": ["node_modules", "dist", ".turbo"],
+	"options": {
+		"typeAware": true,
+		"typeCheck": true,
+	},
+	"ignorePatterns": ["node_modules", "dist", ".turbo", "app/npm"],
 }

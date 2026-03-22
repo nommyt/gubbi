@@ -86,7 +86,7 @@ export function createGitHubService(): GitHubService {
 			updateGitHubPRs(prs)
 			setState("github", "lastRefreshTime", Date.now())
 		} catch (err) {
-			showToast("error", `Failed to load PRs: ${err}`)
+			showToast("error", `Failed to load PRs: ${String(err)}`)
 		}
 	}
 
@@ -96,7 +96,7 @@ export function createGitHubService(): GitHubService {
 			const issues = await listIssues({ state: "open", limit: 50 })
 			updateGitHubIssues(issues)
 		} catch (err) {
-			showToast("error", `Failed to load issues: ${err}`)
+			showToast("error", `Failed to load issues: ${String(err)}`)
 		}
 	}
 
@@ -106,7 +106,7 @@ export function createGitHubService(): GitHubService {
 			const runs = await listRuns({ limit: 30 })
 			updateGitHubRuns(runs)
 		} catch (err) {
-			showToast("error", `Failed to load runs: ${err}`)
+			showToast("error", `Failed to load runs: ${String(err)}`)
 		}
 	}
 
@@ -116,7 +116,7 @@ export function createGitHubService(): GitHubService {
 			const notifications = await listNotifications({ limit: 50 })
 			updateGitHubNotifications(notifications.map(toGitHubNotification))
 		} catch (err) {
-			showToast("error", `Failed to load notifications: ${err}`)
+			showToast("error", `Failed to load notifications: ${String(err)}`)
 		}
 	}
 

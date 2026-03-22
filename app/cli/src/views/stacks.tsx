@@ -81,7 +81,7 @@ export function StacksView() {
 				setDiffContent(diff)
 			}
 		} catch (err) {
-			showToast("error", `Failed to load stacks: ${err}`)
+			showToast("error", `Failed to load stacks: ${String(err)}`)
 		} finally {
 			setLoading(false)
 		}

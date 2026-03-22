@@ -81,7 +81,7 @@ export function ActionsView() {
 			const list = await listRuns({ limit: 30 })
 			setRuns(list)
 		} catch (err) {
-			showToast("error", `Failed to load runs: ${err}`)
+			showToast("error", `Failed to load runs: ${String(err)}`)
 		} finally {
 			setLoading(false)
 		}
