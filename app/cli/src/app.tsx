@@ -11,6 +11,7 @@ import {
 	viewRegistry,
 	showToast,
 	markLastUndone,
+	loadConfig,
 	VIEWS,
 	icons,
 } from "@gubbi/core"
@@ -33,6 +34,11 @@ export function App() {
 
 	// Initialize git repo detection and GitHub auth at startup
 	onMount(() => {
+		// Load config
+		const config = loadConfig()
+		if (config.theme) {
+			// Theme support can be added later
+		}
 		void gitService.initialize()
 		void githubService.checkAuth()
 	})

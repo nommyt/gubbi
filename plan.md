@@ -317,7 +317,7 @@ actions:
       - "gh pr merge $PR_NUMBER --auto --squash"
 ```
 
-- [ ] Load and validate config on startup
+- [x] Load and validate config on startup
 - [ ] Apply custom keybindings to registry
 - [ ] Load custom dashboard sections
 - [ ] Execute custom actions via `packages/core/src/actions/custom.ts`

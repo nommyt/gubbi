@@ -28,3 +28,6 @@ export * from "./persist.ts"
 
 // Operation log
 export * from "./operation-log.ts"
+
+// Config
+export * from "./config.ts"
