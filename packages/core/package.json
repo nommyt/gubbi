@@ -9,7 +9,8 @@
 		"./types": "./src/types/index.ts",
 		"./context": "./src/context/index.ts",
 		"./registry": "./src/registry/index.ts",
-		"./state": "./src/state/index.ts"
+		"./state": "./src/state/index.ts",
+		"./tui": "./src/tui/index.ts"
 	},
 	"scripts": {
 		"clean": "rm -rf dist",

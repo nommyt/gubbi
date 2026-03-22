@@ -3,6 +3,8 @@
  */
 
 import { state, showToast } from "@gubbi/core"
+import { ConfirmDialog, InputDialog, SelectDialog } from "@gubbi/core/tui"
+import { DiffViewer } from "@gubbi/core/tui"
 import {
 	getStashList,
 	stash,
@@ -13,8 +15,6 @@ import {
 	gitService,
 } from "@gubbi/git"
 import type { StashEntry } from "@gubbi/git"
-import { ConfirmDialog, InputDialog, SelectDialog } from "@gubbi/tui"
-import { DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -165,7 +165,7 @@ export function StashView() {
 			{/* Diff preview */}
 			<DiffViewer
 				content={diffContent()}
-				title={selectedEntry() ? `stash@{${selectedEntry()!.index}}` : "stash preview"}
+				title={selectedEntry() ? `stash@{${selectedEntry()?.index}}` : "stash preview"}
 			/>
 
 			{/* Apply confirm */}

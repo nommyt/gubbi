@@ -3,6 +3,7 @@
  */
 
 import { state, showToast, icons } from "@gubbi/core"
+import { InputDialog, ConfirmDialog } from "@gubbi/core/tui"
 import {
 	getWorktrees,
 	addWorktree,
@@ -11,7 +12,6 @@ import {
 	repairWorktree,
 	type WorktreeEntry,
 } from "@gubbi/git"
-import { InputDialog, ConfirmDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 

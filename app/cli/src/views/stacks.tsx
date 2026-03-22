@@ -4,6 +4,8 @@
  */
 
 import { state, showToast, icons } from "@gubbi/core"
+import { InputDialog, ConfirmDialog, SelectDialog } from "@gubbi/core/tui"
+import { DiffViewer } from "@gubbi/core/tui"
 import { getDiffBetween, gitService } from "@gubbi/git"
 import {
 	getStacks,
@@ -17,8 +19,6 @@ import {
 	type Stack,
 	type StackBranch,
 } from "@gubbi/git"
-import { InputDialog, ConfirmDialog, SelectDialog } from "@gubbi/tui"
-import { DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -52,21 +52,6 @@ function prStatusColor(status?: string): string {
 			return C.prClosed
 		default:
 			return C.dim
-	}
-}
-
-function prStatusIcon(status?: string): string {
-	switch (status) {
-		case "open":
-			return icons.pullRequest
-		case "draft":
-			return icons.circle
-		case "merged":
-			return icons.merge
-		case "closed":
-			return icons.circleSlash
-		default:
-			return icons.circle
 	}
 }
 
@@ -330,8 +315,8 @@ export function StacksView() {
 															{/* PR status */}
 															<Show when={pr()}>
 																<text fg={prStatusColor(branch.prStatus)}>
-																	PR #{pr()!.number}
-																	{pr()!.isDraft ? " (draft)" : ""}
+																	PR #{pr()?.number}
+																	{pr()?.isDraft ? " (draft)" : ""}
 																</text>
 															</Show>
 
@@ -403,7 +388,7 @@ export function StacksView() {
 			{/* Diff panel */}
 			<DiffViewer
 				content={diffContent()}
-				title={currentBranch() ? `diff: ${currentBranch()!.name}` : "branch diff"}
+				title={currentBranch() ? `diff: ${currentBranch()?.name}` : "branch diff"}
 			/>
 
 			{/* Create branch in stack */}

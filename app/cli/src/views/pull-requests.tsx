@@ -12,6 +12,8 @@ import {
 	createQuery,
 	invalidateQuery,
 } from "@gubbi/core"
+import { SelectDialog, InputDialog } from "@gubbi/core/tui"
+import { DiffViewer } from "@gubbi/core/tui"
 import { openURL } from "@gubbi/git"
 import {
 	listPRs,
@@ -19,15 +21,12 @@ import {
 	mergePR,
 	reviewPR,
 	createPR,
-	closePR,
 	checkoutPR,
 	requestReviewers,
 	canMergePR,
 	githubService,
 	type PullRequest,
 } from "@gubbi/github"
-import { SelectDialog, InputDialog, ConfirmDialog } from "@gubbi/tui"
-import { DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -118,9 +117,10 @@ export function PullRequestsView() {
 		if (pending != null) {
 			state.github.pendingPRNumber = null
 			const idx = list.findIndex((p) => p.number === pending)
-			if (idx >= 0) {
+			const pendingPR = list[idx]
+			if (idx >= 0 && pendingPR) {
 				setSelectedIdx(idx)
-				await loadDiff(list[idx]!)
+				await loadDiff(pendingPR)
 				return
 			}
 		}
@@ -211,7 +211,7 @@ export function PullRequestsView() {
 			key.preventDefault()
 			const states: Array<"open" | "closed" | "all"> = ["open", "closed", "all"]
 			const current = states.indexOf(filterState())
-			const next = states[(current + 1) % states.length]!
+			const next = states[(current + 1) % states.length] ?? "open"
 			setFilterState(next)
 			setPersistedValue("prs.filterState", next)
 			showToast("info", `Filter: ${next}`)
@@ -342,7 +342,7 @@ export function PullRequestsView() {
 			<Show when={!fullscreenDiff()}>
 				<DiffViewer
 					content={diffContent()}
-					title={selectedPR() ? `PR #${selectedPR()!.number}: ${selectedPR()!.title}` : "pr diff"}
+					title={selectedPR() ? `PR #${selectedPR()?.number}: ${selectedPR()?.title}` : "pr diff"}
 					onToggleFullscreen={() => setFullscreenDiff(true)}
 				/>
 			</Show>
@@ -351,7 +351,7 @@ export function PullRequestsView() {
 			<Show when={fullscreenDiff()}>
 				<DiffViewer
 					content={diffContent()}
-					title={selectedPR() ? `PR #${selectedPR()!.number}: ${selectedPR()!.title}` : "pr diff"}
+					title={selectedPR() ? `PR #${selectedPR()?.number}: ${selectedPR()?.title}` : "pr diff"}
 					fullscreen
 					onToggleFullscreen={() => setFullscreenDiff(false)}
 				/>

@@ -4,10 +4,10 @@
  */
 
 import { state, showToast, icons } from "@gubbi/core"
+import { DiffViewer } from "@gubbi/core/tui"
 import { getLog, getGraphLog, parseGraphLog } from "@gubbi/git"
 import type { LogEntry, GraphEntry } from "@gubbi/git"
 import { exec } from "@gubbi/git"
-import { DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -205,8 +205,14 @@ export function SmartlogView() {
 
 								// PR for first local branch
 								const firstBranch = () => localRefs()[0]
-								const pr = () => (firstBranch() ? prForBranch(firstBranch()!) : null)
-								const ci = () => (pr() ? ciStatusForPR(pr()!.number) : null)
+								const pr = () => {
+									const b = firstBranch()
+									return b ? prForBranch(b) : null
+								}
+								const ci = () => {
+									const p = pr()
+									return p ? ciStatusForPR(p.number) : null
+								}
 
 								return (
 									<box
@@ -231,7 +237,7 @@ export function SmartlogView() {
 													</text>
 												}
 											>
-												<text fg={isCurrent() ? C.current : C.graph}>{graphEntry()!.graph}</text>
+												<text fg={isCurrent() ? C.current : C.graph}>{graphEntry()?.graph}</text>
 											</Show>
 
 											{/* Short hash */}
@@ -272,9 +278,9 @@ export function SmartlogView() {
 
 												<Show when={pr()}>
 													<text>
-														<span style={{ fg: pr()!.isDraft ? C.prDraft : C.prOpen }}>
-															PR #{pr()!.number}
-															{pr()!.isDraft ? " (draft)" : ""}
+														<span style={{ fg: pr()?.isDraft ? C.prDraft : C.prOpen }}>
+															PR #{pr()?.number}
+															{pr()?.isDraft ? " (draft)" : ""}
 														</span>
 													</text>
 												</Show>
@@ -303,7 +309,7 @@ export function SmartlogView() {
 			{/* Diff panel */}
 			<DiffViewer
 				content={diffContent()}
-				title={selectedEntry() ? `commit: ${selectedEntry()!.shortHash}` : "commit"}
+				title={selectedEntry() ? `commit: ${selectedEntry()?.shortHash}` : "commit"}
 			/>
 		</box>
 	)

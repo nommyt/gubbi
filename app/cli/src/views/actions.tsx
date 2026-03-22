@@ -3,6 +3,7 @@
  */
 
 import { state, showToast, icons, useInterval } from "@gubbi/core"
+import { SelectDialog } from "@gubbi/core/tui"
 import { openURL } from "@gubbi/git"
 import {
 	listRuns,
@@ -12,7 +13,6 @@ import {
 	triggerWorkflow,
 	type WorkflowRun,
 } from "@gubbi/github"
-import { SelectDialog, InputDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount, onCleanup } from "solid-js"
 
@@ -288,7 +288,7 @@ export function ActionsView() {
 				flexDirection="column"
 				border
 				borderColor={primaryFocused() ? C.border : C.activeBorder}
-				title={selectedRun() ? `logs: ${selectedRun()!.workflowName}` : "logs"}
+				title={selectedRun() ? `logs: ${selectedRun()?.workflowName}` : "logs"}
 			>
 				<Show
 					when={!loadingLogs()}

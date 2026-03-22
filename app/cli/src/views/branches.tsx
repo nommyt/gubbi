@@ -2,8 +2,9 @@
  * branches.tsx — Branch management: list, checkout, create, delete, merge, rebase, push
  */
 
-import { state, showToast, updateToast, setView, icons, createQuery } from "@gubbi/core"
+import { state, showToast, updateToast, setView, icons } from "@gubbi/core"
 import type { GitHubPR } from "@gubbi/core"
+import { InputDialog, SelectDialog, ConfirmDialog } from "@gubbi/core/tui"
 import {
 	getBranches,
 	checkout,
@@ -17,7 +18,6 @@ import {
 } from "@gubbi/git"
 import type { BranchEntry } from "@gubbi/git"
 import { createPR, mergePR, githubService } from "@gubbi/github"
-import { InputDialog, SelectDialog, ConfirmDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -44,18 +44,11 @@ export function BranchesView() {
 	const [showMerge, setShowMerge] = createSignal(false)
 	const [showRebase, setShowRebase] = createSignal(false)
 	const [showMergePR, setShowMergePR] = createSignal(false)
-	const [showAction, setShowAction] = createSignal(false)
-	const [filter, setFilter] = createSignal("")
+	const [_showAction, _setShowAction] = createSignal(false)
+	const [filter, _setFilter] = createSignal("")
 
 	const [allBranches, setAllBranches] = createSignal<BranchEntry[]>([])
 
-	// Query for branches with caching
-	const branchesQuery = createQuery({
-		queryKey: () => ["branches"],
-		queryFn: () => getBranches(state.git.repoRoot),
-		staleTime: 60_000,
-		refetchInterval: 120_000,
-	})
 	const branches = () => {
 		const q = filter().toLowerCase()
 		if (!q) return allBranches()
@@ -217,12 +210,12 @@ export function BranchesView() {
 
 				{/* PR badge */}
 				<Show when={pr()}>
-					<text fg={pr()!.isDraft ? C.dim : C.current}>
-						PR #{pr()!.number} {pr()!.isDraft ? "" : ""}
+					<text fg={pr()?.isDraft ? C.dim : C.current}>
+						PR #{pr()?.number} {pr()?.isDraft ? "" : ""}
 					</text>
-					<Show when={pr()!.checks.length > 0}>
+					<Show when={(pr()?.checks.length ?? 0) > 0}>
 						{(() => {
-							const checks = pr()!.checks
+							const checks = pr()?.checks ?? []
 							const fail = checks.some(
 								(c) => c.conclusion === "FAILURE" || c.conclusion === "TIMED_OUT",
 							)

@@ -3,7 +3,6 @@
  */
 
 import { state } from "@gubbi/core"
-import { exec } from "@gubbi/git"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -27,11 +26,18 @@ export interface BlameLine {
 
 export async function getBlame(filePath: string, cwd?: string): Promise<BlameLine[]> {
 	try {
-		const r = await exec("git", ["blame", "--porcelain", "--", filePath], {
+		const proc = Bun.spawn(["git", "blame", "--porcelain", "--", filePath], {
 			cwd: cwd ?? state.git.repoRoot,
+			stdout: "pipe",
+			stderr: "pipe",
 		})
-		if (r.exitCode !== 0) return []
-		return parseBlamePorcelain(r.stdout)
+		const [stdout] = await Promise.all([
+			new Response(proc.stdout).text(),
+			new Response(proc.stderr).text(),
+		])
+		const exitCode = await proc.exited
+		if (exitCode !== 0) return []
+		return parseBlamePorcelain(stdout)
 	} catch {
 		return []
 	}

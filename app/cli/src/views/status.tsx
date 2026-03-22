@@ -5,16 +5,15 @@
 import type { GitStatusEntry } from "@gubbi/core"
 import {
 	state,
-	setState,
 	setFocus,
 	showToast,
 	updateToast,
-	removeToast,
 	toggleFullscreen,
 	setView,
 	icons,
 	recordOperation,
 } from "@gubbi/core"
+import { ConfirmDialog, InputDialog, DiffViewer, BlameView } from "@gubbi/core/tui"
 import {
 	stageFile,
 	unstageFile,
@@ -30,8 +29,7 @@ import {
 	gitService,
 	getHeadHash,
 } from "@gubbi/git"
-import { getCurrentBranchPR, pushAndCreatePR, githubService } from "@gubbi/github"
-import { ConfirmDialog, InputDialog, DiffViewer, BlameView } from "@gubbi/tui"
+import { pushAndCreatePR, githubService } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, Show, For, onMount, onCleanup } from "solid-js"
 
@@ -121,9 +119,6 @@ export function StatusView() {
 		state.github.prs.find(
 			(pr) => pr.headRefName === state.git.currentBranch && pr.state === "OPEN",
 		) ?? null
-	const currentBranchEntry = () =>
-		state.git.branches.find((b) => b.name === state.git.currentBranch && !b.remote) ?? null
-
 	const parsedDiff = () => parseDiff(diffContent())
 	const hunks = () => parsedDiff().hunks
 	const hunkCount = () => hunks().length
@@ -349,11 +344,11 @@ export function StatusView() {
 				<box height={1} paddingLeft={2} border={["bottom"]} borderColor={C.border}>
 					<text fg={C.dim}>
 						{state.git.currentBranch} •{" "}
-						<span style={{ fg: "#58a6ff" }}>PR #{currentBranchPR()!.number}</span>{" "}
-						<span style={{ fg: currentBranchPR()!.isDraft ? C.dim : C.staged }}>
-							{currentBranchPR()!.isDraft ? `${icons.circle} draft` : `${icons.check} open`}
+						<span style={{ fg: "#58a6ff" }}>PR #{currentBranchPR()?.number}</span>{" "}
+						<span style={{ fg: currentBranchPR()?.isDraft ? C.dim : C.staged }}>
+							{currentBranchPR()?.isDraft ? `${icons.circle} draft` : `${icons.check} open`}
 						</span>
-						{currentBranchPR()!.mergeable === "MERGEABLE" ? (
+						{currentBranchPR()?.mergeable === "MERGEABLE" ? (
 							<span style={{ fg: C.staged }}> • mergeable</span>
 						) : null}
 					</text>
@@ -487,7 +482,7 @@ export function StatusView() {
 				<Show when={!showBlame()}>
 					<DiffViewer
 						content={diffContent()}
-						title={selectedEntry() ? `diff: ${selectedEntry()!.path}` : "diff"}
+						title={selectedEntry() ? `diff: ${selectedEntry()?.path}` : "diff"}
 						staged={diffStaged()}
 						fullscreen={isFullscreen()}
 						onToggleFullscreen={() => toggleFullscreen("detail")}
@@ -499,14 +494,14 @@ export function StatusView() {
 				{/* Blame overlay */}
 				<Show when={showBlame() && selectedEntry()}>
 					<BlameView
-						filePath={selectedEntry()!.path}
+						filePath={selectedEntry()?.path}
 						onClose={() => setShowBlame(false)}
 						onJumpToCommit={(hash) => {
 							setShowBlame(false)
 							state.git.selectedLogEntry = null
 							setView("log")
 							// Store the hash to jump to in state for the log view to pick up
-							;(state as any)._pendingCommitHash = hash
+							;(state as unknown as Record<string, unknown>)._pendingCommitHash = hash
 						}}
 					/>
 				</Show>
@@ -587,7 +582,7 @@ export function StatusView() {
 					title="Push and create PR?"
 					message={
 						currentBranchPR()
-							? `Push ${state.git.currentBranch}? (PR #${currentBranchPR()!.number} already exists)`
+							? `Push ${state.git.currentBranch}? (PR #${currentBranchPR()?.number} already exists)`
 							: `Push ${state.git.currentBranch} and create a PR?`
 					}
 					confirmLabel="Push"

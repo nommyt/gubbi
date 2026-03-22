@@ -3,6 +3,7 @@
  */
 
 import { setView, showToast, setInputActive } from "@gubbi/core"
+import { InputDialog, SelectDialog } from "@gubbi/core/tui"
 import { openURL, findLocalClone, getOrScanRepoMap, saveRepoMap, gitService } from "@gubbi/git"
 import { exec } from "@gubbi/git"
 import {
@@ -12,7 +13,6 @@ import {
 	type ExploreRepo,
 	type UserRepo,
 } from "@gubbi/github"
-import { InputDialog, SelectDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -554,30 +554,30 @@ export function ExploreView() {
 			>
 				<Show when={selectedRepo()}>
 					<box flexDirection="column" padding={1} gap={1}>
-						<text fg={C.text}>{selectedRepo()!.fullName}</text>
-						<text fg={C.dim}>{selectedRepo()!.description || "(no description)"}</text>
+						<text fg={C.text}>{selectedRepo()?.fullName}</text>
+						<text fg={C.dim}>{selectedRepo()?.description || "(no description)"}</text>
 
 						{/* Stats */}
 						<box flexDirection="row" gap={2} paddingTop={1}>
 							<text>
 								<span style={{ fg: C.star }}>★ </span>
-								<span style={{ fg: C.text }}>{formatStars(selectedRepo()!.stars)}</span>
+								<span style={{ fg: C.text }}>{formatStars(selectedRepo()?.stars)}</span>
 							</text>
-							<Show when={selectedRepo()!.language}>
+							<Show when={selectedRepo()?.language}>
 								<text>
-									<span style={{ fg: C.language }}>{selectedRepo()!.language}</span>
+									<span style={{ fg: C.language }}>{selectedRepo()?.language}</span>
 								</text>
 							</Show>
 							<text>
 								<span style={{ fg: C.dim }}>updated </span>
-								<span style={{ fg: C.text }}>{relativeTime(selectedRepo()!.updatedAt)}</span>
+								<span style={{ fg: C.text }}>{relativeTime(selectedRepo()?.updatedAt)}</span>
 							</text>
 						</box>
 
 						{/* Local clone status */}
 						<box paddingTop={1}>
 							{(() => {
-								const localPath = findLocalClone(selectedRepo()!.fullName, repoMap())
+								const localPath = findLocalClone(selectedRepo()?.fullName ?? "", repoMap())
 								if (localPath) {
 									return (
 										<text>

@@ -24,7 +24,6 @@
 		"@gubbi/core": "workspace:*",
 		"@gubbi/git": "workspace:*",
 		"@gubbi/github": "workspace:*",
-		"@gubbi/tui": "workspace:*",
 		"@opentui/core": "^0.1.88",
 		"@opentui/solid": "^0.1.88",
 		"solid-js": "^1.9.11"

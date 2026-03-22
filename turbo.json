@@ -35,10 +35,6 @@
 			"dependsOn": ["^build"],
 			"outputs": []
 		},
-		"@gubbi/tui#build": {
-			"dependsOn": ["^build"],
-			"outputs": []
-		},
 		"@gubbi/web#build": {
 			"dependsOn": ["^build"],
 			"outputs": []

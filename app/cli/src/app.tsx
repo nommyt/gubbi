@@ -13,9 +13,9 @@ import {
 	VIEWS,
 	icons,
 } from "@gubbi/core"
+import { Header, StatusBar, HelpOverlay, OperationsOverlay } from "@gubbi/core/tui"
 import { createGitService, resetHard } from "@gubbi/git"
 import { createGitHubService } from "@gubbi/github"
-import { Header, StatusBar, HelpOverlay, OperationsOverlay } from "@gubbi/tui"
 import type { ParsedKey } from "@opentui/core"
 import { useRenderer, useKeyboard } from "@opentui/solid"
 import { Switch, Match, Show, onMount, createSignal, type JSX } from "solid-js"

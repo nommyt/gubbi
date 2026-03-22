@@ -1,5 +1,5 @@
 /**
- * @gubbi/tui — Shared TUI components
+ * @gubbi/core/tui — Shared TUI components
  */
 
 export { ConfirmDialog, InputDialog, SelectDialog, HelpOverlay } from "./dialog.tsx"

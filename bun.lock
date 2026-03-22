@@ -33,7 +33,6 @@
         "@gubbi/core": "workspace:*",
         "@gubbi/git": "workspace:*",
         "@gubbi/github": "workspace:*",
-        "@gubbi/tui": "workspace:*",
         "@opentui/core": "^0.1.88",
         "@opentui/solid": "^0.1.88",
         "solid-js": "^1.9.11",
@@ -91,24 +90,6 @@
       "dependencies": {
         "@gubbi/core": "workspace:*",
         "@gubbi/git": "workspace:*",
-      },
-      "devDependencies": {
-        "@gubbi/config": "workspace:*",
-        "@types/bun": "latest",
-        "oxlint": "^1.56.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/tui": {
-      "name": "@gubbi/tui",
-      "version": "0.0.1",
-      "dependencies": {
-        "@gubbi/core": "workspace:*",
-        "@gubbi/git": "workspace:*",
-        "@gubbi/github": "workspace:*",
-        "@opentui/core": "^0.1.88",
-        "@opentui/solid": "^0.1.88",
-        "solid-js": "^1.9.11",
       },
       "devDependencies": {
         "@gubbi/config": "workspace:*",
@@ -224,8 +205,6 @@
     "@gubbi/git": ["@gubbi/git@workspace:packages/git"],
 
     "@gubbi/github": ["@gubbi/github@workspace:packages/github"],
-
-    "@gubbi/tui": ["@gubbi/tui@workspace:packages/tui"],
 
     "@gubbi/web": ["@gubbi/web@workspace:app/web"],
 

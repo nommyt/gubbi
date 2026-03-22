@@ -3,9 +3,10 @@
  */
 
 import { state, showToast, updateToast, icons } from "@gubbi/core"
+import { InputDialog, ConfirmDialog } from "@gubbi/core/tui"
+import { DiffViewer } from "@gubbi/core/tui"
 import {
 	getLog,
-	checkout,
 	cherryPick,
 	createBranch,
 	gitService,
@@ -14,8 +15,6 @@ import {
 } from "@gubbi/git"
 import type { LogEntry, RebaseAction, RebaseTodo } from "@gubbi/git"
 import { exec } from "@gubbi/git"
-import { InputDialog, SelectDialog, ConfirmDialog } from "@gubbi/tui"
-import { DiffViewer } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -80,8 +79,6 @@ export function LogView() {
 
 	const selectedEntry = () => entries()[selectedIdx()]
 
-	const REBASE_ACTION_ORDER: RebaseAction[] = ["pick", "squash", "fixup", "drop", "edit", "reword"]
-
 	function rebaseActionColor(action: RebaseAction): string {
 		switch (action) {
 			case "pick":
@@ -101,15 +98,6 @@ export function LogView() {
 
 	function getAction(hash: string): RebaseAction {
 		return rebaseActions().get(hash) ?? "pick"
-	}
-
-	function cycleAction(hash: string) {
-		const current = getAction(hash)
-		const idx = REBASE_ACTION_ORDER.indexOf(current)
-		const next = REBASE_ACTION_ORDER[(idx + 1) % REBASE_ACTION_ORDER.length]!
-		const map = new Map(rebaseActions())
-		map.set(hash, next)
-		setRebaseActions(map)
 	}
 
 	function toggleAction(hash: string, action: RebaseAction) {
@@ -149,7 +137,8 @@ export function LogView() {
 		// Build todo list from startIdx to 0 (newest commits first in log, but rebase needs oldest first)
 		const todos: RebaseTodo[] = []
 		for (let i = startIdx; i >= 0; i--) {
-			const e = allEntries[i]!
+			const e = allEntries[i]
+			if (!e) continue
 			const action = getAction(e.hash)
 			todos.push({ hash: e.hash, action, subject: e.subject })
 		}
@@ -497,7 +486,7 @@ export function LogView() {
 			<DiffViewer
 				content={diffContent()}
 				title={
-					selectedEntry() ? `${selectedEntry()!.shortHash}: ${selectedEntry()!.subject}` : "commit"
+					selectedEntry() ? `${selectedEntry()?.shortHash}: ${selectedEntry()?.subject}` : "commit"
 				}
 			/>
 

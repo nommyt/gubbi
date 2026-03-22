@@ -3,6 +3,7 @@
  */
 
 import { state, showToast } from "@gubbi/core"
+import { InputDialog, ConfirmDialog } from "@gubbi/core/tui"
 import {
 	getRemotes,
 	fetch,
@@ -13,7 +14,6 @@ import {
 	type WorktreeEntry,
 } from "@gubbi/git"
 import type { RemoteEntry } from "@gubbi/git"
-import { InputDialog, ConfirmDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -35,7 +35,7 @@ export function RemotesView() {
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [showAddWorktree, setShowAddWorktree] = createSignal(false)
 	const [showRemoveWorktree, setShowRemoveWorktree] = createSignal(false)
-	const [loading, setLoading] = createSignal(false)
+	const [_loading, setLoading] = createSignal(false)
 
 	async function loadData() {
 		setLoading(true)

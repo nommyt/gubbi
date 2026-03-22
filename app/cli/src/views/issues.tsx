@@ -10,17 +10,16 @@ import {
 	setPersistedValue,
 	createQuery,
 } from "@gubbi/core"
+import { InputDialog, ConfirmDialog } from "@gubbi/core/tui"
 import { openURL } from "@gubbi/git"
 import {
 	listIssues,
 	getIssueComments,
 	commentOnIssue,
 	closeIssue,
-	reopenIssue,
 	type Issue,
 	type IssueComment,
 } from "@gubbi/github"
-import { InputDialog, ConfirmDialog } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
@@ -129,7 +128,7 @@ export function IssuesView() {
 			key.preventDefault()
 			const states: Array<"open" | "closed" | "all"> = ["open", "closed", "all"]
 			const current = states.indexOf(filterState())
-			const next = states[(current + 1) % states.length]!
+			const next = states[(current + 1) % states.length] ?? "open"
 			setFilterState(next)
 			setPersistedValue("issues.filterState", next)
 			showToast("info", `Filter: ${next}`)
@@ -235,7 +234,7 @@ export function IssuesView() {
 				borderColor={primaryFocused() ? C.border : C.activeBorder}
 				title={
 					selectedIssue()
-						? `#${selectedIssue()!.number}: ${selectedIssue()!.title}`
+						? `#${selectedIssue()?.number}: ${selectedIssue()?.title}`
 						: "issue detail"
 				}
 			>
