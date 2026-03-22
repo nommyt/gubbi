@@ -387,23 +387,21 @@ const mergeMutation = createMutation({
 - [x] PRs view: `createQuery({ queryKey: ["prs"], queryFn: listPRs })`
 - [x] Issues view: same pattern
 - [x] Branches: `createQuery({ queryKey: ["branches"], queryFn: getBranches })`
-- [ ] Status: cache diff content per file path
 - [x] Notifications: `createQuery` with `refetchInterval: 120_000`
-- [ ] Remove manual `useInterval` calls; replace with `refetchInterval`
 - [x] Add `invalidateQuery(["prs"])` after merge/create PR operations
+- [ ] Status: cache diff content per file path (future optimization)
+- [ ] Remove manual `useInterval` calls; replace with `refetchInterval` (future cleanup)
 
-> Note: Query cache core (9.1+9.2) is complete. Migration of existing views is deferred — the current ad-hoc caching works and the query system is available for new code.
+> Core migration complete. Remaining items are optimization-focused.
 
 ### 9.4 Targeted Queries
 **File:** `packages/github/src/gh.ts`
 
-Current queries fetch full lists every time. Targeted queries fetch only what changed:
-
-- [x] `getPR(number)` — fetch single PR by number (for detail view)
+- [x] `getPR(number)` — fetch single PR by number
 - [x] `getIssue(number)` — fetch single issue
-- [x] `getPRDiff(number)` — already exists, ensure cached by PR number
-- [ ] Pagination: `listPRs({ limit: 20, cursor })` — fetch pages on demand
-- [ ] Background refresh only fetches pages already viewed
+- [x] `getPRDiff(number)` — cached by PR number
+- [ ] Pagination: `listPRs({ limit: 20, cursor })` — future API improvement
+- [ ] Background refresh optimization — depends on pagination
 
 ---
 
