@@ -20,7 +20,7 @@
 		"dev:cli": "turbo run dev --filter @gubbi/cli",
 		"dev:web": "turbo run dev --filter @gubbi/web",
 		"format": "oxfmt .",
-		"lint": "turbo run lint",
+		"lint": "bun run scripts/lint.ts",
 		"pre-publish": "bun run scripts/pre-publish.ts",
 		"release": "bun run scripts/release.ts",
 		"release:preview": "bun run scripts/release.ts --dry-run",
@@ -37,6 +37,7 @@
 		"lefthook": "^2.1.4",
 		"oxfmt": "^0.41.0",
 		"oxlint": "^1.56.0",
+		"oxlint-tsgolint": "^0.17.1",
 		"turbo": "^2.8.17",
 		"typescript": "^5.9.3"
 	},

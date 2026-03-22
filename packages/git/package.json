@@ -12,7 +12,6 @@
 	},
 	"scripts": {
 		"clean": "rm -rf dist",
-		"lint": "oxlint ./**/*",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
