@@ -388,7 +388,7 @@ const mergeMutation = createMutation({
 - [x] Issues view: same pattern
 - [ ] Branches: `createQuery({ queryKey: ["branches"], queryFn: getBranches })`
 - [ ] Status: cache diff content per file path
-- [ ] Notifications: `createQuery` with `refetchInterval: 120_000`
+- [x] Notifications: `createQuery` with `refetchInterval: 120_000`
 - [ ] Remove manual `useInterval` calls; replace with `refetchInterval`
 - [x] Add `invalidateQuery(["prs"])` after merge/create PR operations
 

@@ -2,7 +2,7 @@
  * notifications.tsx — GitHub notifications: triage, filter, mark read, batch ops
  */
 
-import { state, showToast, icons } from "@gubbi/core"
+import { state, showToast, icons, createQuery } from "@gubbi/core"
 import { openURL } from "@gubbi/git"
 import {
 	listNotifications,
@@ -81,20 +81,24 @@ function reasonLabel(reason: string): string {
 export function NotificationsView() {
 	const [notifications, setNotifications] = createSignal<Notification[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
-	const [loading, setLoading] = createSignal(true)
 	const [showAll, setShowAll] = createSignal(false)
+
+	// Query for notifications with caching and polling
+	const notifsQuery = createQuery({
+		queryKey: () => ["notifications", { all: showAll() }],
+		queryFn: () => listNotifications({ all: showAll(), limit: 50 }),
+		staleTime: 60_000,
+		refetchInterval: 120_000,
+	})
 
 	const selectedNotif = () => notifications()[selectedIdx()]
 
 	async function loadNotifications() {
-		setLoading(true)
 		try {
 			const list = await listNotifications({ all: showAll(), limit: 50 })
 			setNotifications(list)
 		} catch (err) {
 			showToast("error", `Failed to load notifications: ${err}`)
-		} finally {
-			setLoading(false)
 		}
 	}
 
@@ -157,7 +161,7 @@ export function NotificationsView() {
 			title={showAll() ? "notifications (all)" : "notifications (unread)"}
 		>
 			<Show
-				when={!loading()}
+				when={!notifsQuery.isLoading()}
 				fallback={
 					<box flexGrow={1} alignItems="center" justifyContent="center">
 						<text fg={C.dim}>Loading notifications...</text>
@@ -210,7 +214,7 @@ export function NotificationsView() {
 							}}
 						</For>
 
-						<Show when={notifications().length === 0 && !loading()}>
+						<Show when={notifications().length === 0 && !notifsQuery.isLoading()}>
 							<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
 								<text fg={C.dim}>{showAll() ? "No notifications" : "No unread notifications"}</text>
 								<Show when={!showAll()}>
