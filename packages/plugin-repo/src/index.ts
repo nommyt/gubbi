@@ -9,6 +9,7 @@ import { LogView } from "./log.tsx"
 import { RemotesView } from "./remotes.tsx"
 import { StashView } from "./stash.tsx"
 import { StatusView } from "./status.tsx"
+import { WorktreesView } from "./worktrees-view.tsx"
 
 const plugin: GubbiPlugin = {
 	id: "repo",
@@ -58,6 +59,15 @@ const plugin: GubbiPlugin = {
 			label: "Remotes",
 			shortcut: "0",
 			component: RemotesView,
+			condition: () => ctx.state.git.isRepo,
+		})
+
+		// Worktrees view
+		ctx.registerView({
+			id: "worktrees",
+			label: "Worktrees",
+			shortcut: "w",
+			component: WorktreesView,
 			condition: () => ctx.state.git.isRepo,
 		})
 	},

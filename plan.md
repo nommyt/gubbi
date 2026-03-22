@@ -245,12 +245,12 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 7.2 Worktree Management
 **New files:** `packages/plugin-repo/src/worktrees-view.tsx`, `packages/git/src/worktree.ts`
 
-- [ ] List worktrees with status (locked, prunable, head, path)
-- [ ] `a` → create worktree (with post-create hook: copy .env, npm install)
-- [ ] `d` → remove worktree
+- [x] List worktrees with status (locked, prunable, head, path)
+- [x] `a` → create worktree (with post-create hook: copy .env, npm install)
+- [x] `d` → remove worktree
 - [ ] `o` → open in new tmux window / zellij tab / terminal
-- [ ] `r` → repair worktree
-- [ ] Register as new view in plugin
+- [x] `r` → repair worktree
+- [x] Register as new view in plugin
 
 ### 7.3 Git Blame View
 **New files:** `packages/plugin-repo/src/blame-view.tsx`, `packages/git/src/blame.ts`

@@ -547,6 +547,8 @@ export interface WorktreeEntry {
 	hash: string
 	bare: boolean
 	locked: boolean
+	prunable: boolean
+	isMain: boolean
 }
 
 export async function getWorktrees(cwd?: string): Promise<WorktreeEntry[]> {
@@ -563,6 +565,7 @@ export async function getWorktrees(cwd?: string): Promise<WorktreeEntry[]> {
 		let hash = ""
 		let bare = false
 		let locked = false
+		let prunable = false
 
 		for (const line of lines) {
 			if (line.startsWith("worktree ")) path = line.slice(9)
@@ -570,10 +573,14 @@ export async function getWorktrees(cwd?: string): Promise<WorktreeEntry[]> {
 			else if (line.startsWith("branch ")) branch = line.slice(7).replace("refs/heads/", "")
 			else if (line === "bare") bare = true
 			else if (line.startsWith("locked")) locked = true
+			else if (line === "prunable") prunable = true
 		}
 
-		if (path) entries.push({ path, branch, hash, bare, locked })
+		if (path) entries.push({ path, branch, hash, bare, locked, prunable, isMain: false })
 	}
+
+	// First entry is the main worktree
+	if (entries.length > 0) entries[0]!.isMain = true
 
 	return entries
 }
@@ -587,6 +594,14 @@ export async function removeWorktree(path: string, force = false, cwd?: string):
 	if (force) args.push("--force")
 	args.push(path)
 	await execOrThrow(GIT, args, { cwd })
+}
+
+export async function pruneWorktrees(cwd?: string): Promise<void> {
+	await execOrThrow(GIT, ["worktree", "prune"], { cwd })
+}
+
+export async function repairWorktree(path: string, cwd?: string): Promise<void> {
+	await execOrThrow(GIT, ["worktree", "repair", path], { cwd })
 }
 
 // ---------------------------------------------------------------------------

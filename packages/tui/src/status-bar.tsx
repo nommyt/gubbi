@@ -121,6 +121,13 @@ const BASE_VIEW_HINTS: Record<string, KeyHint[]> = {
 		{ key: "n", label: "add remote" },
 		{ key: "D", label: "remove" },
 	],
+	worktrees: [
+		{ key: "j/k", label: "nav" },
+		{ key: "n", label: "new" },
+		{ key: "d", label: "remove" },
+		{ key: "p", label: "prune" },
+		{ key: "r", label: "repair" },
+	],
 }
 
 function currentBranchPR() {

@@ -238,6 +238,7 @@ export const VIEWS = [
 	{ id: "branches", label: "Branches", key: "4" },
 	{ id: "stacks", label: "Stacks", key: "5" },
 	{ id: "stash", label: "Stash", key: "6" },
+	{ id: "worktrees", label: "Trees", key: "w" },
 	{ id: "prs", label: "Pull Requests", key: "7" },
 	{ id: "issues", label: "Issues", key: "8" },
 	{ id: "actions", label: "Actions", key: "9" },
