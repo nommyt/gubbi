@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@gubbi/core": "workspace:*",
+    "@gubbi/git": "workspace:*",
     "@gubbi/github": "workspace:*",
     "solid-js": "^1.9.11",
     "@opentui/core": "^0.1.88",

@@ -29,7 +29,7 @@ import {
 	gitService,
 } from "@gubbi/git"
 import { getCurrentBranchPR, pushAndCreatePR, githubService } from "@gubbi/github"
-import { ConfirmDialog, InputDialog, DiffViewer } from "@gubbi/tui"
+import { ConfirmDialog, InputDialog, DiffViewer, BlameView } from "@gubbi/tui"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, Show, For, onMount } from "solid-js"
 
@@ -95,6 +95,7 @@ export function StatusView() {
 	const [showCommit, setShowCommit] = createSignal(false)
 	const [showStash, setShowStash] = createSignal(false)
 	const [showPushPR, setShowPushPR] = createSignal(false)
+	const [showBlame, setShowBlame] = createSignal(false)
 	const [pendingCommitMessage, setPendingCommitMessage] = createSignal("")
 	const [diffContent, setDiffContent] = createSignal("")
 	const [diffStaged, setDiffStaged] = createSignal(false)
@@ -130,7 +131,7 @@ export function StatusView() {
 	})
 
 	useKeyboard(async (key) => {
-		if (showDiscard() || showCommit() || showStash() || showPushPR()) return
+		if (showDiscard() || showCommit() || showStash() || showPushPR() || showBlame()) return
 
 		const entry = selectedEntry()
 
@@ -264,6 +265,9 @@ export function StatusView() {
 		} else if (key.name === "s" && !key.shift) {
 			key.preventDefault()
 			setShowStash(true)
+		} else if (key.name === "b" && entry) {
+			key.preventDefault()
+			setShowBlame((v) => !v)
 		} else if (key.name === "r" || (key.ctrl && key.name === "r")) {
 			key.preventDefault()
 			await gitService.refreshStatus()
@@ -436,6 +440,7 @@ export function StatusView() {
 								<span style={{ fg: "#58a6ff" }}>a</span> all ·{" "}
 								<span style={{ fg: "#58a6ff" }}>d</span> discard ·{" "}
 								<span style={{ fg: "#58a6ff" }}>c</span> commit ·{" "}
+								<span style={{ fg: "#58a6ff" }}>b</span> blame ·{" "}
 								<span style={{ fg: "#58a6ff" }}>P</span> push·PR ·{" "}
 								<span style={{ fg: "#58a6ff" }}>V</span> view PR
 							</text>
@@ -444,15 +449,22 @@ export function StatusView() {
 				</Show>
 
 				{/* Diff panel */}
-				<DiffViewer
-					content={diffContent()}
-					title={selectedEntry() ? `diff: ${selectedEntry()!.path}` : "diff"}
-					staged={diffStaged()}
-					fullscreen={isFullscreen()}
-					onToggleFullscreen={() => toggleFullscreen("detail")}
-					selectedHunk={selectedHunk()}
-					hunkCount={hunkCount()}
-				/>
+				<Show when={!showBlame()}>
+					<DiffViewer
+						content={diffContent()}
+						title={selectedEntry() ? `diff: ${selectedEntry()!.path}` : "diff"}
+						staged={diffStaged()}
+						fullscreen={isFullscreen()}
+						onToggleFullscreen={() => toggleFullscreen("detail")}
+						selectedHunk={selectedHunk()}
+						hunkCount={hunkCount()}
+					/>
+				</Show>
+
+				{/* Blame overlay */}
+				<Show when={showBlame() && selectedEntry()}>
+					<BlameView filePath={selectedEntry()!.path} onClose={() => setShowBlame(false)} />
+				</Show>
 			</box>
 
 			{/* Dialogs */}

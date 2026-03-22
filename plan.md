@@ -255,8 +255,8 @@ Gubbi is a terminal-native **Git + GitHub client** built with OpenTUI + SolidJS.
 ### 7.3 Git Blame View
 **New files:** `packages/plugin-repo/src/blame-view.tsx`, `packages/git/src/blame.ts`
 
-- [ ] `b` → toggle blame overlay on selected file
-- [ ] Show: commit hash, author (truncated), relative time, line content
+- [x] `b` → toggle blame overlay on selected file
+- [x] Show: commit hash, author (truncated), relative time, line content
 - [ ] `Enter` on blame line → jump to commit in Log view
 
 ### 7.4 Operation Log & Undo
