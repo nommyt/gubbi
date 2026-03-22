@@ -318,9 +318,9 @@ actions:
 ```
 
 - [x] Load and validate config on startup
-- [ ] Apply custom keybindings to registry
-- [ ] Load custom dashboard sections
-- [ ] Execute custom actions via `packages/core/src/actions/custom.ts`
+- [x] Apply custom keybindings to registry
+- [x] Load custom dashboard sections
+- [x] Execute custom actions via `packages/core/src/actions/custom.ts`
 
 ---
 
