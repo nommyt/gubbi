@@ -386,7 +386,7 @@ const mergeMutation = createMutation({
 - [x] Dashboard: replace module-level cache with `createQuery` per column
 - [x] PRs view: `createQuery({ queryKey: ["prs"], queryFn: listPRs })`
 - [x] Issues view: same pattern
-- [ ] Branches: `createQuery({ queryKey: ["branches"], queryFn: getBranches })`
+- [x] Branches: `createQuery({ queryKey: ["branches"], queryFn: getBranches })`
 - [ ] Status: cache diff content per file path
 - [x] Notifications: `createQuery` with `refetchInterval: 120_000`
 - [ ] Remove manual `useInterval` calls; replace with `refetchInterval`

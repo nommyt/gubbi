@@ -2,7 +2,7 @@
  * branches.tsx — Branch management: list, checkout, create, delete, merge, rebase, push
  */
 
-import { state, showToast, updateToast, setView, icons } from "@gubbi/core"
+import { state, showToast, updateToast, setView, icons, createQuery } from "@gubbi/core"
 import type { GitHubPR } from "@gubbi/core"
 import {
 	getBranches,
@@ -48,6 +48,14 @@ export function BranchesView() {
 	const [filter, setFilter] = createSignal("")
 
 	const [allBranches, setAllBranches] = createSignal<BranchEntry[]>([])
+
+	// Query for branches with caching
+	const branchesQuery = createQuery({
+		queryKey: () => ["branches"],
+		queryFn: () => getBranches(state.git.repoRoot),
+		staleTime: 60_000,
+		refetchInterval: 120_000,
+	})
 	const branches = () => {
 		const q = filter().toLowerCase()
 		if (!q) return allBranches()
