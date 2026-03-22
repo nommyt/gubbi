@@ -21,39 +21,42 @@ Built on [Bun](https://bun.sh), [SolidJS](https://solidjs.com), and [OpenTUI](ht
 git clone https://github.com/nommyt/gubbi
 cd gubbi
 bun install
+bun run build:cli
 ```
+
+This builds the binary and symlinks it to `~/.local/bin/gubbi`. Make sure `~/.local/bin` is in your `PATH`.
 
 ## Usage
 
 Run from inside any git repository:
 
 ```bash
-bun run app/cli/src/index.tsx
+gubbi
 ```
 
-Or add an alias to your shell config:
+For development (restarts on file change):
 
 ```bash
-alias gubbi="bun run /path/to/gubbi/app/cli/src/index.tsx"
+bun run dev:cli
 ```
 
 ## Views
 
-| Key | View          | Description                                                          |
-| --- | ------------- | -------------------------------------------------------------------- |
-| `d` | **dash**      | Live GitHub dashboard — your PRs, tagged items, repos, notifications |
-| `1` | **smartlog**  | Sapling-inspired commit graph with ASCII visualization               |
-| `2` | **status**    | Git staging area with diff preview and blame overlay                 |
-| `3` | **log**       | Commit log with interactive rebase and cherry-pick                   |
-| `4` | **branches**  | Branch list — checkout, create, delete, merge, rebase, push          |
-| `5` | **stacks**    | Stacked diff workflow (Graphite-equivalent)                          |
-| `6` | **stash**     | Stash list with preview                                              |
-| `7` | **PRs**       | Pull requests — view, review, merge, comment, fullscreen diff        |
-| `8` | **issues**    | Issues — browse, filter, create                                      |
-| `9` | **actions**   | GitHub Actions workflow runs with watch and auto-refresh             |
-| `0` | **notifs**    | Notifications — triage, mark read, batch ops                         |
-| `e` | **explore**   | Browse repos — My Repos, Trending, Search, local clone navigation    |
-| `w` | **worktrees** | Git worktree management — create, remove, prune, repair              |
+| Key | View          | Description                                                       |
+| --- | ------------- | ----------------------------------------------------------------- |
+| `1` | **smartlog**  | Sapling-inspired commit graph with ASCII visualization            |
+| `2` | **status**    | Git staging area with diff preview and blame overlay              |
+| `3` | **log**       | Commit log with interactive rebase and cherry-pick                |
+| `4` | **branches**  | Branch list — checkout, create, delete, merge, rebase, push       |
+| `5` | **stacks**    | Stacked diff workflow (Graphite-equivalent)                       |
+| `6` | **stash**     | Stash list with preview                                           |
+| `7` | **PRs**       | Pull requests — view, review, merge, comment, fullscreen diff     |
+| `8` | **issues**    | Issues — browse, filter, create                                   |
+| `9` | **actions**   | GitHub Actions workflow runs with watch and auto-refresh          |
+| `0` | **remotes**   | Remote management and worktrees                                   |
+| `n` | **notifs**    | Notifications — triage, mark read, batch ops                      |
+| `e` | **explore**   | Browse repos — My Repos, Trending, Search, local clone navigation |
+| `w` | **worktrees** | Git worktree management — create, remove, prune, repair           |
 
 ## Keybindings
 
@@ -61,7 +64,7 @@ alias gubbi="bun run /path/to/gubbi/app/cli/src/index.tsx"
 
 | Key                           | Action                      |
 | ----------------------------- | --------------------------- |
-| `d`, `1`–`0`, `e`, `w`  | Switch view                 |
+| `1`–`0`, `e`, `w`, `n`  | Switch view                 |
 | `Ctrl+Tab` / `Ctrl+Shift+Tab` | Cycle views                 |
 | `Ctrl+H` / `Ctrl+L`           | Previous / next view        |
 | `Ctrl+Z`                      | Undo last git operation     |
@@ -114,19 +117,6 @@ alias gubbi="bun run /path/to/gubbi/app/cli/src/index.tsx"
 | `n` | Create new PR                    |
 | `f` | Cycle filter (open/closed/all)   |
 | `/` | Filter by author                 |
-
-### Dashboard View
-
-| Key      | Action                         |
-| -------- | ------------------------------ |
-| `h/l`    | Navigate columns               |
-| `m`      | Merge selected PR              |
-| `c`      | Checkout PR branch             |
-| `o`      | Open in browser                |
-| `Enter`  | Open repo in Explore (repos col), open in browser (other cols) |
-| `r`      | Jump to PRs view (review mode) |
-| `Ctrl+R` | Refresh dashboard              |
-| `d`      | Mark notification as done      |
 
 ### Explore View
 
@@ -283,10 +273,11 @@ gubbi/
 This project is in early development. Issues and PRs are welcome.
 
 ```bash
-# Install dependencies
+# Install dependencies and build
 bun install
+bun run build:cli
 
-# Run in dev mode (restarts on file change)
+# Dev mode (restarts on file change)
 bun run dev:cli
 
 # Lint

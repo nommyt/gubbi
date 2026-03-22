@@ -53,9 +53,11 @@ export function markLastUndone(): OperationEntry | null {
 	const ops = getOperations()
 	const idx = ops.findIndex((op) => !op.undone)
 	if (idx < 0) return null
-	ops[idx]!.undone = true
+	const op = ops[idx]
+	if (!op) return null
+	op.undone = true
 	setPersistedValue("operations", ops)
-	return ops[idx]!
+	return op
 }
 
 /**

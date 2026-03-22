@@ -6,16 +6,7 @@
  *   git config --local branch.<name>.gubbi-parent <parent-branch>
  */
 
-import {
-	getConfig,
-	setConfig,
-	unsetConfig,
-	getCurrentBranch,
-	createBranch,
-	rebaseOnto,
-	push,
-	getLog,
-} from "./git.ts"
+import { getConfig, setConfig, unsetConfig, getCurrentBranch, createBranch } from "./git.ts"
 import { exec, execOrThrow } from "./shell.ts"
 
 const GIT = "git"
@@ -320,7 +311,6 @@ export async function stackSubmit(
 	for (let i = 0; i < stack.branches.length; i++) {
 		const branch = stack.branches[i]
 		if (!branch) continue
-		const parent = branch.parent ?? stack.trunk
 		const base = i === 0 ? (opts.base ?? stack.trunk) : (stack.branches[i - 1]?.name ?? stack.trunk)
 
 		// Push branch

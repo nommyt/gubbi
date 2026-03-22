@@ -8,7 +8,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "oxlint .",
+    "lint": "oxlint ./**/*",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },

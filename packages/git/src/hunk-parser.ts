@@ -216,11 +216,12 @@ function parseHunkHeader(header: string): {
 	// @@ -oldStart,oldCount +newStart,newCount @@
 	const match = header.match(/@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/)
 	if (!match) return null
+	const [, m1 = "0", m2, m3 = "0", m4] = match
 	return {
-		oldStart: parseInt(match[1]!, 10),
-		oldCount: match[2] ? parseInt(match[2], 10) : 1,
-		newStart: parseInt(match[3]!, 10),
-		newCount: match[4] ? parseInt(match[4], 10) : 1,
+		oldStart: parseInt(m1, 10),
+		oldCount: m2 ? parseInt(m2, 10) : 1,
+		newStart: parseInt(m3, 10),
+		newCount: m4 ? parseInt(m4, 10) : 1,
 	}
 }
 

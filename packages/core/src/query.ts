@@ -90,19 +90,6 @@ export function invalidateQuery(key: unknown[]) {
 	notifySubscribers(serialized)
 }
 
-/**
- * Invalidate all queries matching a prefix.
- */
-function invalidateQueriesByPrefix(prefix: string) {
-	for (const key of cache.keys()) {
-		if (key.startsWith(prefix)) {
-			const entry = cache.get(key)
-			if (entry) entry.timestamp = 0
-			notifySubscribers(key)
-		}
-	}
-}
-
 function notifySubscribers(key: string) {
 	const subs = subscribers.get(key)
 	if (subs) {
@@ -198,7 +185,7 @@ export function createQuery<T>(options: QueryOptions<T>) {
 	if (!subscribers.has(serialized)) {
 		subscribers.set(serialized, new Set())
 	}
-	const subs = subscribers.get(serialized)!
+	const subs = subscribers.get(serialized) ?? new Set<() => void>()
 	const notify = () => void fetchData(true)
 	subs.add(notify)
 
@@ -221,8 +208,8 @@ export function createQuery<T>(options: QueryOptions<T>) {
 		data: () => data() as T,
 		isLoading,
 		isStale: () => {
-			const key = options.queryKey()
-			const entry = cache.get(serializeKey(key))
+			const currentKey = options.queryKey()
+			const entry = cache.get(serializeKey(currentKey))
 			if (!entry) return true
 			return Date.now() - entry.timestamp > staleTime
 		},

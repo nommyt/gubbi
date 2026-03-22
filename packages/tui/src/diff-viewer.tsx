@@ -67,11 +67,6 @@ export function DiffViewer(props: DiffViewerProps) {
 					<For each={props.content.split("\n")}>
 						{(line) => {
 							const isHunkHeader = () => line.startsWith("@@")
-							const isSelectedHunk = () => {
-								if (!hasHunks() || selectedHunk() < 0) return false
-								// Lines are rendered sequentially; we mark selected via the hunk index prop
-								return false
-							}
 							return (
 								<box flexDirection="row" paddingLeft={1}>
 									<text fg={isHunkHeader() ? C.hunkHeader : lineColor(line)}>{line}</text>

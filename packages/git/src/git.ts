@@ -12,7 +12,6 @@ import {
 	parseBlame,
 	parseRemotes,
 	LOG_FORMAT,
-	LOG_RECORD_SEP,
 	type StatusEntry,
 	type LogEntry,
 	type BranchEntry,
@@ -21,7 +20,7 @@ import {
 	type BlameEntry,
 	type RemoteEntry,
 } from "./parser.ts"
-import { exec, execOrThrow, ShellError } from "./shell.ts"
+import { exec, execOrThrow } from "./shell.ts"
 
 export type { StatusEntry, LogEntry, BranchEntry, StashEntry, DiffStat, BlameEntry, RemoteEntry }
 
@@ -173,7 +172,7 @@ export function parseGraphLog(raw: string): GraphEntry[] {
 
 	for (const line of lines) {
 		// Graph characters are everything before the first 7-char hash
-		const hashMatch = line.match(/([*|\\/\\ _\-]+)\s*([a-f0-9]{7,})\s*(.*)/)
+		const hashMatch = line.match(/([*|\\/\\ _-]+)\s*([a-f0-9]{7,})\s*(.*)/)
 		if (!hashMatch) continue
 
 		const graph = hashMatch[1] ?? ""
@@ -185,7 +184,7 @@ export function parseGraphLog(raw: string): GraphEntry[] {
 		let refs: string[] = []
 		let subject = rest
 		if (refMatch) {
-			refs = refMatch[1]!.split(", ").map((r) => r.trim())
+			refs = (refMatch[1] ?? "").split(", ").map((r) => r.trim())
 			subject = refMatch[2] ?? ""
 		}
 
@@ -607,7 +606,8 @@ export async function getWorktrees(cwd?: string): Promise<WorktreeEntry[]> {
 	}
 
 	// First entry is the main worktree
-	if (entries.length > 0) entries[0]!.isMain = true
+	const firstEntry = entries[0]
+	if (firstEntry) firstEntry.isMain = true
 
 	return entries
 }

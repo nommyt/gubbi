@@ -13,7 +13,7 @@ import {
 	VIEWS,
 	icons,
 } from "@gubbi/core"
-import { createGitService, getHeadHash, resetHard } from "@gubbi/git"
+import { createGitService, resetHard } from "@gubbi/git"
 import { createGitHubService } from "@gubbi/github"
 import { Header, StatusBar, HelpOverlay, OperationsOverlay } from "@gubbi/tui"
 import type { ParsedKey } from "@opentui/core"

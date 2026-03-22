@@ -2,7 +2,7 @@
  * blame-view.tsx — Git blame overlay for file lines
  */
 
-import { state, icons } from "@gubbi/core"
+import { state } from "@gubbi/core"
 import { exec } from "@gubbi/git"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
@@ -54,8 +54,9 @@ function parseBlamePorcelain(raw: string): BlameLine[] {
 		i++
 
 		// Read metadata lines until we hit a content line
-		while (i < lines.length && lines[i]!.startsWith("\t") === false) {
-			const line = lines[i]!
+		while (i < lines.length) {
+			const line = lines[i]
+			if (line === undefined || line.startsWith("\t")) break
 			const spaceIdx = line.indexOf(" ")
 			if (spaceIdx > 0) {
 				const key = line.slice(0, spaceIdx)

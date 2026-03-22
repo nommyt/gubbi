@@ -4,7 +4,7 @@
 
 import { state } from "@gubbi/core"
 import { icons } from "@gubbi/core"
-import { For, Show, Switch, Match, createSignal, onMount, onCleanup } from "solid-js"
+import { For, Show, createSignal, onMount, onCleanup } from "solid-js"
 
 const C = {
 	bg: "#0d1117",

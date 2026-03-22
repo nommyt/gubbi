@@ -213,8 +213,6 @@ export interface BranchEntry {
 	lastCommitDate: string
 }
 
-const BRANCH_SEP = "\x01"
-
 /** Format for git for-each-ref — fields separated by SOH (0x01) */
 export const BRANCH_FORMAT =
 	"%(refname)\x01%(objectname:short)\x01%(subject)\x01%(committerdate:relative)\x01%(upstream)\x01%(upstream:track,nobracket)"
@@ -446,8 +444,11 @@ export function parseRemotes(output: string): RemoteEntry[] {
 		const m = /^(\S+)\s+(\S+)\s+\((fetch|push)\)$/.exec(line)
 		if (!m) continue
 		const [, name = "", url = "", type = ""] = m
-		if (!map.has(name)) map.set(name, { name })
-		const entry = map.get(name)!
+		let entry = map.get(name)
+		if (!entry) {
+			entry = { name }
+			map.set(name, entry)
+		}
 		if (type === "fetch") entry.fetchUrl = url
 		else entry.pushUrl = url
 	}
