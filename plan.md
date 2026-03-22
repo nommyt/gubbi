@@ -389,7 +389,7 @@ const mergeMutation = createMutation({
 - [x] Branches: `createQuery({ queryKey: ["branches"], queryFn: getBranches })`
 - [x] Notifications: `createQuery` with `refetchInterval: 120_000`
 - [x] Add `invalidateQuery(["prs"])` after merge/create PR operations
-- [ ] Status: cache diff content per file path (future optimization)
+- [x] Status: cache diff content per file path (future optimization)
 - [ ] Remove manual `useInterval` calls; replace with `refetchInterval` (future cleanup)
 
 > Core migration complete. Remaining items are optimization-focused.

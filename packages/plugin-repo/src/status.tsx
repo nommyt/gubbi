@@ -104,6 +104,17 @@ export function StatusView() {
 	const [selectedHunk, setSelectedHunk] = createSignal(0)
 	const [primaryFocused, setPrimaryFocused] = createSignal(true)
 
+	// Diff cache: key = "path:staged" → diff content
+	const diffCache = new Map<string, string>()
+
+	function getDiffCacheKey(path: string, staged: boolean): string {
+		return `${path}:${staged}`
+	}
+
+	function invalidateDiffCache() {
+		diffCache.clear()
+	}
+
 	const entries = () => state.git.status
 	const selectedEntry = () => entries()[selectedIdx()]
 	const currentBranchPR = () =>
@@ -119,7 +130,19 @@ export function StatusView() {
 
 	async function loadDiff(entry: GitStatusEntry) {
 		const staged = entry.staged && !entry.unstaged
+		const cacheKey = getDiffCacheKey(entry.path, staged)
+
+		// Check cache first
+		const cached = diffCache.get(cacheKey)
+		if (cached !== undefined) {
+			setDiffContent(cached)
+			setDiffStaged(staged)
+			setSelectedHunk(0)
+			return
+		}
+
 		const diff = await getDiff(entry.path, staged, state.git.repoRoot)
+		diffCache.set(cacheKey, diff)
 		setDiffContent(diff)
 		setDiffStaged(staged)
 		setSelectedHunk(0)
@@ -232,6 +255,9 @@ export function StatusView() {
 			try {
 				if (entry.staged) await unstageFile(entry.path, state.git.repoRoot)
 				else await stageFile(entry.path, state.git.repoRoot)
+				// Invalidate diff cache for this file
+				diffCache.delete(getDiffCacheKey(entry.path, true))
+				diffCache.delete(getDiffCacheKey(entry.path, false))
 				await gitService.refreshStatus()
 				const updated = entries()[selectedIdx()]
 				if (updated) await loadDiff(updated)
@@ -242,6 +268,7 @@ export function StatusView() {
 			key.preventDefault()
 			try {
 				await stageAll(state.git.repoRoot)
+				invalidateDiffCache()
 				await gitService.refreshStatus()
 			} catch (err) {
 				showToast("error", String(err))
@@ -251,6 +278,7 @@ export function StatusView() {
 			key.preventDefault()
 			try {
 				await unstageAll(state.git.repoRoot)
+				invalidateDiffCache()
 				await gitService.refreshStatus()
 			} catch (err) {
 				showToast("error", String(err))
@@ -491,6 +519,8 @@ export function StatusView() {
 						if (!entry) return
 						try {
 							await discardFile(entry.path, state.git.repoRoot)
+							diffCache.delete(getDiffCacheKey(entry.path, true))
+							diffCache.delete(getDiffCacheKey(entry.path, false))
 							await gitService.refreshStatus()
 							showToast("success", `Discarded changes to ${entry.path}`)
 						} catch (err) {
