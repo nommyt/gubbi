@@ -2,9 +2,9 @@
  * branches.tsx — Branch management: list, checkout, create, delete, merge, rebase, push
  */
 
-import { state, showToast, updateToast, setView, icons } from "@gubbi/core"
+import { state, showToast, updateToast, setView, icons, useTheme } from "@gubbi/core"
 import type { GitHubPR } from "@gubbi/core"
-import { InputDialog, SelectDialog, ConfirmDialog } from "@gubbi/core/tui"
+import { InputDialog, SelectDialog, ConfirmDialog, KeyHints } from "@gubbi/core/tui"
 import {
 	getBranches,
 	checkout,
@@ -21,23 +21,8 @@ import { createPR, mergePR, githubService } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	current: "#3fb950",
-	local: "#e6edf3",
-	remote: "#d29922",
-	upstream: "#58a6ff",
-	ahead: "#3fb950",
-	behind: "#f78166",
-	dim: "#8b949e",
-	date: "#484f58",
-	tag: "#a371f7",
-	danger: "#f78166",
-}
-
 export function BranchesView() {
+	const t = useTheme()
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [showCreate, setShowCreate] = createSignal(false)
 	const [showDelete, setShowDelete] = createSignal(false)
@@ -192,25 +177,25 @@ export function BranchesView() {
 				paddingLeft={2}
 				paddingRight={1}
 				gap={1}
-				backgroundColor={isSelected() ? C.selected : "transparent"}
+				backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 				onMouseDown={() => {
 					const idx = branches().indexOf(props.branch)
 					setSelectedIdx(idx)
 				}}
 			>
 				{/* Current indicator */}
-				<text fg={props.branch.current ? C.current : C.dim}>
+				<text fg={props.branch.current ? t.success : t.textSecondary}>
 					{props.branch.current ? "*" : " "}
 				</text>
 
 				{/* Branch name */}
-				<text fg={props.branch.current ? C.current : props.branch.remote ? C.remote : C.local}>
+				<text fg={props.branch.current ? t.success : props.branch.remote ? t.warning : t.text}>
 					{props.branch.name}
 				</text>
 
 				{/* PR badge */}
 				<Show when={pr()}>
-					<text fg={pr()?.isDraft ? C.dim : C.current}>
+					<text fg={pr()?.isDraft ? t.textSecondary : t.success}>
 						PR #{pr()?.number} {pr()?.isDraft ? "" : ""}
 					</text>
 					<Show when={(pr()?.checks.length ?? 0) > 0}>
@@ -222,9 +207,9 @@ export function BranchesView() {
 							const pending = checks.some(
 								(c) => c.status === "IN_PROGRESS" || c.status === "QUEUED",
 							)
-							if (fail) return <text fg={C.behind}>{icons.circleSlash}</text>
-							if (pending) return <text fg={C.dim}>{icons.sync}</text>
-							return <text fg={C.ahead}>{icons.check}</text>
+							if (fail) return <text fg={t.error}>{icons.circleSlash}</text>
+							if (pending) return <text fg={t.textSecondary}>{icons.sync}</text>
+							return <text fg={t.success}>{icons.check}</text>
 						})()}
 					</Show>
 				</Show>
@@ -233,35 +218,41 @@ export function BranchesView() {
 
 				{/* Ahead/behind */}
 				<Show when={props.branch.ahead > 0}>
-					<text fg={C.ahead}>↑{props.branch.ahead}</text>
+					<text fg={t.success}>↑{props.branch.ahead}</text>
 				</Show>
 				<Show when={props.branch.behind > 0}>
-					<text fg={C.behind}>↓{props.branch.behind}</text>
+					<text fg={t.error}>↓{props.branch.behind}</text>
 				</Show>
 
 				{/* Last commit */}
-				<text fg={C.dim}>{props.branch.lastCommitDate}</text>
+				<text fg={t.textSecondary}>{props.branch.lastCommitDate}</text>
 
 				{/* Short subject */}
-				<text fg={C.dim}>{props.branch.lastCommitSubject.slice(0, 30)}</text>
+				<text fg={t.textSecondary}>{props.branch.lastCommitSubject.slice(0, 30)}</text>
 			</box>
 		)
 	}
 
 	return (
 		<box flexGrow={1} flexDirection="column">
-			<box flexGrow={1} flexDirection="column" border borderColor={C.activeBorder} title="branches">
+			<box
+				flexGrow={1}
+				flexDirection="column"
+				border
+				borderColor={t.borderFocused}
+				title="branches"
+			>
 				<scrollbox flexGrow={1} scrollbarOptions={{ visible: true }}>
 					{/* Local branches */}
 					<box paddingLeft={1} paddingTop={1}>
-						<text fg={C.upstream}>Local branches ({localBranches().length})</text>
+						<text fg={t.accent}>Local branches ({localBranches().length})</text>
 					</box>
 					<For each={localBranches()}>{(branch, i) => <BranchRow branch={branch} idx={i()} />}</For>
 
 					{/* Remote branches */}
 					<Show when={remoteBranches().length > 0}>
 						<box paddingLeft={1} paddingTop={1}>
-							<text fg={C.remote}>Remote branches ({remoteBranches().length})</text>
+							<text fg={t.warning}>Remote branches ({remoteBranches().length})</text>
 						</box>
 						<For each={remoteBranches()}>
 							{(branch, i) => <BranchRow branch={branch} idx={localBranches().length + i()} />}
@@ -270,17 +261,19 @@ export function BranchesView() {
 				</scrollbox>
 
 				{/* Footer */}
-				<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-					<text fg={C.dim}>
-						<span style={{ fg: "#58a6ff" }}>Enter</span> checkout ·{" "}
-						<span style={{ fg: "#58a6ff" }}>n</span> new · <span style={{ fg: "#58a6ff" }}>D</span>{" "}
-						delete · <span style={{ fg: "#58a6ff" }}>m</span> merge ·{" "}
-						<span style={{ fg: "#58a6ff" }}>r</span> rebase ·{" "}
-						<span style={{ fg: "#58a6ff" }}>p</span> push · <span style={{ fg: "#58a6ff" }}>P</span>{" "}
-						push·PR · <span style={{ fg: "#58a6ff" }}>v</span> open PR ·{" "}
-						<span style={{ fg: "#58a6ff" }}>M</span> merge PR
-					</text>
-				</box>
+				<KeyHints
+					hints={[
+						{ key: "Enter", label: "checkout" },
+						{ key: "n", label: "new" },
+						{ key: "D", label: "delete" },
+						{ key: "m", label: "merge" },
+						{ key: "r", label: "rebase" },
+						{ key: "p", label: "push" },
+						{ key: "P", label: "push·PR" },
+						{ key: "v", label: "open PR" },
+						{ key: "M", label: "merge PR" },
+					]}
+				/>
 			</box>
 
 			{/* Create branch */}

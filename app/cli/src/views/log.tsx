@@ -2,9 +2,8 @@
  * log.tsx — Full commit history with graph visualization and search
  */
 
-import { state, showToast, updateToast, icons } from "@gubbi/core"
-import { InputDialog, ConfirmDialog } from "@gubbi/core/tui"
-import { DiffViewer } from "@gubbi/core/tui"
+import { state, showToast, updateToast, icons, useTheme } from "@gubbi/core"
+import { InputDialog, ConfirmDialog, NativeDiff } from "@gubbi/core/tui"
 import {
 	getLog,
 	cherryPick,
@@ -17,32 +16,6 @@ import type { LogEntry, RebaseAction, RebaseTodo } from "@gubbi/git"
 import { exec } from "@gubbi/git"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
-
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	hash: "#8b949e",
-	author: "#58a6ff",
-	date: "#484f58",
-	subject: "#e6edf3",
-	branch: "#3fb950",
-	tag: "#a371f7",
-	remote: "#d29922",
-	dim: "#8b949e",
-	graph: "#484f58",
-	current: "#58a6ff",
-	gpgGood: "#3fb950",
-	gpgBad: "#f78166",
-	prOpen: "#3fb950",
-	prMerged: "#a371f7",
-	rebasePick: "#3fb950",
-	rebaseSquash: "#a371f7",
-	rebaseFixup: "#58a6ff",
-	rebaseDrop: "#f78166",
-	rebaseEdit: "#d29922",
-	rebaseReword: "#58a6ff",
-}
 
 function gpgIcon(status: string): string {
 	if (status === "G") return ` ${icons.check}`
@@ -61,6 +34,8 @@ function getPRForEntry(entry: LogEntry) {
 }
 
 export function LogView() {
+	const t = useTheme()
+
 	const [entries, setEntries] = createSignal<LogEntry[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [diffContent, setDiffContent] = createSignal("")
@@ -82,17 +57,17 @@ export function LogView() {
 	function rebaseActionColor(action: RebaseAction): string {
 		switch (action) {
 			case "pick":
-				return C.rebasePick
+				return t.success
 			case "squash":
-				return C.rebaseSquash
+				return t.prMerged
 			case "fixup":
-				return C.rebaseFixup
+				return t.accent
 			case "drop":
-				return C.rebaseDrop
+				return t.error
 			case "edit":
-				return C.rebaseEdit
+				return t.warning
 			case "reword":
-				return C.rebaseReword
+				return t.accent
 		}
 	}
 
@@ -341,7 +316,7 @@ export function LogView() {
 				width={65}
 				flexDirection="column"
 				border
-				borderColor={rebaseMode() ? C.rebasePick : primaryFocused() ? C.activeBorder : C.border}
+				borderColor={rebaseMode() ? t.success : primaryFocused() ? t.borderFocused : t.border}
 				title={
 					rebaseMode()
 						? `rebase: interactive (${selectedEntry()?.shortHash ?? ""})`
@@ -354,7 +329,7 @@ export function LogView() {
 					when={!loading()}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
-							<text fg={C.dim}>Loading...</text>
+							<text fg={t.textSecondary}>Loading...</text>
 						</box>
 					}
 				>
@@ -373,7 +348,7 @@ export function LogView() {
 										paddingLeft={1}
 										paddingRight={1}
 										gap={1}
-										backgroundColor={isSelected() ? C.selected : "transparent"}
+										backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 										onMouseDown={() => {
 											setSelectedIdx(i())
 											void loadDiff(entry)
@@ -388,13 +363,13 @@ export function LogView() {
 										</Show>
 
 										{/* Hash */}
-										<text fg={C.hash}>{entry.shortHash}</text>
+										<text fg={t.textSecondary}>{entry.shortHash}</text>
 
 										{/* Branch/tag refs */}
 										<For each={localRefs().slice(0, 2)}>
 											{(ref) => (
 												<text>
-													<span style={{ fg: ref.startsWith("tag:") ? C.tag : C.branch }}>
+													<span style={{ fg: ref.startsWith("tag:") ? t.prMerged : t.success }}>
 														[{ref.replace("HEAD -> ", "").replace("tag: ", "")}]
 													</span>
 												</text>
@@ -402,7 +377,7 @@ export function LogView() {
 										</For>
 
 										{/* Subject */}
-										<text fg={isSelected() ? "#e6edf3" : C.subject}>{entry.subject}</text>
+										<text fg={isSelected() ? t.text : t.text}>{entry.subject}</text>
 
 										{/* PR badge */}
 										{(() => {
@@ -410,7 +385,7 @@ export function LogView() {
 											if (!pr) return null
 											const merged = pr.state === "MERGED"
 											return (
-												<text fg={merged ? C.prMerged : C.prOpen}>
+												<text fg={merged ? t.prMerged : t.prOpen}>
 													[PR #{pr.number} {merged ? icons.merge : icons.pullRequest}]
 												</text>
 											)
@@ -419,14 +394,14 @@ export function LogView() {
 										<box flexGrow={1} />
 
 										{/* Author */}
-										<text fg={C.author}>{entry.author.split(" ")[0]}</text>
+										<text fg={t.accent}>{entry.author.split(" ")[0]}</text>
 
 										{/* Date */}
-										<text fg={C.date}>{entry.relativeDate}</text>
+										<text fg={t.textMuted}>{entry.relativeDate}</text>
 
 										{/* GPG */}
 										<Show when={entry.gpgStatus !== "N"}>
-											<text fg={entry.gpgStatus === "G" ? C.gpgGood : C.gpgBad}>
+											<text fg={entry.gpgStatus === "G" ? t.success : t.error}>
 												{gpgIcon(entry.gpgStatus)}
 											</text>
 										</Show>
@@ -437,43 +412,43 @@ export function LogView() {
 
 						<Show when={entries().length === 0 && !loading()}>
 							<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-								<text fg={C.dim}>No commits found</text>
+								<text fg={t.textSecondary}>No commits found</text>
 								<Show when={searchQuery()}>
-									<text fg={C.dim}>for "{searchQuery()}"</text>
+									<text fg={t.textSecondary}>for "{searchQuery()}"</text>
 								</Show>
 							</box>
 						</Show>
 					</scrollbox>
 
 					{/* Footer hints */}
-					<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
+					<box height={1} paddingLeft={1} border={["top"]} borderColor={t.border}>
 						<Show
 							when={rebaseMode()}
 							fallback={
-								<text fg={C.dim}>
-									<span style={{ fg: "#58a6ff" }}>/</span> search ·{" "}
-									<span style={{ fg: "#58a6ff" }}>i</span> rebase ·{" "}
-									<span style={{ fg: "#58a6ff" }}>b</span> branch ·{" "}
-									<span style={{ fg: "#58a6ff" }}>y</span> cherry-pick ·{" "}
-									<span style={{ fg: "#58a6ff" }}>C</span> copy ·{" "}
-									<span style={{ fg: "#58a6ff" }}>V</span> paste ·{" "}
-									<span style={{ fg: "#58a6ff" }}>v</span> open PR
+								<text fg={t.textSecondary}>
+									<span style={{ fg: t.accent }}>/</span> search ·{" "}
+									<span style={{ fg: t.accent }}>i</span> rebase ·{" "}
+									<span style={{ fg: t.accent }}>b</span> branch ·{" "}
+									<span style={{ fg: t.accent }}>y</span> cherry-pick ·{" "}
+									<span style={{ fg: t.accent }}>C</span> copy ·{" "}
+									<span style={{ fg: t.accent }}>V</span> paste ·{" "}
+									<span style={{ fg: t.accent }}>v</span> open PR
 								</text>
 							}
 						>
-							<text fg={C.dim}>
-								<span style={{ fg: C.rebasePick }}>REBASE</span> ·{" "}
-								<span style={{ fg: "#58a6ff" }}>s</span> squash ·{" "}
-								<span style={{ fg: "#58a6ff" }}>f</span> fixup ·{" "}
-								<span style={{ fg: "#58a6ff" }}>d</span> drop ·{" "}
-								<span style={{ fg: "#58a6ff" }}>e</span> edit ·{" "}
-								<span style={{ fg: "#58a6ff" }}>r</span> reword ·{" "}
-								<span style={{ fg: "#58a6ff" }}>Enter</span> execute ·{" "}
-								<span style={{ fg: "#58a6ff" }}>Esc</span> cancel
+							<text fg={t.textSecondary}>
+								<span style={{ fg: t.success }}>REBASE</span> ·{" "}
+								<span style={{ fg: t.accent }}>s</span> squash ·{" "}
+								<span style={{ fg: t.accent }}>f</span> fixup ·{" "}
+								<span style={{ fg: t.accent }}>d</span> drop ·{" "}
+								<span style={{ fg: t.accent }}>e</span> edit ·{" "}
+								<span style={{ fg: t.accent }}>r</span> reword ·{" "}
+								<span style={{ fg: t.accent }}>Enter</span> execute ·{" "}
+								<span style={{ fg: t.accent }}>Esc</span> cancel
 							</text>
 						</Show>
 						<Show when={clipboardHashes().length > 0}>
-							<text fg={C.prMerged}>
+							<text fg={t.prMerged}>
 								{" "}
 								{icons.clipboard} {clipboardHashes().length}
 							</text>
@@ -483,11 +458,12 @@ export function LogView() {
 			</box>
 
 			{/* Diff / commit detail */}
-			<DiffViewer
+			<NativeDiff
 				content={diffContent()}
 				title={
 					selectedEntry() ? `${selectedEntry()?.shortHash}: ${selectedEntry()?.subject}` : "commit"
 				}
+				mode={state.git.sideBySideDiff ? "split" : "unified"}
 			/>
 
 			{/* Search dialog */}

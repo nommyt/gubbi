@@ -2,8 +2,8 @@
  * explore.tsx — Explore view: My Repos, Trending, Search
  */
 
-import { setView, showToast, setInputActive } from "@gubbi/core"
-import { InputDialog, SelectDialog } from "@gubbi/core/tui"
+import { setView, showToast, setInputActive, useTheme, relativeTime } from "@gubbi/core"
+import { InputDialog, SelectDialog, KeyHints } from "@gubbi/core/tui"
 import { openURL, findLocalClone, getOrScanRepoMap, saveRepoMap, gitService } from "@gubbi/git"
 import { exec } from "@gubbi/git"
 import {
@@ -35,43 +35,8 @@ interface FlatRepo {
 }
 
 // ---------------------------------------------------------------------------
-// Colors
-// ---------------------------------------------------------------------------
-
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	text: "#e6edf3",
-	dim: "#8b949e",
-	star: "#d29922",
-	language: "#58a6ff",
-	local: "#3fb950",
-	author: "#58a6ff",
-	repo: "#58a6ff",
-	public: "#3fb950",
-	private: "#d29922",
-}
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function relativeTime(iso: string): string {
-	if (!iso) return ""
-	const ms = Date.now() - new Date(iso).getTime()
-	const s = Math.floor(ms / 1000)
-	if (s < 60) return `${s}s`
-	const m = Math.floor(s / 60)
-	if (m < 60) return `${m}m`
-	const h = Math.floor(m / 60)
-	if (h < 24) return `${h}h`
-	const d = Math.floor(h / 24)
-	if (d < 30) return `${d}d`
-	const mo = Math.floor(d / 30)
-	if (mo < 12) return `${mo}mo`
-	return `${Math.floor(mo / 12)}y`
-}
 
 function formatStars(n: number): string {
 	if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
@@ -83,16 +48,28 @@ function formatStars(n: number): string {
 // Module-level cache
 // ---------------------------------------------------------------------------
 
-const exploreCache: Record<Tab, FlatRepo[]> = {
-	"my-repos": [],
-	trending: [],
-	search: [],
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+const exploreCache: Record<Tab, { data: FlatRepo[]; ts: number }> = {
+	"my-repos": { data: [], ts: 0 },
+	trending: { data: [], ts: 0 },
+	search: { data: [], ts: 0 },
 }
 
-const trendingCache: Record<TrendingSince, FlatRepo[]> = {
-	daily: [],
-	weekly: [],
-	monthly: [],
+const trendingCache: Record<TrendingSince, { data: FlatRepo[]; ts: number }> = {
+	daily: { data: [], ts: 0 },
+	weekly: { data: [], ts: 0 },
+	monthly: { data: [], ts: 0 },
+}
+
+function getCached(cache: { data: FlatRepo[]; ts: number }): FlatRepo[] | null {
+	if (cache.data.length > 0 && Date.now() - cache.ts < CACHE_TTL_MS) return cache.data
+	return null
+}
+
+function setCache(cache: { data: FlatRepo[]; ts: number }, data: FlatRepo[]) {
+	cache.data = data
+	cache.ts = Date.now()
 }
 
 // ---------------------------------------------------------------------------
@@ -100,8 +77,9 @@ const trendingCache: Record<TrendingSince, FlatRepo[]> = {
 // ---------------------------------------------------------------------------
 
 export function ExploreView() {
+	const t = useTheme()
 	const [activeTab, setActiveTab] = createSignal<Tab>("my-repos")
-	const [repos, setRepos] = createSignal<FlatRepo[]>(exploreCache["my-repos"])
+	const [repos, setRepos] = createSignal<FlatRepo[]>(getCached(exploreCache["my-repos"]) ?? [])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [loading, setLoading] = createSignal(false)
 	const [repoMap, setRepoMap] = createSignal<Record<string, string>>({})
@@ -148,15 +126,16 @@ export function ExploreView() {
 	}
 
 	async function loadMyRepos() {
-		if (exploreCache["my-repos"].length > 0) {
-			setRepos(exploreCache["my-repos"])
+		const cached = getCached(exploreCache["my-repos"])
+		if (cached) {
+			setRepos(cached)
 			return
 		}
 		setLoading(true)
 		try {
 			const data = await listUserRepos({ limit: 50 })
 			const flat = toFlatExplore(data)
-			exploreCache["my-repos"] = flat
+			setCache(exploreCache["my-repos"], flat)
 			setRepos(flat)
 		} catch (err) {
 			showToast("error", `Failed to load repos: ${String(err)}`)
@@ -166,15 +145,16 @@ export function ExploreView() {
 	}
 
 	async function loadTrending(since: TrendingSince = trendingSince()) {
-		if (trendingCache[since].length > 0) {
-			setRepos(trendingCache[since])
+		const cached = getCached(trendingCache[since])
+		if (cached) {
+			setRepos(cached)
 			return
 		}
 		setLoading(true)
 		try {
 			const data = await fetchTrendingRepos({ since, limit: 30 })
 			const flat = toFlat(data)
-			trendingCache[since] = flat
+			setCache(trendingCache[since], flat)
 			setRepos(flat)
 		} catch (err) {
 			showToast("error", `Failed to load trending: ${String(err)}`)
@@ -189,7 +169,7 @@ export function ExploreView() {
 		try {
 			const data = await searchRepos(query, { sort: "best-match", limit: 30 })
 			const flat = toFlat(data)
-			exploreCache.search = flat
+			setCache(exploreCache.search, flat)
 			setRepos(flat)
 		} catch (err) {
 			showToast("error", `Search failed: ${String(err)}`)
@@ -209,7 +189,8 @@ export function ExploreView() {
 				await loadTrending()
 				break
 			case "search":
-				if (exploreCache.search.length > 0) setRepos(exploreCache.search)
+				const cached = getCached(exploreCache.search)
+				if (cached) setRepos(cached)
 				else setRepos([])
 				break
 		}
@@ -382,14 +363,14 @@ export function ExploreView() {
 			key.preventDefault()
 			// Clear current tab cache and reload
 			if (activeTab() === "my-repos") {
-				exploreCache["my-repos"] = []
+				exploreCache["my-repos"] = { data: [], ts: 0 }
 				void loadMyRepos()
 			} else if (activeTab() === "trending") {
 				const since = trendingSince()
-				trendingCache[since] = []
+				trendingCache[since] = { data: [], ts: 0 }
 				void loadTrending(since)
 			} else {
-				exploreCache.search = []
+				exploreCache.search = { data: [], ts: 0 }
 				if (searchQuery()) void doSearch(searchQuery())
 			}
 			return
@@ -428,23 +409,23 @@ export function ExploreView() {
 				width="45%"
 				flexDirection="column"
 				border
-				borderColor={focusPanel() === "list" ? C.activeBorder : C.border}
+				borderColor={focusPanel() === "list" ? t.borderFocused : t.border}
 				title={tabLabel()}
 			>
 				{/* Tab indicators */}
 				<box flexDirection="row" height={1} paddingLeft={1} gap={2}>
-					<text fg={activeTab() === "my-repos" ? C.text : C.dim}>
-						<span style={{ fg: "#58a6ff" }}>m</span>y repos
+					<text fg={activeTab() === "my-repos" ? t.text : t.textSecondary}>
+						<span style={{ fg: t.accent }}>m</span>y repos
 					</text>
-					<text fg={activeTab() === "trending" ? C.text : C.dim}>
-						<span style={{ fg: "#58a6ff" }}>t</span>rending
+					<text fg={activeTab() === "trending" ? t.text : t.textSecondary}>
+						<span style={{ fg: t.accent }}>t</span>rending
 					</text>
-					<text fg={activeTab() === "search" ? C.text : C.dim}>
-						<span style={{ fg: "#58a6ff" }}>/</span>search
+					<text fg={activeTab() === "search" ? t.text : t.textSecondary}>
+						<span style={{ fg: t.accent }}>/</span>search
 					</text>
 					{/* Trending sub-filter indicator */}
 					<Show when={activeTab() === "trending"}>
-						<text fg={C.dim}>
+						<text fg={t.textSecondary}>
 							{trendingSince() === "daily"
 								? "[d]aily"
 								: trendingSince() === "weekly"
@@ -456,8 +437,8 @@ export function ExploreView() {
 
 				{/* Search input (shown when search tab is active) */}
 				<Show when={searchActive()}>
-					<box border borderColor={C.activeBorder} height={3} paddingLeft={1}>
-						<text fg={C.text}>Search: </text>
+					<box border borderColor={t.borderFocused} height={3} paddingLeft={1}>
+						<text fg={t.text}>Search: </text>
 						<input
 							focused
 							placeholder="Type to search repos..."
@@ -483,7 +464,7 @@ export function ExploreView() {
 						when={!loading()}
 						fallback={
 							<box flexGrow={1} alignItems="center" justifyContent="center">
-								<text fg={C.dim}>Loading...</text>
+								<text fg={t.textSecondary}>Loading...</text>
 							</box>
 						}
 					>
@@ -495,29 +476,31 @@ export function ExploreView() {
 										paddingLeft={1}
 										paddingRight={1}
 										paddingTop={1}
-										backgroundColor={isSelected() ? C.selected : "transparent"}
+										backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 										flexDirection="column"
 									>
 										<box flexDirection="row" gap={1}>
-											<text fg={C.star}>★</text>
-											<text fg={isSelected() ? C.text : C.repo}>{repo.fullName}</text>
+											<text fg={t.warning}>★</text>
+											<text fg={isSelected() ? t.text : t.accent}>{repo.fullName}</text>
 											<Show when={repo.stars > 0}>
-												<text fg={C.dim}>{formatStars(repo.stars)}</text>
+												<text fg={t.textSecondary}>{formatStars(repo.stars)}</text>
 											</Show>
 											<box flexGrow={1} />
 											<Show when={repo.language}>
-												<text fg={C.language}>{repo.language}</text>
+												<text fg={t.accent}>{repo.language}</text>
 											</Show>
-											<text fg={C.dim}>{relativeTime(repo.updatedAt)}</text>
+											<text fg={t.textSecondary}>
+												{relativeTime(repo.updatedAt, { compact: true })}
+											</text>
 										</box>
 										<box flexDirection="row" paddingLeft={2} gap={1}>
-											<text fg={C.dim} flexGrow={1}>
+											<text fg={t.textSecondary} flexGrow={1}>
 												{repo.description.length > 40
 													? repo.description.slice(0, 40) + "…"
 													: repo.description}
 											</text>
 											<Show when={hasLocalClone(repo.fullName)}>
-												<text fg={C.local}>local</text>
+												<text fg={t.success}>local</text>
 											</Show>
 										</box>
 									</box>
@@ -526,7 +509,7 @@ export function ExploreView() {
 						</For>
 						<Show when={repos().length === 0 && !loading()}>
 							<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-								<text fg={C.dim}>
+								<text fg={t.textSecondary}>
 									{activeTab() === "search" ? "Press / to search" : "No repos found"}
 								</text>
 							</box>
@@ -535,13 +518,14 @@ export function ExploreView() {
 				</box>
 
 				{/* Keybinding hint bar */}
-				<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-					<text fg={C.dim}>
-						<span style={{ fg: "#58a6ff" }}>c</span> clone ·{" "}
-						<span style={{ fg: "#58a6ff" }}>o</span> open · <span style={{ fg: "#58a6ff" }}>f</span>{" "}
-						filter · <span style={{ fg: "#58a6ff" }}>/</span> search
-					</text>
-				</box>
+				<KeyHints
+					hints={[
+						{ key: "c", label: "clone" },
+						{ key: "o", label: "open" },
+						{ key: "f", label: "filter" },
+						{ key: "/", label: "search" },
+					]}
+				/>
 			</box>
 
 			{/* ── Detail panel ── */}
@@ -549,28 +533,30 @@ export function ExploreView() {
 				flexGrow={1}
 				flexDirection="column"
 				border
-				borderColor={focusPanel() === "detail" ? C.activeBorder : C.border}
+				borderColor={focusPanel() === "detail" ? t.borderFocused : t.border}
 				title={selectedRepo()?.fullName ?? "select a repo"}
 			>
 				<Show when={selectedRepo()}>
 					<box flexDirection="column" padding={1} gap={1}>
-						<text fg={C.text}>{selectedRepo()?.fullName}</text>
-						<text fg={C.dim}>{selectedRepo()?.description || "(no description)"}</text>
+						<text fg={t.text}>{selectedRepo()?.fullName}</text>
+						<text fg={t.textSecondary}>{selectedRepo()?.description || "(no description)"}</text>
 
 						{/* Stats */}
 						<box flexDirection="row" gap={2} paddingTop={1}>
 							<text>
-								<span style={{ fg: C.star }}>★ </span>
-								<span style={{ fg: C.text }}>{formatStars(selectedRepo()?.stars ?? 0)}</span>
+								<span style={{ fg: t.warning }}>★ </span>
+								<span style={{ fg: t.text }}>{formatStars(selectedRepo()?.stars ?? 0)}</span>
 							</text>
 							<Show when={selectedRepo()?.language}>
 								<text>
-									<span style={{ fg: C.language }}>{selectedRepo()?.language}</span>
+									<span style={{ fg: t.accent }}>{selectedRepo()?.language}</span>
 								</text>
 							</Show>
 							<text>
-								<span style={{ fg: C.dim }}>updated </span>
-								<span style={{ fg: C.text }}>{relativeTime(selectedRepo()?.updatedAt ?? "")}</span>
+								<span style={{ fg: t.textSecondary }}>updated </span>
+								<span style={{ fg: t.text }}>
+									{relativeTime(selectedRepo()?.updatedAt ?? "", { compact: true })}
+								</span>
 							</text>
 						</box>
 
@@ -581,12 +567,12 @@ export function ExploreView() {
 								if (localPath) {
 									return (
 										<text>
-											<span style={{ fg: C.local }}>Local clone: </span>
-											<span style={{ fg: C.text }}>{localPath}</span>
+											<span style={{ fg: t.success }}>Local clone: </span>
+											<span style={{ fg: t.text }}>{localPath}</span>
 										</text>
 									)
 								}
-								return <text fg={C.dim}>Not cloned locally</text>
+								return <text fg={t.textSecondary}>Not cloned locally</text>
 							})()}
 						</box>
 					</box>

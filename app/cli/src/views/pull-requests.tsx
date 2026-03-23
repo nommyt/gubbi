@@ -11,10 +11,11 @@ import {
 	setPersistedValue,
 	createQuery,
 	invalidateQuery,
+	useTheme,
+	type ThemeColors,
 } from "@gubbi/core"
-import { SelectDialog, InputDialog } from "@gubbi/core/tui"
-import { DiffViewer } from "@gubbi/core/tui"
-import { openURL } from "@gubbi/git"
+import { SelectDialog, InputDialog, NativeDiff, KeyHints } from "@gubbi/core/tui"
+import { openURL, getLog } from "@gubbi/git"
 import {
 	listPRs,
 	getPRDiff,
@@ -24,34 +25,18 @@ import {
 	checkoutPR,
 	requestReviewers,
 	canMergePR,
+	commentOnPR,
 	githubService,
 	type PullRequest,
 } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	prOpen: "#3fb950",
-	prDraft: "#8b949e",
-	prMerged: "#a371f7",
-	prClosed: "#f78166",
-	ciPass: "#3fb950",
-	ciFail: "#f78166",
-	ciPending: "#d29922",
-	author: "#58a6ff",
-	dim: "#8b949e",
-	text: "#e6edf3",
-	label: "#d29922",
-}
-
-function prStateColor(pr: PullRequest): string {
-	if (pr.isDraft) return C.prDraft
-	if (pr.state === "MERGED") return C.prMerged
-	if (pr.state === "CLOSED") return C.prClosed
-	return C.prOpen
+function prStateColor(pr: PullRequest, t: ThemeColors): string {
+	if (pr.isDraft) return t.prDraft
+	if (pr.state === "MERGED") return t.prMerged
+	if (pr.state === "CLOSED") return t.prClosed
+	return t.prOpen
 }
 
 function prStateIcon(pr: PullRequest): string {
@@ -61,19 +46,20 @@ function prStateIcon(pr: PullRequest): string {
 	return icons.check
 }
 
-function checksIcon(pr: PullRequest): { icon: string; color: string } {
+function checksIcon(pr: PullRequest, t: ThemeColors): { icon: string; color: string } {
 	const checks = pr.checks
-	if (checks.length === 0) return { icon: "", color: C.dim }
+	if (checks.length === 0) return { icon: "", color: t.textSecondary }
 	if (checks.some((c) => c.conclusion === "FAILURE"))
-		return { icon: icons.circleSlash, color: C.ciFail }
+		return { icon: icons.circleSlash, color: t.error }
 	if (checks.some((c) => c.status === "IN_PROGRESS" || c.status === "QUEUED"))
-		return { icon: icons.sync, color: C.ciPending }
+		return { icon: icons.sync, color: t.warning }
 	if (checks.every((c) => c.conclusion === "SUCCESS" || c.conclusion === "SKIPPED"))
-		return { icon: icons.check, color: C.ciPass }
-	return { icon: icons.circle, color: C.dim }
+		return { icon: icons.check, color: t.success }
+	return { icon: icons.circle, color: t.textSecondary }
 }
 
 export function PullRequestsView() {
+	const t = useTheme()
 	const [prs, setPRs] = createSignal<PullRequest[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [diffContent, setDiffContent] = createSignal("")
@@ -220,7 +206,6 @@ export function PullRequestsView() {
 			// Create new PR — pre-fill with last commit message
 			key.preventDefault()
 			try {
-				const { getLog } = await import("@gubbi/git")
 				const log = await getLog({ count: 1 }, state.git.repoRoot)
 				setCreatePRDefaultTitle(log[0]?.subject ?? state.git.currentBranch)
 			} catch {
@@ -249,14 +234,14 @@ export function PullRequestsView() {
 				width={50}
 				flexDirection="column"
 				border
-				borderColor={primaryFocused() ? C.activeBorder : C.border}
+				borderColor={primaryFocused() ? t.borderFocused : t.border}
 				title={`pull requests (${filterState()}${filterAuthor() ? ` @${filterAuthor()}` : ""})`}
 			>
 				<Show
 					when={!prsQuery.isLoading()}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
-							<text fg={C.dim}>Loading PRs...</text>
+							<text fg={t.textSecondary}>Loading PRs...</text>
 						</box>
 					}
 				>
@@ -264,8 +249,8 @@ export function PullRequestsView() {
 						when={state.github.isAuthenticated}
 						fallback={
 							<box flexGrow={1} alignItems="center" justifyContent="center" gap={1}>
-								<text fg={C.dim}>GitHub not authenticated</text>
-								<text fg={C.dim}>Install gh and ensure you are logged in</text>
+								<text fg={t.textSecondary}>GitHub not authenticated</text>
+								<text fg={t.textSecondary}>Install gh and ensure you are logged in</text>
 							</box>
 						}
 					>
@@ -273,7 +258,7 @@ export function PullRequestsView() {
 							<For each={prs()}>
 								{(pr, i) => {
 									const isSelected = () => selectedIdx() === i()
-									const ci = checksIcon(pr)
+									const ci = checksIcon(pr, t)
 
 									return (
 										<box
@@ -281,7 +266,7 @@ export function PullRequestsView() {
 											paddingLeft={1}
 											paddingRight={1}
 											paddingTop={1}
-											backgroundColor={isSelected() ? C.selected : "transparent"}
+											backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 											onMouseDown={() => {
 												setSelectedIdx(i())
 												void loadDiff(pr)
@@ -289,9 +274,9 @@ export function PullRequestsView() {
 											}}
 										>
 											<box flexDirection="row" gap={1}>
-												<text fg={prStateColor(pr)}>{prStateIcon(pr)}</text>
-												<text fg={C.dim}>#{pr.number}</text>
-												<text fg={isSelected() ? "#e6edf3" : C.text}>{pr.title}</text>
+												<text fg={prStateColor(pr, t)}>{prStateIcon(pr)}</text>
+												<text fg={t.textSecondary}>#{pr.number}</text>
+												<text fg={t.text}>{pr.title}</text>
 												<box flexGrow={1} />
 												<Show when={ci.icon}>
 													<text fg={ci.color}>{ci.icon}</text>
@@ -299,16 +284,16 @@ export function PullRequestsView() {
 											</box>
 
 											<box flexDirection="row" gap={1} paddingLeft={2}>
-												<text fg={C.author}>{pr.author}</text>
-												<text fg={C.dim}>→ {pr.baseRefName}</text>
-												<text fg={C.dim}>
+												<text fg={t.accent}>{pr.author}</text>
+												<text fg={t.textSecondary}>→ {pr.baseRefName}</text>
+												<text fg={t.textSecondary}>
 													+{pr.additions} -{pr.deletions}
 												</text>
 												<Show when={state.git.branches.some((b) => b.name === pr.headRefName)}>
-													<text fg={C.dim}> local</text>
+													<text fg={t.textSecondary}> local</text>
 												</Show>
 												<For each={pr.labels.slice(0, 3)}>
-													{(label) => <text fg={C.label}>[{label}]</text>}
+													{(label) => <text fg={t.warning}>[{label}]</text>}
 												</For>
 											</box>
 										</box>
@@ -318,7 +303,7 @@ export function PullRequestsView() {
 
 							<Show when={prs().length === 0 && !prsQuery.isLoading()}>
 								<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-									<text fg={C.dim}>No open pull requests</text>
+									<text fg={t.textSecondary}>No open pull requests</text>
 								</box>
 							</Show>
 						</scrollbox>
@@ -326,32 +311,35 @@ export function PullRequestsView() {
 				</Show>
 
 				{/* Footer */}
-				<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-					<text fg={C.dim}>
-						<span style={{ fg: "#58a6ff" }}>m</span> merge ·{" "}
-						<span style={{ fg: "#58a6ff" }}>a</span> review ·{" "}
-						<span style={{ fg: "#58a6ff" }}>r</span> diff · <span style={{ fg: "#58a6ff" }}>R</span>{" "}
-						reviewers · <span style={{ fg: "#58a6ff" }}>c</span> comment ·{" "}
-						<span style={{ fg: "#58a6ff" }}>C</span> checkout ·{" "}
-						<span style={{ fg: "#58a6ff" }}>o</span> open
-					</text>
-				</box>
+				<KeyHints
+					hints={[
+						{ key: "m", label: "merge" },
+						{ key: "a", label: "review" },
+						{ key: "r", label: "diff" },
+						{ key: "R", label: "reviewers" },
+						{ key: "c", label: "comment" },
+						{ key: "C", label: "checkout" },
+						{ key: "o", label: "open" },
+					]}
+				/>
 			</box>
 
 			{/* PR diff — hidden when in fullscreen mode, shown in fullscreen section */}
 			<Show when={!fullscreenDiff()}>
-				<DiffViewer
+				<NativeDiff
 					content={diffContent()}
 					title={selectedPR() ? `PR #${selectedPR()?.number}: ${selectedPR()?.title}` : "pr diff"}
+					mode={state.git.sideBySideDiff ? "split" : "unified"}
 					onToggleFullscreen={() => setFullscreenDiff(true)}
 				/>
 			</Show>
 
 			{/* Fullscreen diff */}
 			<Show when={fullscreenDiff()}>
-				<DiffViewer
+				<NativeDiff
 					content={diffContent()}
 					title={selectedPR() ? `PR #${selectedPR()?.number}: ${selectedPR()?.title}` : "pr diff"}
+					mode={state.git.sideBySideDiff ? "split" : "unified"}
 					fullscreen
 					onToggleFullscreen={() => setFullscreenDiff(false)}
 				/>
@@ -424,7 +412,6 @@ export function PullRequestsView() {
 						const pr = selectedPR()
 						if (!pr) return
 						try {
-							const { commentOnPR } = await import("@gubbi/github")
 							await commentOnPR(pr.number, body)
 							showToast("success", "Comment posted")
 						} catch (err) {

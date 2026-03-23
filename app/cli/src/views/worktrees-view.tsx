@@ -2,30 +2,19 @@
  * worktrees-view.tsx — Git worktree management
  */
 
-import { state, showToast, icons } from "@gubbi/core"
-import { InputDialog, ConfirmDialog } from "@gubbi/core/tui"
+import { state, showToast, icons, useTheme } from "@gubbi/core"
+import { InputDialog, ConfirmDialog, KeyHints } from "@gubbi/core/tui"
 import {
 	getWorktrees,
 	addWorktree,
 	removeWorktree,
 	pruneWorktrees,
 	repairWorktree,
+	exec,
 	type WorktreeEntry,
 } from "@gubbi/git"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
-
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	main: "#58a6ff",
-	branch: "#3fb950",
-	locked: "#d29922",
-	prunable: "#f78166",
-	dim: "#8b949e",
-	text: "#e6edf3",
-}
 
 function statusIcon(wt: WorktreeEntry): string {
 	if (wt.locked) return icons.bookmark
@@ -33,13 +22,15 @@ function statusIcon(wt: WorktreeEntry): string {
 	return icons.folder
 }
 
-function statusColor(wt: WorktreeEntry): string {
-	if (wt.locked) return C.locked
-	if (wt.prunable) return C.prunable
-	return C.dim
-}
-
 export function WorktreesView() {
+	const t = useTheme()
+
+	function statusColor(wt: WorktreeEntry): string {
+		if (wt.locked) return t.warning
+		if (wt.prunable) return t.error
+		return t.textSecondary
+	}
+
 	const [worktrees, setWorktrees] = createSignal<WorktreeEntry[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [loading, setLoading] = createSignal(true)
@@ -96,7 +87,6 @@ export function WorktreesView() {
 			key.preventDefault()
 			try {
 				// Open worktree in new terminal window
-				const { exec } = await import("@gubbi/git")
 				const cmd = process.platform === "darwin" ? "open" : "xdg-open"
 				await exec(cmd, ["-a", "Terminal", wt.path])
 			} catch {
@@ -114,14 +104,14 @@ export function WorktreesView() {
 				flexGrow={1}
 				flexDirection="column"
 				border
-				borderColor={C.activeBorder}
+				borderColor={t.borderFocused}
 				title="worktrees"
 			>
 				<Show
 					when={!loading()}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
-							<text fg={C.dim}>Loading worktrees...</text>
+							<text fg={t.textSecondary}>Loading worktrees...</text>
 						</box>
 					}
 				>
@@ -140,26 +130,26 @@ export function WorktreesView() {
 										paddingLeft={1}
 										paddingRight={1}
 										paddingTop={1}
-										backgroundColor={isSelected() ? C.selected : "transparent"}
+										backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 										onMouseDown={() => setSelectedIdx(i())}
 									>
 										<box flexDirection="row" gap={1}>
 											<text fg={statusColor(wt)}>{statusIcon(wt)}</text>
-											<text fg={wt.isMain ? C.main : C.branch}>{wt.branch || "(detached)"}</text>
+											<text fg={wt.isMain ? t.success : t.accent}>{wt.branch || "(detached)"}</text>
 											<Show when={wt.isMain}>
-												<text fg={C.dim}>(main)</text>
+												<text fg={t.textSecondary}>(main)</text>
 											</Show>
 											<Show when={wt.locked}>
-												<text fg={C.locked}>locked</text>
+												<text fg={t.warning}>locked</text>
 											</Show>
 											<Show when={wt.prunable}>
-												<text fg={C.prunable}>prunable</text>
+												<text fg={t.error}>prunable</text>
 											</Show>
 										</box>
 										<box flexDirection="row" paddingLeft={2} gap={1}>
-											<text fg={C.dim}>{shortPath()}</text>
+											<text fg={t.textSecondary}>{shortPath()}</text>
 											<Show when={wt.hash}>
-												<text fg={C.dim}>{wt.hash.slice(0, 7)}</text>
+												<text fg={t.textSecondary}>{wt.hash.slice(0, 7)}</text>
 											</Show>
 										</box>
 									</box>
@@ -169,20 +159,21 @@ export function WorktreesView() {
 
 						<Show when={worktrees().length === 0 && !loading()}>
 							<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-								<text fg={C.dim}>No worktrees found</text>
+								<text fg={t.textSecondary}>No worktrees found</text>
 							</box>
 						</Show>
 					</scrollbox>
 				</Show>
 
-				<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-					<text fg={C.dim}>
-						<span style={{ fg: "#58a6ff" }}>n</span> new · <span style={{ fg: "#58a6ff" }}>d</span>{" "}
-						remove · <span style={{ fg: "#58a6ff" }}>p</span> prune ·{" "}
-						<span style={{ fg: "#58a6ff" }}>r</span> repair ·{" "}
-						<span style={{ fg: "#58a6ff" }}>o</span> open
-					</text>
-				</box>
+				<KeyHints
+					hints={[
+						{ key: "n", label: "new" },
+						{ key: "d", label: "remove" },
+						{ key: "p", label: "prune" },
+						{ key: "r", label: "repair" },
+						{ key: "o", label: "open" },
+					]}
+				/>
 			</box>
 
 			{/* Add worktree dialog */}

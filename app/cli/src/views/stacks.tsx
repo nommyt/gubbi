@@ -3,10 +3,9 @@
  * Visualize, create, navigate, sync, and submit stacks of dependent branches.
  */
 
-import { state, showToast, icons } from "@gubbi/core"
-import { InputDialog, ConfirmDialog, SelectDialog } from "@gubbi/core/tui"
-import { DiffViewer } from "@gubbi/core/tui"
-import { getDiffBetween, gitService } from "@gubbi/git"
+import { state, showToast, icons, useTheme } from "@gubbi/core"
+import { InputDialog, ConfirmDialog, SelectDialog, NativeDiff, KeyHints } from "@gubbi/core/tui"
+import { getDiffBetween, gitService, exec } from "@gubbi/git"
 import {
 	getStacks,
 	stackCreate,
@@ -19,43 +18,28 @@ import {
 	type Stack,
 	type StackBranch,
 } from "@gubbi/git"
+import { getPRForBranch } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	trunk: "#8b949e",
-	current: "#58a6ff",
-	branch: "#3fb950",
-	prOpen: "#3fb950",
-	prDraft: "#8b949e",
-	prMerged: "#a371f7",
-	prClosed: "#f78166",
-	ciPass: "#3fb950",
-	ciFail: "#f78166",
-	ciPending: "#d29922",
-	dim: "#8b949e",
-	text: "#e6edf3",
-}
-
-function prStatusColor(status?: string): string {
-	switch (status) {
-		case "open":
-			return C.prOpen
-		case "draft":
-			return C.prDraft
-		case "merged":
-			return C.prMerged
-		case "closed":
-			return C.prClosed
-		default:
-			return C.dim
-	}
-}
-
 export function StacksView() {
+	const t = useTheme()
+
+	function prStatusColor(status?: string): string {
+		switch (status) {
+			case "open":
+				return t.prOpen
+			case "draft":
+				return t.prDraft
+			case "merged":
+				return t.prMerged
+			case "closed":
+				return t.prClosed
+			default:
+				return t.textSecondary
+		}
+	}
+
 	const [stacks, setStacks] = createSignal<Stack[]>([])
 	const [selectedStack, setSelectedStack] = createSignal(0)
 	const [selectedBranch, setSelectedBranch] = createSignal(0)
@@ -196,7 +180,6 @@ export function StacksView() {
 				return
 			}
 			try {
-				const { exec } = await import("@gubbi/git")
 				for (const dep of dependents) {
 					await exec("git", ["checkout", dep.name], { cwd: state.git.repoRoot })
 					await exec("git", ["rebase", branch.name], { cwd: state.git.repoRoot })
@@ -239,14 +222,14 @@ export function StacksView() {
 				width={50}
 				flexDirection="column"
 				border
-				borderColor={primaryFocused() ? C.activeBorder : C.border}
+				borderColor={primaryFocused() ? t.borderFocused : t.border}
 				title="stacks"
 			>
 				<Show
 					when={!loading()}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
-							<text fg={C.dim}>Loading stacks...</text>
+							<text fg={t.textSecondary}>Loading stacks...</text>
 						</box>
 					}
 				>
@@ -260,10 +243,10 @@ export function StacksView() {
 								justifyContent="center"
 								gap={1}
 							>
-								<text fg={C.dim}>No stacks tracked yet</text>
-								<text fg={C.dim}>Press n to create a new stacked branch</text>
-								<text fg={C.dim}>or start working on a branch and gubbi will</text>
-								<text fg={C.dim}>track it automatically</text>
+								<text fg={t.textSecondary}>No stacks tracked yet</text>
+								<text fg={t.textSecondary}>Press n to create a new stacked branch</text>
+								<text fg={t.textSecondary}>or start working on a branch and gubbi will</text>
+								<text fg={t.textSecondary}>track it automatically</text>
 							</box>
 						}
 					>
@@ -272,7 +255,7 @@ export function StacksView() {
 								{(stack, si) => (
 									<box flexDirection="column" paddingTop={1} paddingLeft={1}>
 										{/* Stack header */}
-										<text fg={C.dim}>
+										<text fg={t.textSecondary}>
 											Stack {si() + 1}: {stack.trunk} → {stack.branches.at(-1)?.name ?? ""}
 										</text>
 
@@ -285,7 +268,7 @@ export function StacksView() {
 												const isCurrent = () => branch.name === state.git.currentBranch
 
 												// Find linked PR
-												const pr = () => state.github.prs.find((p) => p.headRefName === branch.name)
+												const pr = () => getPRForBranch(branch.name, state.github.prs)
 												// CI status not available on GitHubPR (no checks field)
 												const ci = () => null
 
@@ -293,7 +276,7 @@ export function StacksView() {
 													<box
 														flexDirection="column"
 														paddingLeft={2}
-														backgroundColor={isSelected() ? C.selected : "transparent"}
+														backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 														onMouseDown={() => {
 															setSelectedStack(si())
 															setSelectedBranch(branchIdx)
@@ -303,12 +286,12 @@ export function StacksView() {
 													>
 														<box flexDirection="row" gap={1}>
 															{/* Stack graph */}
-															<text fg={isCurrent() ? C.current : C.branch}>
+															<text fg={isCurrent() ? t.accent : t.success}>
 																{isCurrent() ? icons.circleFilled : icons.circle}
 															</text>
 
 															{/* Branch name */}
-															<text fg={isCurrent() ? C.current : C.branch}>{branch.name}</text>
+															<text fg={isCurrent() ? t.accent : t.success}>{branch.name}</text>
 
 															<box flexGrow={1} />
 
@@ -325,10 +308,10 @@ export function StacksView() {
 																<text
 																	fg={
 																		ci() === "passing"
-																			? C.ciPass
+																			? t.success
 																			: ci() === "failing"
-																				? C.ciFail
-																				: C.ciPending
+																				? t.error
+																				: t.warning
 																	}
 																>
 																	{ci() === "passing"
@@ -344,14 +327,17 @@ export function StacksView() {
 														<For each={branch.commits.slice(0, 3)}>
 															{(c) => (
 																<box flexDirection="row" paddingLeft={2}>
-																	<text fg={C.dim}>· </text>
-																	<text fg={C.dim}>{c.subject.slice(0, 50)}</text>
+																	<text fg={t.textSecondary}>· </text>
+																	<text fg={t.textSecondary}>{c.subject.slice(0, 50)}</text>
 																</box>
 															)}
 														</For>
 														<Show when={branch.commitCount > 3}>
 															<box paddingLeft={2}>
-																<text fg={C.dim}> ...and {branch.commitCount - 3} more</text>
+																<text fg={t.textSecondary}>
+																	{" "}
+																	...and {branch.commitCount - 3} more
+																</text>
 															</box>
 														</Show>
 													</box>
@@ -361,7 +347,7 @@ export function StacksView() {
 
 										{/* Trunk base */}
 										<box paddingLeft={2}>
-											<text fg={C.trunk}>
+											<text fg={t.textSecondary}>
 												{icons.branch} {stack.trunk} (base)
 											</text>
 										</box>
@@ -373,22 +359,24 @@ export function StacksView() {
 				</Show>
 
 				{/* Footer */}
-				<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-					<text fg={C.dim}>
-						<span style={{ fg: "#58a6ff" }}>n</span> new ·{" "}
-						<span style={{ fg: "#58a6ff" }}>u/d</span> navigate ·{" "}
-						<span style={{ fg: "#58a6ff" }}>t/b</span> top/bottom ·{" "}
-						<span style={{ fg: "#58a6ff" }}>s</span> sync · <span style={{ fg: "#58a6ff" }}>p</span>{" "}
-						submit · <span style={{ fg: "#58a6ff" }}>a</span> absorb ·{" "}
-						<span style={{ fg: "#58a6ff" }}>F</span> fold
-					</text>
-				</box>
+				<KeyHints
+					hints={[
+						{ key: "n", label: "new" },
+						{ key: "u/d", label: "navigate" },
+						{ key: "t/b", label: "top/bottom" },
+						{ key: "s", label: "sync" },
+						{ key: "p", label: "submit" },
+						{ key: "a", label: "absorb" },
+						{ key: "F", label: "fold" },
+					]}
+				/>
 			</box>
 
 			{/* Diff panel */}
-			<DiffViewer
+			<NativeDiff
 				content={diffContent()}
 				title={currentBranch() ? `diff: ${currentBranch()?.name}` : "branch diff"}
+				mode={state.git.sideBySideDiff ? "split" : "unified"}
 			/>
 
 			{/* Create branch in stack */}

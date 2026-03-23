@@ -1,25 +1,20 @@
 /**
- * sidebar.tsx — Left navigation panel with view list
+ * sidebar.tsx — Left navigation panel with view list.
+ *
+ * Renders the vertical sidebar with view labels, key hints, icons,
+ * badge counts (notifications, status changes, open PRs), and the
+ * GitHub auth status at the bottom.
  */
 
-import { state, setView, setFocus, VIEWS, icons } from "@gubbi/core"
+import { state, setView, setFocus, VIEWS, icons, useTheme } from "@gubbi/core"
 import { For, Show } from "solid-js"
 
-const C = {
-	bg: "#0d1117",
-	activeBg: "#161b22",
-	activeText: "#58a6ff",
-	inactiveText: "#8b949e",
-	keyHint: "#484f58",
-	border: "#30363d",
-	badge: "#d29922",
-	focused: "#388bfd",
-}
-
 interface SidebarProps {
+	/** Whether this panel currently has keyboard focus. */
 	focused: boolean
 }
 
+/** Maps each view ID to its sidebar icon. */
 const VIEW_ICONS: Record<string, string> = {
 	dashboard: icons.star,
 	smartlog: icons.commit,
@@ -35,14 +30,21 @@ const VIEW_ICONS: Record<string, string> = {
 	remotes: icons.sync,
 }
 
+/**
+ * Sidebar navigation panel.
+ *
+ * Lists all available views with icons, key hints, and badge counts.
+ * Clicking a view switches to it and moves focus to the primary panel.
+ */
 export function Sidebar(props: SidebarProps) {
+	const t = useTheme()
 	return (
 		<box
 			flexDirection="column"
 			width={20}
 			border={["right"]}
-			borderColor={props.focused ? C.focused : C.border}
-			backgroundColor={C.bg}
+			borderColor={props.focused ? t.borderFocused : t.border}
+			backgroundColor={t.bg}
 			paddingTop={1}
 		>
 			<For each={VIEWS}>
@@ -65,26 +67,26 @@ export function Sidebar(props: SidebarProps) {
 							paddingLeft={1}
 							paddingRight={1}
 							height={1}
-							backgroundColor={isActive() ? C.activeBg : "transparent"}
+							backgroundColor={isActive() ? t.bgSecondary : "transparent"}
 							onMouseDown={() => {
 								setView(view.id)
 								setFocus("primary")
 							}}
 						>
 							{/* Key hint */}
-							<text fg={C.keyHint}>{view.key} </text>
+							<text fg={t.textMuted}>{view.key} </text>
 
 							{/* Icon */}
-							<text fg={isActive() ? C.activeText : C.inactiveText}>{VIEW_ICONS[view.id]} </text>
+							<text fg={isActive() ? t.accent : t.textSecondary}>{VIEW_ICONS[view.id]} </text>
 
 							{/* Label */}
-							<text fg={isActive() ? C.activeText : C.inactiveText}>{view.label}</text>
+							<text fg={isActive() ? t.accent : t.textSecondary}>{view.label}</text>
 
 							<box flexGrow={1} />
 
 							{/* Badge */}
 							<Show when={badge() > 0}>
-								<text fg={C.badge}>{badge()}</text>
+								<text fg={t.warning}>{badge()}</text>
 							</Show>
 						</box>
 					)
@@ -100,13 +102,13 @@ export function Sidebar(props: SidebarProps) {
 					fallback={
 						<Show
 							when={state.github.isCheckingAuth}
-							fallback={<text fg={C.keyHint}>⚠ gh: not logged in</text>}
+							fallback={<text fg={t.textMuted}>⚠ gh: not logged in</text>}
 						>
-							<text fg={C.keyHint}>{icons.sync} gh: checking...</text>
+							<text fg={t.textMuted}>{icons.sync} gh: checking...</text>
 						</Show>
 					}
 				>
-					<text fg={C.keyHint}>
+					<text fg={t.textMuted}>
 						{icons.check} {state.github.user || "authenticated"}
 					</text>
 				</Show>

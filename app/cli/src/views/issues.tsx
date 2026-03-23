@@ -9,8 +9,9 @@ import {
 	getPersistedValue,
 	setPersistedValue,
 	createQuery,
+	useTheme,
 } from "@gubbi/core"
-import { InputDialog, ConfirmDialog } from "@gubbi/core/tui"
+import { InputDialog, ConfirmDialog, KeyHints } from "@gubbi/core/tui"
 import { openURL } from "@gubbi/git"
 import {
 	listIssues,
@@ -23,21 +24,8 @@ import {
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	open: "#3fb950",
-	closed: "#f78166",
-	author: "#58a6ff",
-	label: "#d29922",
-	dim: "#8b949e",
-	text: "#e6edf3",
-	comment: "#e6edf3",
-	commentBorder: "#30363d",
-}
-
 export function IssuesView() {
+	const t = useTheme()
 	const [issues, setIssues] = createSignal<Issue[]>([])
 	const [comments, setComments] = createSignal<IssueComment[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
@@ -149,14 +137,14 @@ export function IssuesView() {
 				width={48}
 				flexDirection="column"
 				border
-				borderColor={primaryFocused() ? C.activeBorder : C.border}
+				borderColor={primaryFocused() ? t.borderFocused : t.border}
 				title={`issues (${filterState()}${filterAuthor() ? ` @${filterAuthor()}` : ""})`}
 			>
 				<Show
 					when={!issuesQuery.isLoading()}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
-							<text fg={C.dim}>Loading issues...</text>
+							<text fg={t.textSecondary}>Loading issues...</text>
 						</box>
 					}
 				>
@@ -164,8 +152,8 @@ export function IssuesView() {
 						when={state.github.isAuthenticated}
 						fallback={
 							<box flexGrow={1} alignItems="center" justifyContent="center" gap={1}>
-								<text fg={C.dim}>GitHub not authenticated</text>
-								<text fg={C.dim}>Install gh and ensure you are logged in</text>
+								<text fg={t.textSecondary}>GitHub not authenticated</text>
+								<text fg={t.textSecondary}>Install gh and ensure you are logged in</text>
 							</box>
 						}
 					>
@@ -179,7 +167,7 @@ export function IssuesView() {
 											paddingLeft={1}
 											paddingRight={1}
 											paddingTop={1}
-											backgroundColor={isSelected() ? C.selected : "transparent"}
+											backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 											onMouseDown={() => {
 												setSelectedIdx(i())
 												void loadComments(issue)
@@ -187,20 +175,20 @@ export function IssuesView() {
 											}}
 										>
 											<box flexDirection="row" gap={1}>
-												<text fg={issue.state === "OPEN" ? C.open : C.closed}>
+												<text fg={issue.state === "OPEN" ? t.success : t.error}>
 													{issue.state === "OPEN" ? icons.circle : icons.circleFilled}
 												</text>
-												<text fg={C.dim}>#{issue.number}</text>
-												<text fg={isSelected() ? "#e6edf3" : C.text}>{issue.title}</text>
+												<text fg={t.textSecondary}>#{issue.number}</text>
+												<text fg={isSelected() ? t.text : t.textSecondary}>{issue.title}</text>
 												<box flexGrow={1} />
 												<Show when={issue.comments > 0}>
-													<text fg={C.dim}>💬{issue.comments}</text>
+													<text fg={t.textSecondary}>💬{issue.comments}</text>
 												</Show>
 											</box>
 											<box flexDirection="row" paddingLeft={2} gap={1}>
-												<text fg={C.author}>{issue.author}</text>
+												<text fg={t.accent}>{issue.author}</text>
 												<For each={issue.labels.slice(0, 3)}>
-													{(label) => <text fg={C.label}>[{label}]</text>}
+													{(label) => <text fg={t.accentSecondary}>[{label}]</text>}
 												</For>
 											</box>
 										</box>
@@ -209,21 +197,22 @@ export function IssuesView() {
 							</For>
 							<Show when={issues().length === 0 && !issuesQuery.isLoading()}>
 								<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-									<text fg={C.dim}>No open issues</text>
+									<text fg={t.textSecondary}>No open issues</text>
 								</box>
 							</Show>
 						</scrollbox>
 					</Show>
 				</Show>
 
-				<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-					<text fg={C.dim}>
-						<span style={{ fg: "#58a6ff" }}>n</span> new · <span style={{ fg: "#58a6ff" }}>c</span>{" "}
-						comment · <span style={{ fg: "#58a6ff" }}>x</span> close ·{" "}
-						<span style={{ fg: "#58a6ff" }}>/</span> filter ·{" "}
-						<span style={{ fg: "#58a6ff" }}>o</span> open
-					</text>
-				</box>
+				<KeyHints
+					hints={[
+						{ key: "n", label: "new" },
+						{ key: "c", label: "comment" },
+						{ key: "x", label: "close" },
+						{ key: "/", label: "filter" },
+						{ key: "o", label: "open" },
+					]}
+				/>
 			</box>
 
 			{/* Issue detail */}
@@ -231,7 +220,7 @@ export function IssuesView() {
 				flexGrow={1}
 				flexDirection="column"
 				border
-				borderColor={primaryFocused() ? C.border : C.activeBorder}
+				borderColor={primaryFocused() ? t.border : t.borderFocused}
 				title={
 					selectedIssue()
 						? `#${selectedIssue()?.number}: ${selectedIssue()?.title}`
@@ -247,12 +236,12 @@ export function IssuesView() {
 						paddingTop={1}
 					>
 						{/* Issue body */}
-						<text fg={C.text}>{selectedIssue()?.body || "(no description)"}</text>
+						<text fg={t.text}>{selectedIssue()?.body || "(no description)"}</text>
 
 						{/* Comments */}
 						<Show when={comments().length > 0}>
 							<box paddingTop={1}>
-								<text fg={C.dim}>
+								<text fg={t.textSecondary}>
 									── {comments().length} comment{comments().length !== 1 ? "s" : ""} ──
 								</text>
 							</box>
@@ -263,11 +252,11 @@ export function IssuesView() {
 										paddingTop={1}
 										paddingLeft={1}
 										border={["left"]}
-										borderColor={C.commentBorder}
+										borderColor={t.border}
 										marginTop={1}
 									>
-										<text fg={C.author}>{comment.author}</text>
-										<text fg={C.comment}>{comment.body}</text>
+										<text fg={t.accent}>{comment.author}</text>
+										<text fg={t.textSecondary}>{comment.body}</text>
 									</box>
 								)}
 							</For>

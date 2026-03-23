@@ -1,29 +1,34 @@
 /**
- * blame-view.tsx — Git blame overlay for file lines
+ * blame-view.tsx — Git blame overlay for file lines.
+ *
+ * Parses `git blame --porcelain` output and displays per-line
+ * commit hash, author, relative date, and file content in a
+ * scrollable, keyboard-navigable overlay.
  */
 
-import { state } from "@gubbi/core"
+import { state, useTheme, relativeTime } from "@gubbi/core"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	hash: "#8b949e",
-	author: "#58a6ff",
-	date: "#484f58",
-	content: "#e6edf3",
-	dim: "#8b949e",
-}
-
+/** A single line of blame output with commit metadata. */
 export interface BlameLine {
+	/** Abbreviated commit hash (8 chars). */
 	hash: string
+	/** Author name (truncated to 16 chars). */
 	author: string
+	/** Human-readable relative date (e.g. `"3d ago"`). */
 	date: string
+	/** Source line content. */
 	content: string
 }
 
+/**
+ * Run `git blame --porcelain` on a file and parse the result.
+ *
+ * @param filePath - Path to the file to blame.
+ * @param cwd      - Working directory (defaults to repo root).
+ * @returns Array of {@link BlameLine}, or `[]` on failure.
+ */
 export async function getBlame(filePath: string, cwd?: string): Promise<BlameLine[]> {
 	try {
 		const proc = Bun.spawn(["git", "blame", "--porcelain", "--", filePath], {
@@ -77,7 +82,7 @@ function parseBlamePorcelain(raw: string): BlameLine[] {
 		i++
 
 		const authorTime = info["author-time"]
-		const date = authorTime ? formatDate(new Date(Number(authorTime) * 1000)) : ""
+		const date = authorTime ? relativeTime(Number(authorTime) * 1000) : ""
 
 		result.push({
 			hash: hash.slice(0, 8),
@@ -90,23 +95,23 @@ function parseBlamePorcelain(raw: string): BlameLine[] {
 	return result
 }
 
-function formatDate(d: Date): string {
-	const now = new Date()
-	const diff = (now.getTime() - d.getTime()) / 1000
-	if (diff < 60) return `${Math.floor(diff)}s ago`
-	if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-	if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-	if (diff < 86400 * 30) return `${Math.floor(diff / 86400)}d ago`
-	return `${Math.floor(diff / (86400 * 30))}mo ago`
-}
-
 interface BlameViewProps {
+	/** Path to the file being blamed. */
 	filePath: string
+	/** Called when the user presses `Esc` to close. */
 	onClose: () => void
+	/** Called when the user presses `Enter` to jump to a commit. */
 	onJumpToCommit?: (hash: string) => void
 }
 
+/**
+ * Full-screen git blame viewer.
+ *
+ * Displays per-line blame annotations with `j/k` navigation,
+ * `Enter` to jump to a commit, and `Esc` to close.
+ */
 export function BlameView(props: BlameViewProps) {
+	const t = useTheme()
 	const [lines, setLines] = createSignal<BlameLine[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [loading, setLoading] = createSignal(true)
@@ -142,14 +147,14 @@ export function BlameView(props: BlameViewProps) {
 			flexGrow={1}
 			flexDirection="column"
 			border
-			borderColor={C.activeBorder}
+			borderColor={t.borderFocused}
 			title={`blame: ${props.filePath}`}
 		>
 			<Show
 				when={!loading()}
 				fallback={
 					<box flexGrow={1} alignItems="center" justifyContent="center">
-						<text fg={C.dim}>Loading blame...</text>
+						<text fg={t.textSecondary}>Loading blame...</text>
 					</box>
 				}
 			>
@@ -163,13 +168,13 @@ export function BlameView(props: BlameViewProps) {
 									paddingLeft={1}
 									paddingRight={1}
 									gap={1}
-									backgroundColor={isSelected() ? C.selected : "transparent"}
+									backgroundColor={isSelected() ? t.bgSecondary : "transparent"}
 									onMouseDown={() => setSelectedIdx(i())}
 								>
-									<text fg={C.hash}>{line.hash}</text>
-									<text fg={C.author}>{line.author.padEnd(16)}</text>
-									<text fg={C.date}>{line.date.padEnd(8)}</text>
-									<text fg={isSelected() ? "#e6edf3" : C.content}>{line.content}</text>
+									<text fg={t.textSecondary}>{line.hash}</text>
+									<text fg={t.accent}>{line.author.padEnd(16)}</text>
+									<text fg={t.textMuted}>{line.date.padEnd(8)}</text>
+									<text fg={t.text}>{line.content}</text>
 								</box>
 							)
 						}}
@@ -177,11 +182,11 @@ export function BlameView(props: BlameViewProps) {
 				</scrollbox>
 			</Show>
 
-			<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-				<text fg={C.dim}>
-					<span style={{ fg: "#58a6ff" }}>j/k</span> nav ·{" "}
-					<span style={{ fg: "#58a6ff" }}>Enter</span> jump to commit ·{" "}
-					<span style={{ fg: "#58a6ff" }}>Esc</span> close
+			<box height={1} paddingLeft={1} border={["top"]} borderColor={t.border}>
+				<text fg={t.textSecondary}>
+					<span style={{ fg: t.accent }}>j/k</span> nav ·{" "}
+					<span style={{ fg: t.accent }}>Enter</span> jump to commit ·{" "}
+					<span style={{ fg: t.accent }}>Esc</span> close
 				</text>
 			</box>
 		</box>

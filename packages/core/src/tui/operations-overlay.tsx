@@ -1,36 +1,36 @@
 /**
- * operations-overlay.tsx — Shows recent git operations timeline for undo support
+ * operations-overlay.tsx — Recent git operations timeline for undo support.
+ *
+ * Displays a scrollable list of recorded git operations (commit, merge,
+ * rebase, etc.) with before/after hashes and relative timestamps.
+ * Supports clearing the log via `c` and closing via `Esc`.
  */
 
-import { getOperations, clearOperations, type OperationEntry } from "@gubbi/core"
+import {
+	getOperations,
+	clearOperations,
+	type OperationEntry,
+	useTheme,
+	relativeTime,
+} from "@gubbi/core"
 import { icons } from "@gubbi/core"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show } from "solid-js"
 
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	dim: "#8b949e",
-	text: "#e6edf3",
-	hash: "#8b949e",
-	undone: "#484f58",
-	commit: "#3fb950",
-}
-
-function formatTime(ts: number): string {
-	const diff = (Date.now() - ts) / 1000
-	if (diff < 60) return `${Math.floor(diff)}s ago`
-	if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-	if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-	return `${Math.floor(diff / 86400)}d ago`
-}
-
 interface OperationsOverlayProps {
+	/** Called when the user presses `Esc` to close. */
 	onClose: () => void
 }
 
+/**
+ * Operations timeline overlay.
+ *
+ * Shows each recorded git operation with its type, description,
+ * before → after hashes, and relative timestamp. Press `c` to clear
+ * the log, `Esc` to close.
+ */
 export function OperationsOverlay(props: OperationsOverlayProps) {
+	const t = useTheme()
 	const [operations, setOperations] = createSignal<OperationEntry[]>(getOperations())
 
 	useKeyboard((key) => {
@@ -49,7 +49,7 @@ export function OperationsOverlay(props: OperationsOverlayProps) {
 			flexGrow={1}
 			flexDirection="column"
 			border
-			borderColor={C.activeBorder}
+			borderColor={t.borderFocused}
 			title="operations (Ctrl+Z to undo)"
 		>
 			<scrollbox flexGrow={1} scrollbarOptions={{ visible: true }}>
@@ -57,21 +57,21 @@ export function OperationsOverlay(props: OperationsOverlayProps) {
 					{(op) => (
 						<box flexDirection="column" paddingLeft={1} paddingRight={1} paddingTop={1}>
 							<box flexDirection="row" gap={1}>
-								<text fg={op.undone ? C.undone : C.commit}>
+								<text fg={op.undone ? t.textMuted : t.success}>
 									{op.undone ? icons.circleSlash : icons.circleFilled}
 								</text>
-								<text fg={op.undone ? C.undone : C.text}>
+								<text fg={op.undone ? t.textMuted : t.text}>
 									{op.type}: {op.description}
 								</text>
 								<box flexGrow={1} />
-								<text fg={C.dim}>{formatTime(op.timestamp)}</text>
+								<text fg={t.textSecondary}>{relativeTime(op.timestamp)}</text>
 							</box>
 							<box flexDirection="row" paddingLeft={2} gap={1}>
-								<text fg={C.hash}>{op.beforeHash.slice(0, 7)}</text>
-								<text fg={C.dim}>→</text>
-								<text fg={C.hash}>{op.afterHash.slice(0, 7)}</text>
+								<text fg={t.textSecondary}>{op.beforeHash.slice(0, 7)}</text>
+								<text fg={t.textSecondary}>→</text>
+								<text fg={t.textSecondary}>{op.afterHash.slice(0, 7)}</text>
 								<Show when={op.undone}>
-									<text fg={C.undone}> (undone)</text>
+									<text fg={t.textMuted}> (undone)</text>
 								</Show>
 							</box>
 						</box>
@@ -80,15 +80,15 @@ export function OperationsOverlay(props: OperationsOverlayProps) {
 
 				<Show when={operations().length === 0}>
 					<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-						<text fg={C.dim}>No operations recorded</text>
+						<text fg={t.textSecondary}>No operations recorded</text>
 					</box>
 				</Show>
 			</scrollbox>
 
-			<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-				<text fg={C.dim}>
-					<span style={{ fg: "#58a6ff" }}>c</span> clear ·{" "}
-					<span style={{ fg: "#58a6ff" }}>Esc</span> close
+			<box height={1} paddingLeft={1} border={["top"]} borderColor={t.border}>
+				<text fg={t.textSecondary}>
+					<span style={{ fg: t.accent }}>c</span> clear · <span style={{ fg: t.accent }}>Esc</span>{" "}
+					close
 				</text>
 			</box>
 		</box>

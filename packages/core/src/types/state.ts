@@ -213,6 +213,7 @@ export interface UIState {
 	helpVisible: boolean
 	syncing: boolean
 	inputActive: boolean
+	themeName: string
 }
 
 // ---------------------------------------------------------------------------

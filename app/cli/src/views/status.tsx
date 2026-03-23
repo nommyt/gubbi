@@ -12,8 +12,9 @@ import {
 	setView,
 	icons,
 	recordOperation,
+	useTheme,
 } from "@gubbi/core"
-import { ConfirmDialog, InputDialog, DiffViewer, BlameView } from "@gubbi/core/tui"
+import { ConfirmDialog, InputDialog, NativeDiff, BlameView, KeyHints } from "@gubbi/core/tui"
 import {
 	stageFile,
 	unstageFile,
@@ -28,24 +29,12 @@ import {
 	lineToPatch,
 	gitService,
 	getHeadHash,
+	commit,
+	stash,
 } from "@gubbi/git"
 import { pushAndCreatePR, githubService } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, Show, For, onMount, onCleanup } from "solid-js"
-
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	selectedText: "#e6edf3",
-	staged: "#3fb950",
-	modified: "#d29922",
-	deleted: "#f78166",
-	untracked: "#8b949e",
-	conflict: "#ff7b72",
-	dim: "#8b949e",
-	text: "#e6edf3",
-}
 
 function fileStatusIcon(entry: GitStatusEntry): string {
 	switch (entry.type) {
@@ -68,28 +57,30 @@ function fileStatusIcon(entry: GitStatusEntry): string {
 	}
 }
 
-function fileStatusColor(entry: GitStatusEntry): string {
-	switch (entry.type) {
-		case "added":
-			return C.staged
-		case "modified":
-			return entry.staged ? C.staged : C.modified
-		case "deleted":
-			return C.deleted
-		case "renamed":
-			return C.staged
-		case "copied":
-			return C.staged
-		case "untracked":
-			return C.untracked
-		case "unmerged":
-			return C.conflict
-		default:
-			return C.dim
-	}
-}
-
 export function StatusView() {
+	const t = useTheme()
+
+	function fileStatusColor(entry: GitStatusEntry): string {
+		switch (entry.type) {
+			case "added":
+				return t.gitAdded
+			case "modified":
+				return entry.staged ? t.gitAdded : t.gitModified
+			case "deleted":
+				return t.gitDeleted
+			case "renamed":
+				return t.gitRenamed
+			case "copied":
+				return t.gitAdded
+			case "untracked":
+				return t.gitUntracked
+			case "unmerged":
+				return t.gitConflict
+			default:
+				return t.textSecondary
+		}
+	}
+
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [showDiscard, setShowDiscard] = createSignal(false)
 	const [showCommit, setShowCommit] = createSignal(false)
@@ -151,7 +142,7 @@ export function StatusView() {
 
 		const timer = setInterval(async () => {
 			await gitService.refreshStatus()
-		}, 2000)
+		}, 5000)
 		onCleanup(() => clearInterval(timer))
 	})
 
@@ -341,15 +332,15 @@ export function StatusView() {
 		<box flexGrow={1} flexDirection="column">
 			{/* PR context banner */}
 			<Show when={currentBranchPR() !== null && state.github.isAuthenticated}>
-				<box height={1} paddingLeft={2} border={["bottom"]} borderColor={C.border}>
-					<text fg={C.dim}>
+				<box height={1} paddingLeft={2} border={["bottom"]} borderColor={t.border}>
+					<text fg={t.textSecondary}>
 						{state.git.currentBranch} •{" "}
-						<span style={{ fg: "#58a6ff" }}>PR #{currentBranchPR()?.number}</span>{" "}
-						<span style={{ fg: currentBranchPR()?.isDraft ? C.dim : C.staged }}>
+						<span style={{ fg: t.accent }}>PR #{currentBranchPR()?.number}</span>{" "}
+						<span style={{ fg: currentBranchPR()?.isDraft ? t.textSecondary : t.gitAdded }}>
 							{currentBranchPR()?.isDraft ? `${icons.circle} draft` : `${icons.check} open`}
 						</span>
 						{currentBranchPR()?.mergeable === "MERGEABLE" ? (
-							<span style={{ fg: C.staged }}> • mergeable</span>
+							<span style={{ fg: t.gitAdded }}> • mergeable</span>
 						) : null}
 					</text>
 				</box>
@@ -363,14 +354,14 @@ export function StatusView() {
 						width={36}
 						flexDirection="column"
 						border
-						borderColor={primaryFocused() ? C.activeBorder : C.border}
+						borderColor={primaryFocused() ? t.borderFocused : t.border}
 						title="changes"
 					>
 						<scrollbox flexGrow={1}>
 							{/* Staged changes */}
 							<Show when={stagedEntries().length > 0}>
 								<box paddingLeft={1} paddingTop={1}>
-									<text fg={C.staged}>Staged ({stagedEntries().length})</text>
+									<text fg={t.gitAdded}>Staged ({stagedEntries().length})</text>
 								</box>
 								<For each={stagedEntries()}>
 									{(entry) => {
@@ -381,15 +372,15 @@ export function StatusView() {
 												flexDirection="row"
 												paddingLeft={2}
 												paddingRight={1}
-												backgroundColor={isSelected() ? C.selected : "transparent"}
+												backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 												onMouseDown={() => {
 													setSelectedIdx(myIdx())
 													void loadDiff(entry)
 													setPrimaryFocused(true)
 												}}
 											>
-												<text fg={C.staged}>{fileStatusIcon(entry)} </text>
-												<text fg={isSelected() ? C.selectedText : C.text}>{entry.path}</text>
+												<text fg={t.gitAdded}>{fileStatusIcon(entry)} </text>
+												<text fg={isSelected() ? t.text : t.text}>{entry.path}</text>
 											</box>
 										)
 									}}
@@ -399,7 +390,7 @@ export function StatusView() {
 							{/* Unstaged changes */}
 							<Show when={unstagedEntries().length > 0}>
 								<box paddingLeft={1} paddingTop={1}>
-									<text fg={C.modified}>Unstaged ({unstagedEntries().length})</text>
+									<text fg={t.gitModified}>Unstaged ({unstagedEntries().length})</text>
 								</box>
 								<For each={unstagedEntries()}>
 									{(entry) => {
@@ -410,7 +401,7 @@ export function StatusView() {
 												flexDirection="row"
 												paddingLeft={2}
 												paddingRight={1}
-												backgroundColor={isSelected() ? C.selected : "transparent"}
+												backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 												onMouseDown={() => {
 													setSelectedIdx(myIdx())
 													void loadDiff(entry)
@@ -418,7 +409,7 @@ export function StatusView() {
 												}}
 											>
 												<text fg={fileStatusColor(entry)}>{fileStatusIcon(entry)} </text>
-												<text fg={isSelected() ? C.selectedText : C.text}>{entry.path}</text>
+												<text fg={isSelected() ? t.text : t.text}>{entry.path}</text>
 											</box>
 										)
 									}}
@@ -428,7 +419,7 @@ export function StatusView() {
 							{/* Untracked files */}
 							<Show when={untrackedEntries().length > 0}>
 								<box paddingLeft={1} paddingTop={1}>
-									<text fg={C.untracked}>Untracked ({untrackedEntries().length})</text>
+									<text fg={t.gitUntracked}>Untracked ({untrackedEntries().length})</text>
 								</box>
 								<For each={untrackedEntries()}>
 									{(entry) => {
@@ -439,15 +430,15 @@ export function StatusView() {
 												flexDirection="row"
 												paddingLeft={2}
 												paddingRight={1}
-												backgroundColor={isSelected() ? C.selected : "transparent"}
+												backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 												onMouseDown={() => {
 													setSelectedIdx(myIdx())
 													void loadDiff(entry)
 													setPrimaryFocused(true)
 												}}
 											>
-												<text fg={C.untracked}>? </text>
-												<text fg={isSelected() ? C.selectedText : C.dim}>{entry.path}</text>
+												<text fg={t.gitUntracked}>? </text>
+												<text fg={isSelected() ? t.text : t.textSecondary}>{entry.path}</text>
 											</box>
 										)
 									}}
@@ -457,32 +448,34 @@ export function StatusView() {
 							{/* Empty state */}
 							<Show when={entries().length === 0}>
 								<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-									<text fg={C.dim}>Nothing to commit</text>
-									<text fg={C.dim}>working tree clean</text>
+									<text fg={t.textSecondary}>Nothing to commit</text>
+									<text fg={t.textSecondary}>working tree clean</text>
 								</box>
 							</Show>
 						</scrollbox>
 
 						{/* File list footer hints */}
-						<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-							<text fg={C.dim}>
-								<span style={{ fg: "#58a6ff" }}>Space</span> stage ·{" "}
-								<span style={{ fg: "#58a6ff" }}>a</span> all ·{" "}
-								<span style={{ fg: "#58a6ff" }}>d</span> discard ·{" "}
-								<span style={{ fg: "#58a6ff" }}>c</span> commit ·{" "}
-								<span style={{ fg: "#58a6ff" }}>b</span> blame ·{" "}
-								<span style={{ fg: "#58a6ff" }}>P</span> push·PR ·{" "}
-								<span style={{ fg: "#58a6ff" }}>V</span> view PR
-							</text>
-						</box>
+						<KeyHints
+							hints={[
+								{ key: "Space", label: "stage" },
+								{ key: "a", label: "all" },
+								{ key: "d", label: "discard" },
+								{ key: "c", label: "commit" },
+								{ key: "b", label: "blame" },
+								{ key: "P", label: "push·PR" },
+								{ key: "V", label: "view PR" },
+							]}
+						/>
 					</box>
 				</Show>
 
 				{/* Diff panel */}
 				<Show when={!showBlame()}>
-					<DiffViewer
+					<NativeDiff
 						content={diffContent()}
 						title={selectedEntry() ? `diff: ${selectedEntry()?.path}` : "diff"}
+						filepath={selectedEntry()?.path}
+						mode={state.git.sideBySideDiff ? "split" : "unified"}
 						staged={diffStaged()}
 						fullscreen={isFullscreen()}
 						onToggleFullscreen={() => toggleFullscreen("detail")}
@@ -540,7 +533,6 @@ export function StatusView() {
 						setShowCommit(false)
 						try {
 							const beforeHash = await getHeadHash(state.git.repoRoot)
-							const { commit } = await import("@gubbi/git")
 							await commit(message, {}, state.git.repoRoot)
 							const afterHash = await getHeadHash(state.git.repoRoot)
 							recordOperation("commit", `commit: ${message.slice(0, 50)}`, beforeHash, afterHash)
@@ -565,7 +557,6 @@ export function StatusView() {
 					onSubmit={async (message) => {
 						setShowStash(false)
 						try {
-							const { stash } = await import("@gubbi/git")
 							await stash(message || undefined, { includeUntracked: true }, state.git.repoRoot)
 							await gitService.refreshStatus()
 							showToast("success", "Changes stashed")

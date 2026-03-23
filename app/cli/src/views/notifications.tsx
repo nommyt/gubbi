@@ -2,7 +2,8 @@
  * notifications.tsx — GitHub notifications: triage, filter, mark read, batch ops
  */
 
-import { state, showToast, icons, createQuery } from "@gubbi/core"
+import { state, showToast, icons, createQuery, useTheme } from "@gubbi/core"
+import { KeyHints } from "@gubbi/core/tui"
 import { openURL } from "@gubbi/git"
 import {
 	listNotifications,
@@ -12,20 +13,6 @@ import {
 } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
-
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	unread: "#e6edf3",
-	read: "#8b949e",
-	pr: "#3fb950",
-	issue: "#f78166",
-	release: "#a371f7",
-	other: "#58a6ff",
-	dim: "#8b949e",
-	repo: "#58a6ff",
-}
 
 function typeIcon(type: string): string {
 	switch (type) {
@@ -39,19 +26,6 @@ function typeIcon(type: string): string {
 			return icons.commit
 		default:
 			return icons.bell
-	}
-}
-
-function typeColor(type: string): string {
-	switch (type) {
-		case "PullRequest":
-			return C.pr
-		case "Issue":
-			return C.issue
-		case "Release":
-			return C.release
-		default:
-			return C.other
 	}
 }
 
@@ -79,6 +53,21 @@ function reasonLabel(reason: string): string {
 }
 
 export function NotificationsView() {
+	const t = useTheme()
+
+	function typeColor(type: string): string {
+		switch (type) {
+			case "PullRequest":
+				return t.prOpen
+			case "Issue":
+				return t.error
+			case "Release":
+				return t.accentSecondary
+			default:
+				return t.accent
+		}
+	}
+
 	const [notifications, setNotifications] = createSignal<Notification[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [showAll, setShowAll] = createSignal(false)
@@ -157,14 +146,14 @@ export function NotificationsView() {
 			flexGrow={1}
 			flexDirection="column"
 			border
-			borderColor={C.activeBorder}
+			borderColor={t.borderFocused}
 			title={showAll() ? "notifications (all)" : "notifications (unread)"}
 		>
 			<Show
 				when={!notifsQuery.isLoading()}
 				fallback={
 					<box flexGrow={1} alignItems="center" justifyContent="center">
-						<text fg={C.dim}>Loading notifications...</text>
+						<text fg={t.textSecondary}>Loading notifications...</text>
 					</box>
 				}
 			>
@@ -172,8 +161,8 @@ export function NotificationsView() {
 					when={state.github.isAuthenticated}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center" gap={1}>
-							<text fg={C.dim}>GitHub not authenticated</text>
-							<text fg={C.dim}>Install gh and ensure you are logged in</text>
+							<text fg={t.textSecondary}>GitHub not authenticated</text>
+							<text fg={t.textSecondary}>Install gh and ensure you are logged in</text>
 						</box>
 					}
 				>
@@ -188,11 +177,11 @@ export function NotificationsView() {
 										paddingRight={1}
 										paddingTop={1}
 										gap={1}
-										backgroundColor={isSelected() ? C.selected : "transparent"}
+										backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 										onMouseDown={() => setSelectedIdx(i())}
 									>
 										{/* Unread dot */}
-										<text fg={notif.unread ? C.unread : C.dim}>
+										<text fg={notif.unread ? t.text : t.textSecondary}>
 											{notif.unread ? icons.circleFilled : icons.circle}
 										</text>
 
@@ -200,15 +189,15 @@ export function NotificationsView() {
 										<text fg={typeColor(notif.subject.type)}>{typeIcon(notif.subject.type)}</text>
 
 										{/* Title */}
-										<text fg={notif.unread ? C.unread : C.read}>{notif.subject.title}</text>
+										<text fg={notif.unread ? t.text : t.textMuted}>{notif.subject.title}</text>
 
 										<box flexGrow={1} />
 
 										{/* Reason */}
-										<text fg={C.dim}>{reasonLabel(notif.reason)}</text>
+										<text fg={t.textSecondary}>{reasonLabel(notif.reason)}</text>
 
 										{/* Repo */}
-										<text fg={C.repo}>{notif.repository.split("/").at(-1)}</text>
+										<text fg={t.accent}>{notif.repository.split("/").at(-1)}</text>
 									</box>
 								)
 							}}
@@ -216,9 +205,11 @@ export function NotificationsView() {
 
 						<Show when={notifications().length === 0 && !notifsQuery.isLoading()}>
 							<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-								<text fg={C.dim}>{showAll() ? "No notifications" : "No unread notifications"}</text>
+								<text fg={t.textSecondary}>
+									{showAll() ? "No notifications" : "No unread notifications"}
+								</text>
 								<Show when={!showAll()}>
-									<text fg={C.dim}>Press a to show all</text>
+									<text fg={t.textSecondary}>Press a to show all</text>
 								</Show>
 							</box>
 						</Show>
@@ -226,14 +217,14 @@ export function NotificationsView() {
 				</Show>
 			</Show>
 
-			<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-				<text fg={C.dim}>
-					<span style={{ fg: "#58a6ff" }}>m</span> mark read ·{" "}
-					<span style={{ fg: "#58a6ff" }}>M</span> mark all ·{" "}
-					<span style={{ fg: "#58a6ff" }}>a</span> toggle all ·{" "}
-					<span style={{ fg: "#58a6ff" }}>o</span> open
-				</text>
-			</box>
+			<KeyHints
+				hints={[
+					{ key: "m", label: "mark read" },
+					{ key: "M", label: "mark all" },
+					{ key: "a", label: "toggle all" },
+					{ key: "o", label: "open" },
+				]}
+			/>
 		</box>
 	)
 }

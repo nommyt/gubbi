@@ -1,26 +1,20 @@
 /**
- * status-bar.tsx — Bottom bar with context-sensitive keybinding hints + notifications
+ * status-bar.tsx — Bottom status bar with context-sensitive keybinding hints.
+ *
+ * Displays view-specific keybinding hints on the left, global hints on
+ * the right, toast messages when active, the current view label, a
+ * relative "last refreshed" timestamp, and a sync indicator.
  */
 
-import { state } from "@gubbi/core"
+import { state, useTheme } from "@gubbi/core"
 import { icons } from "@gubbi/core"
 import { For, Show, createSignal, onMount, onCleanup } from "solid-js"
 
-const C = {
-	bg: "#0d1117",
-	border: "#30363d",
-	key: "#58a6ff",
-	sep: "#484f58",
-	text: "#8b949e",
-	activeView: "#e6edf3",
-	error: "#f78166",
-	success: "#3fb950",
-	warning: "#d29922",
-	info: "#58a6ff",
-}
-
+/** A single keybinding hint shown in the status bar. */
 interface KeyHint {
+	/** Key or key combo label (e.g. `"j/k"`, `"^r"`). */
 	key: string
+	/** Short description of the action. */
 	label: string
 }
 
@@ -155,7 +149,14 @@ function getContextHints(): KeyHint[] {
 	return base
 }
 
+/**
+ * Bottom status bar component.
+ *
+ * Renders context-sensitive key hints for the active view, global hints,
+ * toast notifications, and the last-refresh timestamp.
+ */
 export function StatusBar() {
+	const t = useTheme()
 	const hints = () => getContextHints()
 	const latestToast = () => state.ui.toasts.at(-1)
 
@@ -167,9 +168,9 @@ export function StatusBar() {
 	})
 
 	const refreshedAgo = () => {
-		const t = state.github.lastRefreshTime
-		if (!t) return ""
-		const s = Math.floor((now() - t) / 1000)
+		const ts = state.github.lastRefreshTime
+		if (!ts) return ""
+		const s = Math.floor((now() - ts) / 1000)
 		if (s < 60) return `${s}s ago`
 		const m = Math.floor(s / 60)
 		if (m < 60) return `${m}m ago`
@@ -182,8 +183,8 @@ export function StatusBar() {
 			alignItems="center"
 			height={1}
 			border={["top"]}
-			borderColor={C.border}
-			backgroundColor={C.bg}
+			borderColor={t.border}
+			backgroundColor={t.bg}
 			paddingLeft={1}
 			paddingRight={1}
 			gap={1}
@@ -195,12 +196,12 @@ export function StatusBar() {
 						style={{
 							fg:
 								latestToast()?.type === "error"
-									? C.error
+									? t.error
 									: latestToast()?.type === "success"
-										? C.success
+										? t.success
 										: latestToast()?.type === "warning"
-											? C.warning
-											: C.info,
+											? t.warning
+											: t.info,
 						}}
 					>
 						{latestToast()?.message}
@@ -214,11 +215,11 @@ export function StatusBar() {
 					{(hint, i) => (
 						<>
 							<Show when={i() > 0}>
-								<text fg={C.sep}>·</text>
+								<text fg={t.textMuted}>·</text>
 							</Show>
 							<text>
-								<span style={{ fg: C.key }}>{hint.key}</span>
-								<span style={{ fg: C.text }}> {hint.label}</span>
+								<span style={{ fg: t.accent }}>{hint.key}</span>
+								<span style={{ fg: t.textSecondary }}> {hint.label}</span>
 							</text>
 						</>
 					)}
@@ -232,25 +233,25 @@ export function StatusBar() {
 				{(hint, i) => (
 					<>
 						<Show when={i() > 0}>
-							<text fg={C.sep}>·</text>
+							<text fg={t.textMuted}>·</text>
 						</Show>
 						<text>
-							<span style={{ fg: C.sep }}>{hint.key}</span>
-							<span style={{ fg: C.sep }}> {hint.label}</span>
+							<span style={{ fg: t.textMuted }}>{hint.key}</span>
+							<span style={{ fg: t.textMuted }}> {hint.label}</span>
 						</text>
 					</>
 				)}
 			</For>
 
-			<text fg={C.sep}>│</text>
+			<text fg={t.textMuted}>│</text>
 
 			{/* Current view name */}
-			<text fg={C.activeView}>{VIEWS_DISPLAY[state.ui.currentView]}</text>
+			<text fg={t.text}>{VIEWS_DISPLAY[state.ui.currentView]}</text>
 			<Show when={refreshedAgo()}>
-				<text fg={C.sep}> {refreshedAgo()}</text>
+				<text fg={t.textMuted}> {refreshedAgo()}</text>
 			</Show>
 			<Show when={state.ui.syncing}>
-				<text fg={C.info}> {icons.sync} syncing</text>
+				<text fg={t.info}> {icons.sync} syncing</text>
 			</Show>
 		</box>
 	)

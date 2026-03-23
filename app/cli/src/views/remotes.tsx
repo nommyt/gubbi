@@ -2,8 +2,8 @@
  * remotes.tsx — Remote management and worktrees
  */
 
-import { state, showToast } from "@gubbi/core"
-import { InputDialog, ConfirmDialog } from "@gubbi/core/tui"
+import { state, showToast, useTheme } from "@gubbi/core"
+import { InputDialog, ConfirmDialog, KeyHints } from "@gubbi/core/tui"
 import {
 	getRemotes,
 	fetch,
@@ -17,18 +17,8 @@ import type { RemoteEntry } from "@gubbi/git"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	name: "#58a6ff",
-	url: "#8b949e",
-	dim: "#8b949e",
-	text: "#e6edf3",
-	current: "#3fb950",
-}
-
 export function RemotesView() {
+	const t = useTheme()
 	const [remotes, setRemotes] = createSignal<RemoteEntry[]>([])
 	const [worktrees, setWorktrees] = createSignal<WorktreeEntry[]>([])
 	const [selectedSection, setSelectedSection] = createSignal<"remotes" | "worktrees">("remotes")
@@ -101,7 +91,7 @@ export function RemotesView() {
 					width={50}
 					flexDirection="column"
 					border
-					borderColor={selectedSection() === "remotes" ? C.activeBorder : C.border}
+					borderColor={selectedSection() === "remotes" ? t.borderFocused : t.border}
 					title="remotes"
 				>
 					<scrollbox flexGrow={1}>
@@ -113,14 +103,14 @@ export function RemotesView() {
 										flexDirection="column"
 										paddingLeft={1}
 										paddingTop={1}
-										backgroundColor={isSelected() ? C.selected : "transparent"}
+										backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 										onMouseDown={() => {
 											setSelectedSection("remotes")
 											setSelectedIdx(i())
 										}}
 									>
-										<text fg={C.name}>{remote.name}</text>
-										<text fg={C.url} paddingLeft={2}>
+										<text fg={t.accent}>{remote.name}</text>
+										<text fg={t.textSecondary} paddingLeft={2}>
 											{remote.fetchUrl}
 										</text>
 									</box>
@@ -129,16 +119,16 @@ export function RemotesView() {
 						</For>
 						<Show when={remotes().length === 0}>
 							<box paddingLeft={1} paddingTop={2}>
-								<text fg={C.dim}>No remotes configured</text>
+								<text fg={t.textSecondary}>No remotes configured</text>
 							</box>
 						</Show>
 					</scrollbox>
-					<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-						<text fg={C.dim}>
-							<span style={{ fg: "#58a6ff" }}>f</span> fetch ·{" "}
-							<span style={{ fg: "#58a6ff" }}>Tab</span> worktrees
-						</text>
-					</box>
+					<KeyHints
+						hints={[
+							{ key: "f", label: "fetch" },
+							{ key: "Tab", label: "worktrees" },
+						]}
+					/>
 				</box>
 
 				{/* Worktrees section */}
@@ -146,7 +136,7 @@ export function RemotesView() {
 					flexGrow={1}
 					flexDirection="column"
 					border
-					borderColor={selectedSection() === "worktrees" ? C.activeBorder : C.border}
+					borderColor={selectedSection() === "worktrees" ? t.borderFocused : t.border}
 					title="worktrees"
 				>
 					<scrollbox flexGrow={1}>
@@ -159,21 +149,21 @@ export function RemotesView() {
 										flexDirection="column"
 										paddingLeft={1}
 										paddingTop={1}
-										backgroundColor={isSelected() ? C.selected : "transparent"}
+										backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 										onMouseDown={() => {
 											setSelectedSection("worktrees")
 											setSelectedIdx(i())
 										}}
 									>
-										<text fg={isCurrent() ? C.current : C.name}>
+										<text fg={isCurrent() ? t.success : t.accent}>
 											{isCurrent() ? "* " : "  "}
 											{wt.path.split("/").slice(-2).join("/")}
 										</text>
 										<box flexDirection="row" paddingLeft={2} gap={1}>
-											<text fg={C.url}>{wt.branch || "(detached)"}</text>
-											<text fg={C.dim}>{wt.hash.slice(0, 7)}</text>
+											<text fg={t.textSecondary}>{wt.branch || "(detached)"}</text>
+											<text fg={t.textSecondary}>{wt.hash.slice(0, 7)}</text>
 											<Show when={wt.locked}>
-												<text fg={C.dim}>locked</text>
+												<text fg={t.textSecondary}>locked</text>
 											</Show>
 										</box>
 									</box>
@@ -182,17 +172,17 @@ export function RemotesView() {
 						</For>
 						<Show when={worktrees().length === 0}>
 							<box paddingLeft={1} paddingTop={2}>
-								<text fg={C.dim}>No additional worktrees</text>
-								<text fg={C.dim}>Press n to add one</text>
+								<text fg={t.textSecondary}>No additional worktrees</text>
+								<text fg={t.textSecondary}>Press n to add one</text>
 							</box>
 						</Show>
 					</scrollbox>
-					<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-						<text fg={C.dim}>
-							<span style={{ fg: "#58a6ff" }}>n</span> add ·{" "}
-							<span style={{ fg: "#58a6ff" }}>D</span> remove
-						</text>
-					</box>
+					<KeyHints
+						hints={[
+							{ key: "n", label: "add" },
+							{ key: "D", label: "remove" },
+						]}
+					/>
 				</box>
 			</box>
 

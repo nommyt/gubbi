@@ -2,8 +2,8 @@
  * actions.tsx — GitHub Actions workflow runs: list, status, logs, re-run
  */
 
-import { state, showToast, icons, useInterval } from "@gubbi/core"
-import { SelectDialog } from "@gubbi/core/tui"
+import { state, showToast, icons, useInterval, useTheme, relativeTime } from "@gubbi/core"
+import { SelectDialog, KeyHints } from "@gubbi/core/tui"
 import { openURL } from "@gubbi/git"
 import {
 	listRuns,
@@ -16,27 +16,6 @@ import {
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount, onCleanup } from "solid-js"
 
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	success: "#3fb950",
-	failure: "#f78166",
-	running: "#d29922",
-	cancelled: "#8b949e",
-	dim: "#8b949e",
-	text: "#e6edf3",
-	branch: "#58a6ff",
-}
-
-function statusColor(run: WorkflowRun): string {
-	if (run.status === "in_progress") return C.running
-	if (run.conclusion === "success") return C.success
-	if (run.conclusion === "failure" || run.conclusion === "timed_out") return C.failure
-	if (run.conclusion === "cancelled") return C.cancelled
-	return C.dim
-}
-
 function statusIcon(run: WorkflowRun): string {
 	if (run.status === "in_progress") return icons.sync
 	if (run.status === "queued") return icons.clock
@@ -47,21 +26,17 @@ function statusIcon(run: WorkflowRun): string {
 	return icons.circle
 }
 
-function formatDate(iso: string): string {
-	try {
-		const d = new Date(iso)
-		const now = new Date()
-		const diff = (now.getTime() - d.getTime()) / 1000
-		if (diff < 60) return `${Math.floor(diff)}s ago`
-		if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-		if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-		return `${Math.floor(diff / 86400)}d ago`
-	} catch {
-		return iso
-	}
-}
-
 export function ActionsView() {
+	const t = useTheme()
+
+	function statusColor(run: WorkflowRun): string {
+		if (run.status === "in_progress") return t.warning
+		if (run.conclusion === "success") return t.success
+		if (run.conclusion === "failure" || run.conclusion === "timed_out") return t.error
+		if (run.conclusion === "cancelled") return t.textSecondary
+		return t.textSecondary
+	}
+
 	const [runs, setRuns] = createSignal<WorkflowRun[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [logs, setLogs] = createSignal("")
@@ -201,14 +176,14 @@ export function ActionsView() {
 				width={55}
 				flexDirection="column"
 				border
-				borderColor={primaryFocused() ? C.activeBorder : C.border}
+				borderColor={primaryFocused() ? t.borderFocused : t.border}
 				title="github actions"
 			>
 				<Show
 					when={!loading()}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
-							<text fg={C.dim}>Loading runs...</text>
+							<text fg={t.textSecondary}>Loading runs...</text>
 						</box>
 					}
 				>
@@ -216,8 +191,8 @@ export function ActionsView() {
 						when={state.github.isAuthenticated}
 						fallback={
 							<box flexGrow={1} alignItems="center" justifyContent="center" gap={1}>
-								<text fg={C.dim}>GitHub not authenticated</text>
-								<text fg={C.dim}>Install gh and ensure you are logged in</text>
+								<text fg={t.textSecondary}>GitHub not authenticated</text>
+								<text fg={t.textSecondary}>Install gh and ensure you are logged in</text>
 							</box>
 						}
 					>
@@ -231,7 +206,7 @@ export function ActionsView() {
 											paddingLeft={1}
 											paddingRight={1}
 											paddingTop={1}
-											backgroundColor={isSelected() ? C.selected : "transparent"}
+											backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 											onMouseDown={() => {
 												setSelectedIdx(i())
 												setPrimaryFocused(true)
@@ -239,19 +214,19 @@ export function ActionsView() {
 										>
 											<box flexDirection="row" gap={1}>
 												<text fg={statusColor(run)}>{statusIcon(run)}</text>
-												<text fg={isSelected() ? "#e6edf3" : C.text}>{run.workflowName}</text>
+												<text fg={isSelected() ? t.text : t.textSecondary}>{run.workflowName}</text>
 												<Show when={watchingRunId() === run.id}>
-													<text fg={C.running}> {icons.circleFilled} watching</text>
+													<text fg={t.warning}> {icons.circleFilled} watching</text>
 												</Show>
 												<box flexGrow={1} />
-												<text fg={C.dim}>{formatDate(run.updatedAt)}</text>
+												<text fg={t.textSecondary}>{relativeTime(run.updatedAt)}</text>
 											</box>
 											<box flexDirection="row" paddingLeft={2} gap={1}>
-												<text fg={C.branch}>
+												<text fg={t.accent}>
 													{icons.branch} {run.branch}
 												</text>
-												<text fg={C.dim}>{run.event}</text>
-												<text fg={C.dim}>{run.headSha.slice(0, 7)}</text>
+												<text fg={t.textSecondary}>{run.event}</text>
+												<text fg={t.textSecondary}>{run.headSha.slice(0, 7)}</text>
 											</box>
 										</box>
 									)
@@ -260,26 +235,27 @@ export function ActionsView() {
 
 							<Show when={runs().length === 0 && !loading()}>
 								<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-									<text fg={C.dim}>No workflow runs</text>
+									<text fg={t.textSecondary}>No workflow runs</text>
 								</box>
 							</Show>
 						</scrollbox>
 					</Show>
 				</Show>
 
-				<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-					<text fg={C.dim}>
-						<span style={{ fg: "#58a6ff" }}>Enter</span> logs ·{" "}
-						<span style={{ fg: "#58a6ff" }}>t</span> trigger ·{" "}
-						<span style={{ fg: "#58a6ff" }}>r</span> re-run ·{" "}
-						<span style={{ fg: "#58a6ff" }}>w</span> watch ·{" "}
-						<span style={{ fg: "#58a6ff" }}>^l</span> auto-refresh ·{" "}
-						<span style={{ fg: "#58a6ff" }}>o</span> open
-					</text>
+				<KeyHints
+					hints={[
+						{ key: "Enter", label: "logs" },
+						{ key: "t", label: "trigger" },
+						{ key: "r", label: "re-run" },
+						{ key: "w", label: "watch" },
+						{ key: "^l", label: "auto-refresh" },
+						{ key: "o", label: "open" },
+					]}
+				>
 					<Show when={autoRefresh()}>
-						<text fg={C.running}> {icons.sync} auto</text>
+						<text fg={t.warning}> {icons.sync} auto</text>
 					</Show>
-				</box>
+				</KeyHints>
 			</box>
 
 			{/* Logs panel */}
@@ -287,14 +263,14 @@ export function ActionsView() {
 				flexGrow={1}
 				flexDirection="column"
 				border
-				borderColor={primaryFocused() ? C.border : C.activeBorder}
+				borderColor={primaryFocused() ? t.border : t.borderFocused}
 				title={selectedRun() ? `logs: ${selectedRun()?.workflowName}` : "logs"}
 			>
 				<Show
 					when={!loadingLogs()}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
-							<text fg={C.dim}>Loading logs...</text>
+							<text fg={t.textSecondary}>Loading logs...</text>
 						</box>
 					}
 				>
@@ -302,7 +278,7 @@ export function ActionsView() {
 						when={logs()}
 						fallback={
 							<box flexGrow={1} alignItems="center" justifyContent="center">
-								<text fg={C.dim}>Press Enter to load logs</text>
+								<text fg={t.textSecondary}>Press Enter to load logs</text>
 							</box>
 						}
 					>
@@ -314,7 +290,7 @@ export function ActionsView() {
 							paddingRight={1}
 							paddingTop={1}
 						>
-							<text fg={C.text}>{logs()}</text>
+							<text fg={t.text}>{logs()}</text>
 						</scrollbox>
 					</Show>
 				</Show>

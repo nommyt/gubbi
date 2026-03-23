@@ -1,39 +1,44 @@
 /**
- * dialog.tsx — Modal dialogs (confirm, input, select)
+ * dialog.tsx — Modal dialog components (confirm, input, select, help).
+ *
+ * All dialogs render as absolutely-positioned overlays and capture
+ * keyboard input while open.
  */
 
-import { setInputActive } from "@gubbi/core"
+import { setInputActive, useTheme } from "@gubbi/core"
 import { useKeyboard } from "@opentui/solid"
 import { Show, For, onMount, onCleanup } from "solid-js"
-
-const C = {
-	overlay: "#0d1117",
-	bg: "#161b22",
-	border: "#388bfd",
-	title: "#e6edf3",
-	text: "#8b949e",
-	danger: "#f78166",
-	success: "#3fb950",
-	key: "#58a6ff",
-	selectedBg: "#1f2937",
-	selectedText: "#e6edf3",
-}
 
 // ---------------------------------------------------------------------------
 // Confirm Dialog
 // ---------------------------------------------------------------------------
 
 interface ConfirmDialogProps {
+	/** Dialog title text. */
 	title: string
+	/** Descriptive message shown below the title. */
 	message: string
+	/** If `true`, renders the dialog with danger-coloured borders and text. */
 	dangerous?: boolean
+	/** Label for the confirm button (default: `"y"`). */
 	confirmLabel?: string
+	/** Label for the cancel button (default: `"n"`). */
 	cancelLabel?: string
+	/** Called when the user confirms (presses `y` or `Enter`). */
 	onConfirm: () => void
+	/** Called when the user cancels (presses `n`, `Esc`, or `q`). */
 	onCancel: () => void
 }
 
+/**
+ * Yes/no confirmation dialog.
+ *
+ * Press `y` or `Enter` to confirm, `n` / `Esc` / `q` to cancel.
+ * Use `dangerous` for destructive actions like delete or discard.
+ */
 export function ConfirmDialog(props: ConfirmDialogProps) {
+	const t = useTheme()
+
 	useKeyboard((key) => {
 		if (key.name === "y" || key.name === "enter") {
 			key.preventDefault()
@@ -51,22 +56,22 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
 			left="25%"
 			right="25%"
 			border
-			borderColor={props.dangerous ? C.danger : C.border}
-			backgroundColor={C.bg}
+			borderColor={props.dangerous ? t.borderDanger : t.borderFocused}
+			backgroundColor={t.bgOverlay}
 			flexDirection="column"
 			padding={1}
 			gap={1}
 		>
-			<text fg={props.dangerous ? C.danger : C.title}>{props.title}</text>
-			<text fg={C.text}>{props.message}</text>
+			<text fg={props.dangerous ? t.error : t.text}>{props.title}</text>
+			<text fg={t.textSecondary}>{props.message}</text>
 			<box flexDirection="row" gap={2} marginTop={1}>
 				<text>
-					<span style={{ fg: props.dangerous ? C.danger : C.success }}>
+					<span style={{ fg: props.dangerous ? t.error : t.success }}>
 						[{props.confirmLabel ?? "y"} confirm]
 					</span>
 				</text>
 				<text>
-					<span style={{ fg: C.text }}>[{props.cancelLabel ?? "n"} cancel]</span>
+					<span style={{ fg: t.textSecondary }}>[{props.cancelLabel ?? "n"} cancel]</span>
 				</text>
 			</box>
 		</box>
@@ -78,15 +83,29 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
 // ---------------------------------------------------------------------------
 
 interface InputDialogProps {
+	/** Dialog title text. */
 	title: string
+	/** Placeholder text for the input field. */
 	placeholder?: string
+	/** Pre-filled value. */
 	initialValue?: string
+	/** Render a multiline textarea instead of a single-line input. */
 	multiline?: boolean
+	/** Called with the trimmed value when the user presses `Enter`. */
 	onSubmit: (value: string) => void
+	/** Called when the user presses `Esc`. */
 	onCancel: () => void
 }
 
+/**
+ * Text input dialog.
+ *
+ * Supports single-line and multiline modes. Activates the global
+ * input lock while open so that view-level keybindings are suppressed.
+ */
 export function InputDialog(props: InputDialogProps) {
+	const t = useTheme()
+
 	onMount(() => setInputActive(true))
 	onCleanup(() => setInputActive(false))
 
@@ -104,17 +123,17 @@ export function InputDialog(props: InputDialogProps) {
 			left="20%"
 			right="20%"
 			border
-			borderColor={C.border}
-			backgroundColor={C.bg}
+			borderColor={t.borderFocused}
+			backgroundColor={t.bgOverlay}
 			flexDirection="column"
 			padding={1}
 			gap={1}
 		>
-			<text fg={C.title}>{props.title}</text>
+			<text fg={t.text}>{props.title}</text>
 			<Show
 				when={props.multiline}
 				fallback={
-					<box border borderColor={C.border} height={3}>
+					<box border borderColor={t.border} height={3}>
 						<input
 							focused
 							placeholder={props.placeholder ?? ""}
@@ -128,13 +147,13 @@ export function InputDialog(props: InputDialogProps) {
 					</box>
 				}
 			>
-				<box border borderColor={C.border} height={8}>
+				<box border borderColor={t.border} height={8}>
 					<textarea focused onSubmit={() => props.onCancel()} />
 				</box>
 			</Show>
-			<text fg={C.text}>
-				<span style={{ fg: C.key }}>Enter</span> confirm · <span style={{ fg: C.key }}>Esc</span>{" "}
-				cancel
+			<text fg={t.textSecondary}>
+				<span style={{ fg: t.accent }}>Enter</span> confirm ·{" "}
+				<span style={{ fg: t.accent }}>Esc</span> cancel
 			</text>
 		</box>
 	)
@@ -144,20 +163,35 @@ export function InputDialog(props: InputDialogProps) {
 // Select Dialog
 // ---------------------------------------------------------------------------
 
+/** A single option in a {@link SelectDialog}. */
 interface SelectOption {
+	/** Display label. */
 	label: string
+	/** Optional secondary description. */
 	description?: string
+	/** Value passed to `onSelect` when this option is chosen. */
 	value: string
 }
 
 interface SelectDialogProps {
+	/** Dialog title text. */
 	title: string
+	/** List of selectable options. */
 	options: SelectOption[]
+	/** Called with the selected option's value. */
 	onSelect: (value: string) => void
+	/** Called when the user presses `Esc` or `q`. */
 	onCancel: () => void
 }
 
+/**
+ * Scrollable selection dialog with arrow-key navigation.
+ *
+ * Uses OpenTUI's native `<select>` component for the option list.
+ */
 export function SelectDialog(props: SelectDialogProps) {
+	const t = useTheme()
+
 	useKeyboard((key) => {
 		if (key.name === "escape" || key.name === "q") {
 			key.preventDefault()
@@ -174,13 +208,13 @@ export function SelectDialog(props: SelectDialogProps) {
 			left="25%"
 			right="25%"
 			border
-			borderColor={C.border}
-			backgroundColor={C.bg}
+			borderColor={t.borderFocused}
+			backgroundColor={t.bgOverlay}
 			flexDirection="column"
 			padding={1}
 			height={maxHeight}
 		>
-			<text fg={C.title} paddingBottom={1}>
+			<text fg={t.text} paddingBottom={1}>
 				{props.title}
 			</text>
 			<select
@@ -198,9 +232,9 @@ export function SelectDialog(props: SelectDialogProps) {
 					height: "100%",
 					backgroundColor: "transparent",
 					focusedBackgroundColor: "transparent",
-					selectedBackgroundColor: C.selectedBg,
-					selectedTextColor: C.selectedText,
-					descriptionColor: C.text,
+					selectedBackgroundColor: t.bgTertiary,
+					selectedTextColor: t.text,
+					descriptionColor: t.textSecondary,
 				}}
 				showScrollIndicator
 				wrapSelection
@@ -213,11 +247,15 @@ export function SelectDialog(props: SelectDialogProps) {
 // Help Overlay
 // ---------------------------------------------------------------------------
 
+/** A group of keybindings displayed in the help overlay. */
 interface HelpSection {
+	/** Section heading (e.g. `"Global"`, `"Status"`). */
 	title: string
+	/** Keybinding entries in this section. */
 	bindings: Array<{ key: string; description: string }>
 }
 
+/** All keyboard shortcut sections shown in the help overlay. */
 const HELP_SECTIONS: HelpSection[] = [
 	{
 		title: "Global",
@@ -230,6 +268,7 @@ const HELP_SECTIONS: HelpSection[] = [
 			{ key: "S", description: "Toggle side-by-side diff" },
 			{ key: "/", description: "Search / filter" },
 			{ key: "?", description: "This help" },
+			{ key: "Ctrl+t", description: "Switch theme" },
 			{ key: "Mod+r", description: "Refresh all data (Cmd on Mac, Ctrl on other)" },
 			{ key: "q / Esc", description: "Go back / cancel" },
 			{ key: "Mod+c", description: "Quit (Cmd on Mac, Ctrl on other)" },
@@ -276,10 +315,19 @@ const HELP_SECTIONS: HelpSection[] = [
 ]
 
 interface HelpOverlayProps {
+	/** Called when the user closes the overlay (`?`, `Esc`, or `q`). */
 	onClose: () => void
 }
 
+/**
+ * Full-screen help overlay listing all keyboard shortcuts.
+ *
+ * Renders scrollable sections for global, navigation, status, and
+ * stacks keybindings.
+ */
 export function HelpOverlay(props: HelpOverlayProps) {
+	const t = useTheme()
+
 	useKeyboard((key) => {
 		if (key.name === "escape" || key.name === "q" || key.name === "?") {
 			key.preventDefault()
@@ -295,26 +343,26 @@ export function HelpOverlay(props: HelpOverlayProps) {
 			right="10%"
 			bottom="5%"
 			border
-			borderColor={C.border}
-			backgroundColor={C.bg}
+			borderColor={t.borderFocused}
+			backgroundColor={t.bgOverlay}
 			flexDirection="column"
 			padding={1}
 		>
-			<text fg={C.title} paddingBottom={1}>
-				<span style={{ fg: C.key }}>gubbi</span> — keyboard shortcuts
+			<text fg={t.text} paddingBottom={1}>
+				<span style={{ fg: t.accent }}>gubbi</span> — keyboard shortcuts
 			</text>
 			<scrollbox flexGrow={1}>
 				<For each={HELP_SECTIONS}>
 					{(section) => (
 						<box flexDirection="column" marginBottom={1}>
-							<text fg={C.key}>{section.title}</text>
+							<text fg={t.accent}>{section.title}</text>
 							<For each={section.bindings}>
 								{(binding) => (
 									<box flexDirection="row" gap={1}>
-										<text fg={C.key} width={14}>
+										<text fg={t.accent} width={14}>
 											{binding.key}
 										</text>
-										<text fg={C.text}>{binding.description}</text>
+										<text fg={t.textSecondary}>{binding.description}</text>
 									</box>
 								)}
 							</For>
@@ -322,9 +370,9 @@ export function HelpOverlay(props: HelpOverlayProps) {
 					)}
 				</For>
 			</scrollbox>
-			<text fg={C.text} marginTop={1}>
-				Press <span style={{ fg: C.key }}>?</span> or <span style={{ fg: C.key }}>Esc</span> to
-				close
+			<text fg={t.textSecondary} marginTop={1}>
+				Press <span style={{ fg: t.accent }}>?</span> or <span style={{ fg: t.accent }}>Esc</span>{" "}
+				to close
 			</text>
 		</box>
 	)

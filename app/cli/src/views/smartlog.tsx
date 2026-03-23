@@ -3,50 +3,19 @@
  * Shows only your work: unpushed commits, branches you authored, with inline GitHub data.
  */
 
-import { state, showToast, icons } from "@gubbi/core"
-import { DiffViewer } from "@gubbi/core/tui"
+import { state, showToast, icons, useTheme } from "@gubbi/core"
+import { NativeDiff } from "@gubbi/core/tui"
 import { getLog, getGraphLog, parseGraphLog } from "@gubbi/git"
 import type { LogEntry, GraphEntry } from "@gubbi/git"
 import { exec } from "@gubbi/git"
+import { getPRForBranch } from "@gubbi/github"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
-
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	hash: "#8b949e",
-	author: "#58a6ff",
-	date: "#484f58",
-	subject: "#e6edf3",
-	branch: "#3fb950",
-	tag: "#a371f7",
-	remote: "#d29922",
-	prOpen: "#3fb950",
-	prDraft: "#8b949e",
-	prMerged: "#a371f7",
-	ciPass: "#3fb950",
-	ciFail: "#f78166",
-	ciPending: "#d29922",
-	gpgGood: "#3fb950",
-	gpgBad: "#f78166",
-	graph: "#484f58",
-	dim: "#8b949e",
-	current: "#58a6ff",
-}
 
 function gpgIcon(status: string): string | null {
 	if (status === "G") return icons.check
 	if (status === "B" || status === "E") return icons.circleSlash
 	return null
-}
-
-function gpgColor(status: string): string {
-	return status === "G" ? C.gpgGood : C.gpgBad
-}
-
-function prForBranch(branch: string) {
-	return state.github.prs.find((pr) => pr.headRefName === branch)
 }
 
 function ciStatusForPR(_prNumber: number): string | null {
@@ -67,20 +36,22 @@ function ciIcon(status: string | null): string {
 	}
 }
 
-function ciColor(status: string | null): string {
-	switch (status) {
-		case "passing":
-			return C.ciPass
-		case "failing":
-			return C.ciFail
-		case "pending":
-			return C.ciPending
-		default:
-			return C.dim
-	}
-}
-
 export function SmartlogView() {
+	const t = useTheme()
+
+	function gpgColor(status: string): string {
+		if (status === "G") return t.success
+		if (status === "B" || status === "E") return t.error
+		return t.textMuted
+	}
+
+	function ciColor(status: string | null): string {
+		if (status === "success") return t.success
+		if (status === "failure") return t.error
+		if (status === "pending") return t.warning
+		return t.textMuted
+	}
+
 	const [entries, setEntries] = createSignal<LogEntry[]>([])
 	const [graphData, setGraphData] = createSignal<Map<string, GraphEntry>>(new Map())
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
@@ -174,14 +145,14 @@ export function SmartlogView() {
 				width={60}
 				flexDirection="column"
 				border
-				borderColor={primaryFocused() ? C.activeBorder : C.border}
+				borderColor={primaryFocused() ? t.borderFocused : t.border}
 				title="smartlog"
 			>
 				<Show
 					when={!loading()}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
-							<text fg={C.dim}>Loading...</text>
+							<text fg={t.textSecondary}>Loading...</text>
 						</box>
 					}
 				>
@@ -207,7 +178,7 @@ export function SmartlogView() {
 								const firstBranch = () => localRefs()[0]
 								const pr = () => {
 									const b = firstBranch()
-									return b ? prForBranch(b) : null
+									return b ? getPRForBranch(b, state.github.prs) : null
 								}
 								const ci = () => {
 									const p = pr()
@@ -220,7 +191,7 @@ export function SmartlogView() {
 										paddingLeft={1}
 										paddingRight={1}
 										paddingTop={0}
-										backgroundColor={isSelected() ? C.selected : "transparent"}
+										backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 										onMouseDown={() => {
 											setSelectedIdx(i())
 											void loadDiff(entry)
@@ -232,19 +203,21 @@ export function SmartlogView() {
 											<Show
 												when={graphEntry()}
 												fallback={
-													<text fg={isCurrent() ? C.current : C.graph}>
+													<text fg={isCurrent() ? t.success : t.textMuted}>
 														{isCurrent() ? icons.circleFilled : icons.circle}
 													</text>
 												}
 											>
-												<text fg={isCurrent() ? C.current : C.graph}>{graphEntry()?.graph}</text>
+												<text fg={isCurrent() ? t.success : t.textMuted}>
+													{graphEntry()?.graph}
+												</text>
 											</Show>
 
 											{/* Short hash */}
-											<text fg={C.hash}>{entry.shortHash}</text>
+											<text fg={t.accent}>{entry.shortHash}</text>
 
 											{/* Subject */}
-											<text fg={isSelected() ? "#e6edf3" : C.subject}>{entry.subject}</text>
+											<text fg={isSelected() ? t.text : t.textSecondary}>{entry.subject}</text>
 
 											<box flexGrow={1} />
 
@@ -265,7 +238,7 @@ export function SmartlogView() {
 												<For each={localRefs()}>
 													{(ref) => (
 														<text>
-															<span style={{ fg: ref.includes("HEAD") ? C.current : C.branch }}>
+															<span style={{ fg: ref.includes("HEAD") ? t.success : t.accent }}>
 																{icons.branch} {ref.replace("HEAD -> ", "")}
 															</span>
 														</text>
@@ -273,12 +246,12 @@ export function SmartlogView() {
 												</For>
 
 												<Show when={remoteBranch()}>
-													<text fg={C.remote}>↑ {remoteBranch()?.replace("origin/", "")}</text>
+													<text fg={t.warning}>↑ {remoteBranch()?.replace("origin/", "")}</text>
 												</Show>
 
 												<Show when={pr()}>
 													<text>
-														<span style={{ fg: pr()?.isDraft ? C.prDraft : C.prOpen }}>
+														<span style={{ fg: pr()?.isDraft ? t.prDraft : t.prOpen }}>
 															PR #{pr()?.number}
 															{pr()?.isDraft ? " (draft)" : ""}
 														</span>
@@ -289,8 +262,8 @@ export function SmartlogView() {
 
 										{/* Author + date */}
 										<box flexDirection="row" paddingLeft={2} gap={1}>
-											<text fg={C.author}>{entry.author}</text>
-											<text fg={C.date}>{entry.relativeDate}</text>
+											<text fg={t.accent}>{entry.author}</text>
+											<text fg={t.textMuted}>{entry.relativeDate}</text>
 										</box>
 									</box>
 								)
@@ -299,7 +272,7 @@ export function SmartlogView() {
 
 						<Show when={entries().length === 0}>
 							<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-								<text fg={C.dim}>No commits found</text>
+								<text fg={t.textSecondary}>No commits found</text>
 							</box>
 						</Show>
 					</scrollbox>
@@ -307,9 +280,10 @@ export function SmartlogView() {
 			</box>
 
 			{/* Diff panel */}
-			<DiffViewer
+			<NativeDiff
 				content={diffContent()}
 				title={selectedEntry() ? `commit: ${selectedEntry()?.shortHash}` : "commit"}
+				mode={state.git.sideBySideDiff ? "split" : "unified"}
 			/>
 		</box>
 	)

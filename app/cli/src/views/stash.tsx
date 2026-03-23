@@ -2,9 +2,8 @@
  * stash.tsx — Stash management: list, preview, apply/pop/drop
  */
 
-import { state, showToast } from "@gubbi/core"
-import { ConfirmDialog, InputDialog, SelectDialog } from "@gubbi/core/tui"
-import { DiffViewer } from "@gubbi/core/tui"
+import { state, showToast, useTheme } from "@gubbi/core"
+import { ConfirmDialog, InputDialog, SelectDialog, NativeDiff, KeyHints } from "@gubbi/core/tui"
 import {
 	getStashList,
 	stash,
@@ -18,18 +17,9 @@ import type { StashEntry } from "@gubbi/git"
 import { useKeyboard } from "@opentui/solid"
 import { createSignal, For, Show, onMount } from "solid-js"
 
-const C = {
-	border: "#30363d",
-	activeBorder: "#388bfd",
-	selected: "#1f2937",
-	selectedText: "#e6edf3",
-	text: "#e6edf3",
-	branch: "#58a6ff",
-	dim: "#8b949e",
-	danger: "#f78166",
-}
-
 export function StashView() {
+	const t = useTheme()
+
 	const [entries, setEntries] = createSignal<StashEntry[]>([])
 	const [selectedIdx, setSelectedIdx] = createSignal(0)
 	const [diffContent, setDiffContent] = createSignal("")
@@ -109,15 +99,15 @@ export function StashView() {
 				width={45}
 				flexDirection="column"
 				border
-				borderColor={primaryFocused() ? C.activeBorder : C.border}
+				borderColor={primaryFocused() ? t.borderFocused : t.border}
 				title="stash"
 			>
 				<Show
 					when={entries().length > 0}
 					fallback={
 						<box flexGrow={1} alignItems="center" justifyContent="center">
-							<text fg={C.dim}>No stashes</text>
-							<text fg={C.dim}>Press n to create one</text>
+							<text fg={t.textSecondary}>No stashes</text>
+							<text fg={t.textSecondary}>Press n to create one</text>
 						</box>
 					}
 				>
@@ -131,7 +121,7 @@ export function StashView() {
 										paddingLeft={1}
 										paddingRight={1}
 										paddingTop={1}
-										backgroundColor={isSelected() ? C.selected : "transparent"}
+										backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 										onMouseDown={() => {
 											setSelectedIdx(i())
 											void loadDiff(entry.index)
@@ -139,10 +129,10 @@ export function StashView() {
 										}}
 									>
 										<box flexDirection="row" gap={1}>
-											<text fg={C.dim}>stash@{"{" + entry.index + "}"}</text>
-											<text fg={isSelected() ? C.selectedText : C.text}>{entry.message}</text>
+											<text fg={t.textSecondary}>stash@{"{" + entry.index + "}"}</text>
+											<text fg={isSelected() ? t.text : t.text}>{entry.message}</text>
 										</box>
-										<text fg={C.branch} paddingLeft={2}>
+										<text fg={t.accent} paddingLeft={2}>
 											on {entry.branch}
 										</text>
 									</box>
@@ -153,19 +143,21 @@ export function StashView() {
 				</Show>
 
 				{/* Footer */}
-				<box height={1} paddingLeft={1} border={["top"]} borderColor={C.border}>
-					<text fg={C.dim}>
-						<span style={{ fg: "#58a6ff" }}>Enter</span> apply ·{" "}
-						<span style={{ fg: "#58a6ff" }}>p</span> pop · <span style={{ fg: "#58a6ff" }}>D</span>{" "}
-						drop · <span style={{ fg: "#58a6ff" }}>n</span> new
-					</text>
-				</box>
+				<KeyHints
+					hints={[
+						{ key: "Enter", label: "apply" },
+						{ key: "p", label: "pop" },
+						{ key: "D", label: "drop" },
+						{ key: "n", label: "new" },
+					]}
+				/>
 			</box>
 
 			{/* Diff preview */}
-			<DiffViewer
+			<NativeDiff
 				content={diffContent()}
 				title={selectedEntry() ? `stash@{${selectedEntry()?.index}}` : "stash preview"}
+				mode={state.git.sideBySideDiff ? "split" : "unified"}
 			/>
 
 			{/* Apply confirm */}

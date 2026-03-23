@@ -5,6 +5,7 @@
 import { createRoot } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 
+import { getDefaultThemeName, persistThemeName } from "../theme.ts"
 import type {
 	AppState,
 	GitState,
@@ -82,6 +83,7 @@ const initialUIState: UIState = {
 	helpVisible: false,
 	syncing: false,
 	inputActive: false,
+	themeName: getDefaultThemeName(),
 }
 
 const initialState: AppState = {
@@ -146,6 +148,11 @@ export function setInputActive(value: boolean) {
 
 export function setLoading(key: keyof UIState["loading"], value: boolean) {
 	setState("ui", "loading", key, value)
+}
+
+export function setThemeName(name: string) {
+	setState("ui", "themeName", name)
+	persistThemeName(name)
 }
 
 export function updateGitStatus(entries: GitStatusEntry[]) {
