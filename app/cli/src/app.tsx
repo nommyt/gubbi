@@ -219,7 +219,7 @@ export function App() {
 		// Ctrl+C — quit (always active, even in inputs)
 		if (key.ctrl && key.name === "c") {
 			renderer.destroy()
-			return
+			process.exit(0)
 		}
 
 		// Skip all global hotkeys when an input/dialog is active

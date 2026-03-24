@@ -8,6 +8,7 @@ import { join } from "node:path"
 
 const STATE_DIR = join(homedir(), ".gubbi")
 const STATE_FILE = join(STATE_DIR, "state.json")
+const LAST_DIR_FILE = join(STATE_DIR, "last-dir")
 
 function ensureDir() {
 	mkdirSync(STATE_DIR, { recursive: true })
@@ -54,4 +55,17 @@ export function getPersistedValue<T>(key: string, fallback: T): T {
  */
 export function setPersistedValue(key: string, value: unknown) {
 	writePersistedState({ [key]: value })
+}
+
+/**
+ * Write the last working directory so a shell wrapper can cd into it after exit.
+ * File: ~/.gubbi/last-dir
+ */
+export function writeLastDir(dir: string) {
+	try {
+		ensureDir()
+		writeFileSync(LAST_DIR_FILE, dir)
+	} catch {
+		// Best-effort
+	}
 }

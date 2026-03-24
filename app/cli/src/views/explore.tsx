@@ -2,8 +2,8 @@
  * explore.tsx — Explore view: My Repos, Trending, Search
  */
 
-import { setView, showToast, setInputActive, useTheme, relativeTime } from "@gubbi/core"
-import { InputDialog, SelectDialog, KeyHints } from "@gubbi/core/tui"
+import { setView, showToast, setInputActive, useTheme, relativeTime, icons } from "@gubbi/core"
+import { InputDialog, SelectDialog } from "@gubbi/core/tui"
 import { openURL, findLocalClone, getOrScanRepoMap, saveRepoMap, gitService } from "@gubbi/git"
 import { exec } from "@gubbi/git"
 import {
@@ -40,7 +40,7 @@ interface FlatRepo {
 
 function formatStars(n: number): string {
 	if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-	if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
+	if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
 	return String(n)
 }
 
@@ -188,11 +188,12 @@ export function ExploreView() {
 			case "trending":
 				await loadTrending()
 				break
-			case "search":
+			case "search": {
 				const cached = getCached(exploreCache.search)
 				if (cached) setRepos(cached)
 				else setRepos([])
 				break
+			}
 		}
 	}
 
@@ -253,7 +254,6 @@ export function ExploreView() {
 				throw new Error(result.stderr)
 			}
 
-			// Update repo map
 			const map = { ...repoMap() }
 			map[fullName] = cloneDir
 			saveRepoMap(map)
@@ -278,7 +278,6 @@ export function ExploreView() {
 		if (showCloneDialog() || showLanguageFilter()) return
 
 		if (searchActive()) {
-			// When search input is focused, handle Esc to close
 			if (key.name === "escape") {
 				key.preventDefault()
 				setSearchActive(false)
@@ -334,7 +333,7 @@ export function ExploreView() {
 			return
 		}
 
-		// Trending sub-filters: d/w/m
+		// Trending sub-filters
 		if (activeTab() === "trending") {
 			if (key.name === "d") {
 				key.preventDefault()
@@ -361,7 +360,6 @@ export function ExploreView() {
 
 		if (key.ctrl && key.name === "r") {
 			key.preventDefault()
-			// Clear current tab cache and reload
 			if (activeTab() === "my-repos") {
 				exploreCache["my-repos"] = { data: [], ts: 0 }
 				void loadMyRepos()
@@ -384,27 +382,34 @@ export function ExploreView() {
 	})
 
 	// -------------------------------------------------------------------------
-	// Render
+	// Render helpers
 	// -------------------------------------------------------------------------
 
 	const languages = ["JavaScript", "TypeScript", "Python", "Rust", "Go", "Java", "C++", "Ruby"]
 
+	const repoCount = () => repos().length
+
 	const tabLabel = () => {
+		const count = repoCount()
+		const suffix = count > 0 ? ` (${count})` : ""
 		switch (activeTab()) {
 			case "my-repos":
-				return "My Repos"
+				return `My Repos${suffix}`
 			case "trending":
-				return `Trending (${trendingSince()})`
+				return `Trending · ${trendingSince()}${suffix}`
 			case "search":
-				return searchQuery() ? `Search: ${searchQuery()}` : "Search"
+				return searchQuery() ? `Search: ${searchQuery()}${suffix}` : "Search"
 		}
 	}
 
 	const hasLocalClone = (fullName: string) => !!findLocalClone(fullName, repoMap())
 
+	// Truncate description to fit in list column
+	const truncate = (s: string, max: number) => (s.length > max ? s.slice(0, max) + "…" : s)
+
 	return (
 		<box flexGrow={1} flexDirection="row">
-			{/* ── List panel ── */}
+			{/* ── List panel ─────────────────────────────────────────────────────── */}
 			<box
 				width="45%"
 				flexDirection="column"
@@ -412,36 +417,71 @@ export function ExploreView() {
 				borderColor={focusPanel() === "list" ? t.borderFocused : t.border}
 				title={tabLabel()}
 			>
-				{/* Tab indicators */}
-				<box flexDirection="row" height={1} paddingLeft={1} gap={2}>
-					<text fg={activeTab() === "my-repos" ? t.text : t.textSecondary}>
-						<span style={{ fg: t.accent }}>m</span>y repos
+				{/* Tab bar — m·my repos  t·trending  /·search */}
+				<box
+					flexDirection="row"
+					height={1}
+					paddingLeft={1}
+					paddingRight={1}
+					gap={2}
+					backgroundColor={t.bgSecondary}
+				>
+					<text fg={activeTab() === "my-repos" ? t.text : t.textMuted}>
+						<span style={{ fg: t.accent }}>m</span>
+						<span
+							style={{
+								fg: activeTab() === "my-repos" ? t.text : t.textMuted,
+								bold: activeTab() === "my-repos",
+							}}
+						>
+							y repos
+						</span>
 					</text>
-					<text fg={activeTab() === "trending" ? t.text : t.textSecondary}>
-						<span style={{ fg: t.accent }}>t</span>rending
+
+					<text fg={activeTab() === "trending" ? t.text : t.textMuted}>
+						<span style={{ fg: t.accent }}>t</span>
+						<span
+							style={{
+								fg: activeTab() === "trending" ? t.text : t.textMuted,
+								bold: activeTab() === "trending",
+							}}
+						>
+							rending
+						</span>
 					</text>
-					<text fg={activeTab() === "search" ? t.text : t.textSecondary}>
-						<span style={{ fg: t.accent }}>/</span>search
+
+					<text fg={activeTab() === "search" ? t.text : t.textMuted}>
+						<span style={{ fg: t.accent }}>/</span>
+						<span
+							style={{
+								fg: activeTab() === "search" ? t.text : t.textMuted,
+								bold: activeTab() === "search",
+							}}
+						>
+							search
+						</span>
 					</text>
-					{/* Trending sub-filter indicator */}
+
+					{/* Trending sub-filter badge */}
 					<Show when={activeTab() === "trending"}>
-						<text fg={t.textSecondary}>
+						<box flexGrow={1} />
+						<text fg={t.textMuted}>
 							{trendingSince() === "daily"
-								? "[d]aily"
+								? "d·daily"
 								: trendingSince() === "weekly"
-									? "[w]eekly"
-									: "[m]onthly"}
+									? "w·weekly"
+									: "m·monthly"}
 						</text>
 					</Show>
 				</box>
 
-				{/* Search input (shown when search tab is active) */}
+				{/* Search input */}
 				<Show when={searchActive()}>
 					<box border borderColor={t.borderFocused} height={3} paddingLeft={1}>
 						<text fg={t.text}>Search: </text>
 						<input
 							focused
-							placeholder="Type to search repos..."
+							placeholder="Type to search GitHub repos…"
 							onSubmit={
 								((v: string) => {
 									setSearchActive(false)
@@ -464,13 +504,14 @@ export function ExploreView() {
 						when={!loading()}
 						fallback={
 							<box flexGrow={1} alignItems="center" justifyContent="center">
-								<text fg={t.textSecondary}>Loading...</text>
+								<text fg={t.textSecondary}>Loading…</text>
 							</box>
 						}
 					>
 						<For each={repos()}>
 							{(repo, idx) => {
 								const isSelected = () => selectedIdx() === idx()
+								const isLocal = () => hasLocalClone(repo.fullName)
 								return (
 									<box
 										paddingLeft={1}
@@ -479,56 +520,61 @@ export function ExploreView() {
 										backgroundColor={isSelected() ? t.bgTertiary : "transparent"}
 										flexDirection="column"
 									>
-										<box flexDirection="row" gap={1}>
+										{/* Row 1: name + meta */}
+										<box flexDirection="row" gap={1} alignItems="center">
 											<text fg={t.warning}>★</text>
-											<text fg={isSelected() ? t.text : t.accent}>{repo.fullName}</text>
-											<Show when={repo.stars > 0}>
-												<text fg={t.textSecondary}>{formatStars(repo.stars)}</text>
+											<text>
+												<span style={{ fg: isSelected() ? t.text : t.accent, bold: isSelected() }}>
+													{repo.fullName}
+												</span>
+											</text>
+											{/* Private badge */}
+											<Show when={repo.isPrivate}>
+												<text fg={t.textMuted}>private</text>
 											</Show>
 											<box flexGrow={1} />
-											<Show when={repo.language}>
-												<text fg={t.accent}>{repo.language}</text>
+											{/* Star count */}
+											<Show when={repo.stars > 0}>
+												<text fg={t.warning}>★{formatStars(repo.stars)}</text>
 											</Show>
-											<text fg={t.textSecondary}>
+											{/* Language */}
+											<Show when={repo.language}>
+												<text fg={t.accentSecondary}>{repo.language}</text>
+											</Show>
+											{/* Updated time */}
+											<text fg={t.textMuted}>
 												{relativeTime(repo.updatedAt, { compact: true })}
 											</text>
-										</box>
-										<box flexDirection="row" paddingLeft={2} gap={1}>
-											<text fg={t.textSecondary} flexGrow={1}>
-												{repo.description.length > 40
-													? repo.description.slice(0, 40) + "…"
-													: repo.description}
-											</text>
-											<Show when={hasLocalClone(repo.fullName)}>
+											{/* Local clone indicator */}
+											<Show when={isLocal()}>
 												<text fg={t.success}>local</text>
 											</Show>
+										</box>
+
+										{/* Row 2: description */}
+										<box paddingLeft={2}>
+											<text fg={isSelected() ? t.textSecondary : t.textMuted}>
+												{repo.description ? truncate(repo.description, 44) : "(no description)"}
+											</text>
 										</box>
 									</box>
 								)
 							}}
 						</For>
+
+						{/* Empty state */}
 						<Show when={repos().length === 0 && !loading()}>
 							<box flexGrow={1} alignItems="center" justifyContent="center" paddingTop={4}>
-								<text fg={t.textSecondary}>
-									{activeTab() === "search" ? "Press / to search" : "No repos found"}
+								<text fg={t.textMuted}>
+									{activeTab() === "search" ? "Press / to search GitHub" : "No repos found"}
 								</text>
 							</box>
 						</Show>
 					</Show>
 				</box>
-
-				{/* Keybinding hint bar */}
-				<KeyHints
-					hints={[
-						{ key: "c", label: "clone" },
-						{ key: "o", label: "open" },
-						{ key: "f", label: "filter" },
-						{ key: "/", label: "search" },
-					]}
-				/>
 			</box>
 
-			{/* ── Detail panel ── */}
+			{/* ── Detail panel ────────────────────────────────────────────────────── */}
 			<box
 				flexGrow={1}
 				flexDirection="column"
@@ -536,24 +582,50 @@ export function ExploreView() {
 				borderColor={focusPanel() === "detail" ? t.borderFocused : t.border}
 				title={selectedRepo()?.fullName ?? "select a repo"}
 			>
-				<Show when={selectedRepo()}>
+				<Show
+					when={selectedRepo()}
+					fallback={
+						<box flexGrow={1} alignItems="center" justifyContent="center">
+							<text fg={t.textMuted}>j/k to navigate · Tab to focus detail</text>
+						</box>
+					}
+				>
 					<box flexDirection="column" padding={1} gap={1}>
-						<text fg={t.text}>{selectedRepo()?.fullName}</text>
-						<text fg={t.textSecondary}>{selectedRepo()?.description || "(no description)"}</text>
-
-						{/* Stats */}
-						<box flexDirection="row" gap={2} paddingTop={1}>
+						{/* Repo title + visibility badge */}
+						<box flexDirection="row" gap={1} alignItems="center">
 							<text>
-								<span style={{ fg: t.warning }}>★ </span>
-								<span style={{ fg: t.text }}>{formatStars(selectedRepo()?.stars ?? 0)}</span>
+								<span style={{ fg: t.accent }}>{icons.folder} </span>
+								<span style={{ fg: t.text, bold: true }}>{selectedRepo()?.fullName}</span>
 							</text>
+							<Show when={selectedRepo()?.isPrivate}>
+								<text>
+									<span style={{ fg: t.textMuted }}> [private]</span>
+								</text>
+							</Show>
+						</box>
+
+						{/* Description */}
+						<box paddingLeft={2}>
+							<text fg={selectedRepo()?.description ? t.textSecondary : t.textMuted}>
+								{selectedRepo()?.description || "no description"}
+							</text>
+						</box>
+
+						{/* Stats row */}
+						<box flexDirection="row" gap={2} paddingTop={1} paddingLeft={2}>
+							<Show when={(selectedRepo()?.stars ?? 0) > 0}>
+								<text>
+									<span style={{ fg: t.warning }}>★ </span>
+									<span style={{ fg: t.text }}>{formatStars(selectedRepo()?.stars ?? 0)}</span>
+								</text>
+							</Show>
 							<Show when={selectedRepo()?.language}>
 								<text>
-									<span style={{ fg: t.accent }}>{selectedRepo()?.language}</span>
+									<span style={{ fg: t.accentSecondary }}>{selectedRepo()?.language}</span>
 								</text>
 							</Show>
 							<text>
-								<span style={{ fg: t.textSecondary }}>updated </span>
+								<span style={{ fg: t.textMuted }}>updated </span>
 								<span style={{ fg: t.text }}>
 									{relativeTime(selectedRepo()?.updatedAt ?? "", { compact: true })}
 								</span>
@@ -561,25 +633,56 @@ export function ExploreView() {
 						</box>
 
 						{/* Local clone status */}
-						<box paddingTop={1}>
+						<box paddingTop={1} paddingLeft={2}>
 							{(() => {
 								const localPath = findLocalClone(selectedRepo()?.fullName ?? "", repoMap())
 								if (localPath) {
 									return (
 										<text>
-											<span style={{ fg: t.success }}>Local clone: </span>
+											<span style={{ fg: t.success }}>{icons.check} cloned: </span>
 											<span style={{ fg: t.text }}>{localPath}</span>
 										</text>
 									)
 								}
-								return <text fg={t.textSecondary}>Not cloned locally</text>
+								return (
+									<text>
+										<span style={{ fg: t.textMuted }}>○ not cloned — press </span>
+										<span style={{ fg: t.accent }}>c</span>
+										<span style={{ fg: t.textMuted }}> to clone</span>
+									</text>
+								)
 							})()}
+						</box>
+
+						{/* URL */}
+						<Show when={selectedRepo()?.url}>
+							<box paddingLeft={2}>
+								<text>
+									<span style={{ fg: t.textMuted }}>url </span>
+									<span style={{ fg: t.accent }}>{selectedRepo()?.url}</span>
+								</text>
+							</box>
+						</Show>
+
+						{/* Action hints */}
+						<box paddingTop={1} paddingLeft={2} flexDirection="row" gap={3}>
+							<text>
+								<span style={{ fg: t.accent }}>o</span>
+								<span style={{ fg: t.textMuted }}> open in browser</span>
+							</text>
+							<text>
+								<span style={{ fg: t.accent }}>c</span>
+								<span style={{ fg: t.textMuted }}>
+									{" "}
+									{hasLocalClone(selectedRepo()?.fullName ?? "") ? "switch to local" : "clone"}
+								</span>
+							</text>
 						</box>
 					</box>
 				</Show>
 			</box>
 
-			{/* ── Clone dialog ── */}
+			{/* ── Clone dialog ─────────────────────────────────────────────────────── */}
 			<Show when={showCloneDialog()}>
 				<InputDialog
 					title={`Clone ${cloneRepoFullName()} to:`}
@@ -589,7 +692,7 @@ export function ExploreView() {
 				/>
 			</Show>
 
-			{/* ── Language filter dialog ── */}
+			{/* ── Language filter dialog ─────────────────────────────────────────── */}
 			<Show when={showLanguageFilter()}>
 				<SelectDialog
 					title="Filter by language"
@@ -604,8 +707,7 @@ export function ExploreView() {
 									limit: 30,
 									language: lang,
 								})
-								const flat = toFlat(data)
-								setRepos(flat)
+								setRepos(toFlat(data))
 								setSelectedIdx(0)
 							} catch (err) {
 								showToast("error", String(err))
@@ -620,8 +722,7 @@ export function ExploreView() {
 									limit: 30,
 									language: lang,
 								})
-								const flat = toFlat(data)
-								setRepos(flat)
+								setRepos(toFlat(data))
 								setSelectedIdx(0)
 							} catch (err) {
 								showToast("error", String(err))

@@ -1,26 +1,31 @@
 /**
- * status-bar.tsx — Bottom status bar with context-sensitive keybinding hints.
+ * status-bar.tsx — Bottom status bar with context-sensitive hints and view navigation.
  *
- * Displays view-specific keybinding hints on the left, global hints on
- * the right, toast messages when active, the current view label, a
- * relative "last refreshed" timestamp, and a sync indicator.
+ * Single-row layout (left → right):
+ *   [toast OR view hints]  ···  [view keys: e 1 2 [3] 4 5 6 w │ 7 8 9 0 n]  │  ? ^z ^r ^c  │  3m ↺
  */
 
-import { state, useTheme } from "@gubbi/core"
+import { state, useTheme, VIEWS } from "@gubbi/core"
 import { icons } from "@gubbi/core"
-import { For, Show, createSignal, onMount, onCleanup } from "solid-js"
+import { useRenderer } from "@opentui/solid"
+import { For, Show } from "solid-js"
 
-/** A single keybinding hint shown in the status bar. */
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
 interface KeyHint {
-	/** Key or key combo label (e.g. `"j/k"`, `"^r"`). */
 	key: string
-	/** Short description of the action. */
 	label: string
 }
 
+// ---------------------------------------------------------------------------
+// Hint definitions
+// ---------------------------------------------------------------------------
+
 const GLOBAL_HINTS: KeyHint[] = [
 	{ key: "?", label: "help" },
-	{ key: "Tab", label: "focus" },
+	{ key: "^z", label: "undo" },
 	{ key: "^r", label: "refresh" },
 	{ key: "^c", label: "quit" },
 ]
@@ -72,7 +77,6 @@ const BASE_VIEW_HINTS: Record<string, KeyHint[]> = {
 		{ key: "s", label: "sync" },
 		{ key: "p", label: "submit" },
 		{ key: "a", label: "absorb" },
-		{ key: "F", label: "fold" },
 	],
 	stash: [
 		{ key: "j/k", label: "nav" },
@@ -87,32 +91,40 @@ const BASE_VIEW_HINTS: Record<string, KeyHint[]> = {
 		{ key: "n", label: "new PR" },
 		{ key: "m", label: "merge" },
 		{ key: "a", label: "approve" },
-		{ key: "o", label: "open in browser" },
+		{ key: "r", label: "diff" },
+		{ key: "o", label: "open" },
 	],
 	issues: [
 		{ key: "j/k", label: "nav" },
 		{ key: "Enter", label: "view" },
-		{ key: "n", label: "new issue" },
+		{ key: "n", label: "new" },
 		{ key: "c", label: "comment" },
 		{ key: "x", label: "close" },
-		{ key: "o", label: "open in browser" },
 	],
 	actions: [
 		{ key: "j/k", label: "nav" },
-		{ key: "Enter", label: "view logs" },
+		{ key: "Enter", label: "logs" },
 		{ key: "r", label: "re-run" },
-		{ key: "o", label: "open in browser" },
+		{ key: "t", label: "trigger" },
+		{ key: "w", label: "watch" },
 	],
 	notifications: [
 		{ key: "j/k", label: "nav" },
 		{ key: "Enter", label: "open" },
 		{ key: "m", label: "mark read" },
-		{ key: "M", label: "mark all read" },
+		{ key: "M", label: "all read" },
+	],
+	explore: [
+		{ key: "j/k", label: "nav" },
+		{ key: "m/t", label: "my/trending" },
+		{ key: "c", label: "clone" },
+		{ key: "o", label: "open" },
+		{ key: "/", label: "search" },
 	],
 	remotes: [
 		{ key: "j/k", label: "nav" },
 		{ key: "f", label: "fetch" },
-		{ key: "n", label: "add remote" },
+		{ key: "n", label: "add" },
 		{ key: "D", label: "remove" },
 	],
 	worktrees: [
@@ -123,6 +135,20 @@ const BASE_VIEW_HINTS: Record<string, KeyHint[]> = {
 		{ key: "r", label: "repair" },
 	],
 }
+
+// Views that require a git repo
+const GIT_VIEW_IDS = new Set([
+	"smartlog",
+	"status",
+	"log",
+	"branches",
+	"stacks",
+	"stash",
+	"worktrees",
+	"remotes",
+])
+// Views that require GitHub auth
+const GH_VIEW_IDS = new Set(["prs", "issues", "actions", "notifications"])
 
 function currentBranchPR() {
 	return (
@@ -138,7 +164,7 @@ function getContextHints(): KeyHint[] {
 	const pr = currentBranchPR()
 
 	if (view === "status" && pr) {
-		return [...base, { key: "P", label: `push·PR` }, { key: "V", label: `PR #${pr.number}` }]
+		return [...base, { key: "P", label: "push·PR" }, { key: "V", label: `PR#${pr.number}` }]
 	}
 	if (view === "status") {
 		return [...base, { key: "P", label: "push·PR" }]
@@ -149,33 +175,28 @@ function getContextHints(): KeyHint[] {
 	return base
 }
 
-/**
- * Bottom status bar component.
- *
- * Renders context-sensitive key hints for the active view, global hints,
- * toast notifications, and the last-refresh timestamp.
- */
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+// Width breakpoints for progressive disclosure
+const BP_MED = 80 // below: hints keys-only (no labels)
+const BP_NARROW = 50 // below: no context hints, no global hints
+
 export function StatusBar() {
 	const t = useTheme()
+	const renderer = useRenderer()
+	const w = () => renderer.terminalWidth
 	const hints = () => getContextHints()
 	const latestToast = () => state.ui.toasts.at(-1)
 
-	// Tick every 10s to update relative time display
-	const [now, setNow] = createSignal(Date.now())
-	onMount(() => {
-		const id = setInterval(() => setNow(Date.now()), 10_000)
-		onCleanup(() => clearInterval(id))
-	})
-
-	const refreshedAgo = () => {
-		const ts = state.github.lastRefreshTime
-		if (!ts) return ""
-		const s = Math.floor((now() - ts) / 1000)
-		if (s < 60) return `${s}s ago`
-		const m = Math.floor(s / 60)
-		if (m < 60) return `${m}m ago`
-		return `${Math.floor(m / 60)}h ago`
-	}
+	// Filter views by availability
+	const visibleViews = () =>
+		VIEWS.filter((v) => {
+			if (GIT_VIEW_IDS.has(v.id) && !state.git.isRepo) return false
+			if (GH_VIEW_IDS.has(v.id) && !state.github.isAuthenticated) return false
+			return true
+		})
 
 	return (
 		<box
@@ -187,11 +208,11 @@ export function StatusBar() {
 			backgroundColor={t.bg}
 			paddingLeft={1}
 			paddingRight={1}
-			gap={1}
+			overflow="hidden"
 		>
-			{/* Toast messages (highest priority) */}
+			{/* ── Left: toast or context hints ── */}
 			<Show when={latestToast()}>
-				<text>
+				<text truncate>
 					<span
 						style={{
 							fg:
@@ -209,17 +230,18 @@ export function StatusBar() {
 				</text>
 			</Show>
 
-			{/* Normal key hints */}
-			<Show when={!latestToast()}>
+			<Show when={!latestToast() && w() >= BP_NARROW}>
 				<For each={hints()}>
 					{(hint, i) => (
 						<>
 							<Show when={i() > 0}>
-								<text fg={t.textMuted}>·</text>
+								<text fg={t.textMuted}> · </text>
 							</Show>
 							<text>
 								<span style={{ fg: t.accent }}>{hint.key}</span>
-								<span style={{ fg: t.textSecondary }}> {hint.label}</span>
+								<Show when={w() >= BP_MED}>
+									<span style={{ fg: t.textSecondary }}> {hint.label}</span>
+								</Show>
 							</text>
 						</>
 					)}
@@ -228,35 +250,45 @@ export function StatusBar() {
 
 			<box flexGrow={1} />
 
-			{/* Global hints */}
-			<For each={GLOBAL_HINTS}>
-				{(hint, i) => (
-					<>
-						<Show when={i() > 0}>
-							<text fg={t.textMuted}>·</text>
-						</Show>
+			{/* ── Center-right: view navigation strip ── */}
+			<For each={visibleViews()}>
+				{(view) => {
+					const isActive = () => state.ui.currentView === view.id
+					return (
 						<text>
-							<span style={{ fg: t.textMuted }}>{hint.key}</span>
-							<span style={{ fg: t.textMuted }}> {hint.label}</span>
+							<Show when={isActive()}>
+								<span style={{ fg: t.accent, bold: true }}>[{view.key}]</span>
+							</Show>
+							<Show when={!isActive()}>
+								<span style={{ fg: t.textMuted }}> {view.key} </span>
+							</Show>
 						</text>
-					</>
-				)}
+					)
+				}}
 			</For>
 
-			<text fg={t.textMuted}>│</text>
+			{/* ── Right: global hints (hidden at very narrow) ── */}
+			<Show when={w() >= BP_NARROW}>
+				<text fg={t.textMuted}> │ </text>
 
-			{/* Current view name */}
-			<text fg={t.text}>{VIEWS_DISPLAY[state.ui.currentView]}</text>
-			<Show when={refreshedAgo()}>
-				<text fg={t.textMuted}> {refreshedAgo()}</text>
+				<For each={GLOBAL_HINTS}>
+					{(hint, i) => (
+						<>
+							<Show when={i() > 0}>
+								<text fg={t.textMuted}> </text>
+							</Show>
+							<text>
+								<span style={{ fg: t.textMuted }}>{hint.key}</span>
+							</text>
+						</>
+					)}
+				</For>
 			</Show>
+
+			{/* Sync spinner */}
 			<Show when={state.ui.syncing}>
-				<text fg={t.info}> {icons.sync} syncing</text>
+				<text fg={t.info}> {icons.sync}</text>
 			</Show>
 		</box>
 	)
 }
-
-import { VIEWS } from "@gubbi/core"
-
-const VIEWS_DISPLAY: Record<string, string> = Object.fromEntries(VIEWS.map((v) => [v.id, v.label]))
